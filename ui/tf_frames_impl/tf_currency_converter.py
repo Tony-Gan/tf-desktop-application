@@ -2,10 +2,10 @@ from ui.tf_draggable_window import TFDraggableWindow
 from ui.tf_widgets.tf_number_receiver import TFNumberReceiver
 
 from PyQt6.QtWidgets import QCompleter, QLineEdit, QListView, QPushButton, QVBoxLayout, QWidget, QComboBox, QHBoxLayout, QLabel, QFrame, QStyledItemDelegate
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtCore import Qt, QSize, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QPixmap, QIcon, QStandardItemModel, QStandardItem
-from typing import List
 from datetime import datetime, timedelta
+from typing import List, Dict, Optional
 import requests
 import pytz
 import json
@@ -22,6 +22,28 @@ class CleanTextBox(QComboBox):
         if self.currentText() == "Select Currency":
             self.lineEdit().clear()
 
+class ExchangeRateLoader(QThread):
+    data_loaded = pyqtSignal(dict)
+    error_occurred = pyqtSignal(str)
+
+    def __init__(self, api_key: str, parent=None):
+        super().__init__(parent)
+        self.api_key = api_key
+
+    def run(self):
+        url = f"https://v6.exchangerate-api.com/v6/{self.api_key}/latest/USD"
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+            if data.get("result") == "success":
+                self.data_loaded.emit(data)
+            else:
+                self.error_occurred.emit("Failed to fetch exchange rates")
+        except requests.RequestException as e:
+            self.error_occurred.emit(f"Error fetching data: {e}")
+
 class TFCurrencyConverter(TFDraggableWindow):
 
     def __init__(self, parent=None, message_bar=None):
@@ -31,9 +53,9 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.container.setGeometry(10, 30, 280, 460)
 
         self.selected_currencies: List[str] = []
-        self.rates = {}
-        self.last_update = None
-        self.currency_names = {
+        self.rates: Dict[str, float] = {}
+        self.last_update: Optional[str] = None
+        self.currency_names: Dict[str, str] = {
             "USD": "United States Dollar - USD",
             "AED": "United Arab Emirates Dirham - AED",
             "AFN": "Afghan Afghani - AFN",
@@ -197,77 +219,19 @@ class TFCurrencyConverter(TFDraggableWindow):
             "ZMW": "Zambian Kwacha - ZMW",
             "ZWL": "Zimbabwean Dollar - ZWL"
         }
+        self.currency_icons: Dict[str, QIcon] = {}
         self.setup_ui()
         
-    def load_exchange_rates(self):
-        if not self.should_update_data():
-            self.load_saved_data()
-            return
-
-        if not API_KEY:
-            self.message_bar.show_message("API key is missing", 3000, 'red')
-            return
-
-        url = f"https://v6.exchangerate-api.com/v6/{API_KEY}/latest/USD"
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-
-            if data.get("result") == "success":
-                self.rates = data['conversion_rates']
-                self.last_update = data['time_last_update_utc']
-
-                self.save_exchange_data(data)
-
-                self.update_ui_with_rates()
-            else:
-                self.message_bar.show_message("Failed to fetch exchange rates", 3000, 'red')
-
-        except requests.RequestException as e:
-            self.message_bar.show_message(f"Error fetching data: {e}", 3000, 'red')
-
-    def should_update_data(self):
-        path = os.path.abspath("data/currency_record.json")
-        if not os.path.exists(path):
-            return True
-
-        with open(path, "r") as f:
-            saved_data = json.load(f)
-
-        saved_time_str = saved_data.get("current_time")
-        if not saved_time_str:
-            return True
-
-        saved_time = datetime.fromisoformat(saved_time_str)
-        current_time = datetime.now()
-
-        return current_time - saved_time > timedelta(hours=24)
-    
-    def load_saved_data(self):
-        path = os.path.abspath("data/currency_record.json")
-        with open(path, "r") as f:
-            data = json.load(f)
-
-        self.rates = data['conversion_rates']
-        self.last_update = data['time_last_update_utc']
-        self.update_ui_with_rates()
-
-    def save_exchange_data(self, data):
-        path = os.path.abspath("data/currency_record.json")
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-
-        data["current_time"] = datetime.now().isoformat()
-
-        with open(path, "w") as f:
-            json.dump(data, f, indent=4)
-        
     def setup_ui(self):
-        layout = QVBoxLayout(self.container)
-        layout.setSpacing(15)
+        self.container = QWidget(self)
+        self.container.setGeometry(0, 30, self.size[0], self.size[1] - 30)
 
-        self.selector_container = QWidget()
-        selector_layout = QVBoxLayout(self.selector_container)
+        main_layout = QVBoxLayout(self.container)
+        main_layout.setSpacing(15)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+
+        selector_container = QWidget()
+        selector_layout = QVBoxLayout(selector_container)
         selector_layout.setSpacing(10)
         selector_layout.setContentsMargins(0, 5, 0, 5)
 
@@ -286,27 +250,34 @@ class TFCurrencyConverter(TFDraggableWindow):
             if i > 0:
                 selector.setEnabled(False)
 
-        layout.addWidget(self.selector_container)
+        main_layout.addWidget(selector_container)
 
         button_container = QWidget()
         button_layout = QHBoxLayout(button_container)
         button_layout.setSpacing(10)
 
-        self.confirm_button = QPushButton("Confirm Selection")
+        self.confirm_button = QPushButton("Confirm")
         self.confirm_button.setObjectName("confirm_button")
-        self.confirm_button.setFont(QFont("Montserrat", 12))
+        self.confirm_button.setFont(QFont("Montserrat", 10))
         self.confirm_button.setFixedHeight(35)
         self.confirm_button.clicked.connect(self.confirm_selection)
         button_layout.addWidget(self.confirm_button)
 
         self.reset_button = QPushButton("Reset")
         self.reset_button.setObjectName("reset_button")
-        self.reset_button.setFont(QFont("Montserrat", 12))
+        self.reset_button.setFont(QFont("Montserrat", 10))
         self.reset_button.setFixedHeight(35)
         self.reset_button.clicked.connect(self.reset_converter)
         button_layout.addWidget(self.reset_button)
 
-        layout.addWidget(button_container)
+        self.zero_button = QPushButton("Zero")
+        self.zero_button.setObjectName("zero_button")
+        self.zero_button.setFont(QFont("Montserrat", 10))
+        self.zero_button.setFixedHeight(35)
+        self.zero_button.clicked.connect(self.zero_amounts)
+        button_layout.addWidget(self.zero_button)
+
+        main_layout.addWidget(button_container)
 
         currency_container = QWidget()
         currency_layout = QVBoxLayout(currency_container)
@@ -331,7 +302,7 @@ class TFCurrencyConverter(TFDraggableWindow):
             currency_label.setFont(QFont("Nunito", 10))
             frame_layout.addWidget(currency_label)
 
-            amount_input = TFNumberReceiver("0", Qt.AlignmentFlag.AlignRight, QFont("Montserrat", 12))
+            amount_input = TFNumberReceiver("0", Qt.AlignmentFlag.AlignRight)
             amount_input.setObjectName("currency_amount")
             amount_input.setEnabled(False)
             amount_input.textChanged.connect(self.update_amounts)
@@ -343,35 +314,14 @@ class TFCurrencyConverter(TFDraggableWindow):
 
             self.set_currency_icon(icon_label, "default")
 
-        layout.addWidget(currency_container)
+        main_layout.addWidget(currency_container)
 
         self.time_label = QLabel("Update time: Not yet fetched")
         self.time_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.time_label.setFont(QFont("Open Sans", 9))
-        layout.addWidget(self.time_label)
+        main_layout.addWidget(self.time_label)
 
-        layout.addStretch()
-
-    def set_currency_icon(self, icon_label: QLabel, currency_code: str):
-        default_icon_path = "static/images/icons/countries/default.png"
-        icon_path = f"static/images/icons/countries/{currency_code.lower()}.png"
-        
-        if os.path.exists(icon_path):
-            pixmap = QPixmap(icon_path)
-        else:
-            pixmap = QPixmap(default_icon_path)
-        
-        icon_label.setPixmap(pixmap.scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
-        
-    def convert_to_local_time(self, utc_time_str):
-        utc_time = datetime.strptime(utc_time_str, "%a, %d %b %Y %H:%M:%S +0000")
-        utc_time = pytz.utc.localize(utc_time)
-
-        local_tz = datetime.now(pytz.utc).astimezone().tzinfo
-
-        local_time = utc_time.astimezone(local_tz)
-
-        return local_time.strftime("%d %b %Y %H:%M:%S")
+        main_layout.addStretch()
         
     def setup_selector(self, selector: QComboBox):
         selector.clear()
@@ -387,12 +337,15 @@ class TFCurrencyConverter(TFDraggableWindow):
         model.appendRow(item)
 
         for code, name in self.currency_names.items():
-            icon_path = f"static/images/icons/countries/{code.lower()}.png"
-
-            if os.path.exists(icon_path):
-                icon = QIcon(QPixmap(icon_path).scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            if code.lower() in self.currency_icons:
+                icon = self.currency_icons[code.lower()]
             else:
-                icon = default_icon
+                icon_path = f"static/images/icons/countries/{code.lower()}.png"
+                if os.path.exists(icon_path):
+                    icon = QIcon(QPixmap(icon_path).scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                else:
+                    icon = default_icon
+                self.currency_icons[code.lower()] = icon
 
             item = QStandardItem(name)
             item.setIcon(icon)
@@ -444,52 +397,81 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.selected_currencies = selected
 
         self.load_exchange_rates()
-            
-    def reset_converter(self):
-        for i, selector in enumerate(self.selectors):
-            selector.setCurrentIndex(0)
-            selector.setEnabled(i == 0)
 
-        self.confirm_button.setEnabled(True)
-        
-        for frame in self.currency_frames:
-            icon_label = frame.findChildren(QLabel)[0]
-            currency_label = frame.findChildren(QLabel)[1]
-
-            self.set_currency_icon(icon_label, "default")
-
-            currency_label.setText("Select Currency")
-
-            amount_input = frame.findChild(QLineEdit)
-            amount_input.setEnabled(False)
-            amount_input.setText("0")
-        
-        self.selected_currencies = []
-            
-    def update_amounts(self, text: str):
-        if not text:
-            text = "0"
-            self.sender().setText(text)
+    def load_exchange_rates(self):
+        if not self.should_update_data():
+            self.load_saved_data()
             return
-        
+
+        if not API_KEY:
+            self.message_bar.show_message("API key is missing", 3000, 'red')
+            return
+
+        self.loader_thread = ExchangeRateLoader(API_KEY)
+        self.loader_thread.data_loaded.connect(self.on_data_loaded)
+        self.loader_thread.error_occurred.connect(self.on_error_occurred)
+        self.loader_thread.start()
+
+    def on_data_loaded(self, data):
+        self.rates = data['conversion_rates']
+        self.last_update = data['time_last_update_utc']
+
+        self.save_exchange_data(data)
+
+        self.update_ui_with_rates()
+
+    def on_error_occurred(self, error_message):
+        self.message_bar.show_message(error_message, 3000, 'red')
+
+    def should_update_data(self):
+        path = os.path.abspath("data/currency_record.json")
+        if not os.path.exists(path):
+            return True
+
         try:
-            sender = self.sender()
-            sender_index = self.currency_inputs.index(sender)
-            amount = float(text)
-            
-            source_currency = self.selected_currencies[sender_index]
-            
-            for i, currency_code in enumerate(self.selected_currencies):
-                if i != sender_index:
-                    target_input = self.currency_inputs[i]
-                    rate = self.rates[currency_code] / self.rates[source_currency]
-                    converted_amount = amount * rate
-                    target_input.blockSignals(True)
-                    target_input.setText(f"{converted_amount:.2f}")
-                    target_input.blockSignals(False)
-                        
+            with open(path, "r") as f:
+                saved_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return True
+
+        saved_time_str = saved_data.get("current_time")
+        if not saved_time_str:
+            return True
+
+        try:
+            saved_time = datetime.fromisoformat(saved_time_str)
         except ValueError:
-            self.message_bar.show_message('Invalid input', 3000, 'yellow')
+            return True
+
+        current_time = datetime.now()
+
+        return current_time - saved_time > timedelta(hours=24)
+    
+    def load_saved_data(self):
+        path = os.path.abspath("data/currency_record.json")
+        try:
+            with open(path, "r") as f:
+                data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.message_bar.show_message("Error loading saved data", 3000, 'red')
+            return
+
+        self.rates = data['conversion_rates']
+        self.last_update = data['time_last_update_utc']
+        self.update_ui_with_rates()
+
+    def save_exchange_data(self, data):
+        path = os.path.abspath("data/currency_record.json")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+        data["current_time"] = datetime.now().isoformat()
+
+        try:
+            with open(path, "w") as f:
+                json.dump(data, f, indent=4)
+        except IOError:
+            self.message_bar.show_message("Error saving data", 3000, 'red')
+
 
     def update_ui_with_rates(self):
         for i, frame in enumerate(self.currency_frames):
@@ -506,7 +488,7 @@ class TFCurrencyConverter(TFDraggableWindow):
                 amount_input.setText("0")
             else:
                 icon_label = frame.findChildren(QLabel)[0]
-                icon_label.setPixmap(QPixmap("static/images/icons/countries/default.png").scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                self.set_currency_icon(icon_label, "default")
 
                 currency_label = frame.findChildren(QLabel)[1]
                 currency_label.setText("Select Currency")
@@ -522,3 +504,100 @@ class TFCurrencyConverter(TFDraggableWindow):
         for selector in self.selectors:
             selector.setEnabled(False)
         self.confirm_button.setEnabled(False)
+                        
+    def update_amounts(self, text: str):
+        sender = self.sender()
+
+        if not text:
+            text = "0"
+            sender.blockSignals(True)
+            sender.setText(text)
+            sender.blockSignals(False)
+            return
+
+        try:
+            sender_index = self.currency_inputs.index(sender)
+            amount = float(text)
+
+            digit_count = len(text.replace('.', '').replace('-', ''))
+            if digit_count > 12:
+                scientific_text = f"{amount:.2e}"
+                sender.blockSignals(True)
+                sender.setText(scientific_text)
+                sender.blockSignals(False)
+                sender.setReadOnly(True)
+            else:
+                sender.setReadOnly(False)
+
+            source_currency = self.selected_currencies[sender_index]
+
+            for i, currency_code in enumerate(self.selected_currencies):
+                if i != sender_index:
+                    target_input = self.currency_inputs[i]
+                    rate = self.rates[currency_code] / self.rates[source_currency]
+                    converted_amount = amount * rate
+
+                    converted_text = f"{converted_amount:.2f}"
+                    digit_count = len(converted_text.replace('.', '').replace('-', ''))
+                    if digit_count > 12:
+                        converted_text = f"{converted_amount:.2e}"
+                        target_input.setReadOnly(True)
+                    else:
+                        target_input.setReadOnly(False)
+
+                    target_input.blockSignals(True)
+                    target_input.setText(converted_text)
+                    target_input.blockSignals(False)
+        except ValueError:
+            self.message_bar.show_message('Invalid input', 3000, 'yellow')
+
+    def reset_converter(self):
+        for i, selector in enumerate(self.selectors):
+            selector.setCurrentIndex(0)
+            selector.setEnabled(i == 0)
+
+        self.confirm_button.setEnabled(True)
+
+        for frame in self.currency_frames:
+            icon_label = frame.findChildren(QLabel)[0]
+            currency_label = frame.findChildren(QLabel)[1]
+
+            self.set_currency_icon(icon_label, "default")
+            currency_label.setText("Select Currency")
+
+            amount_input = frame.findChild(QLineEdit)
+            amount_input.setEnabled(False)
+            amount_input.setText("0")
+
+        self.selected_currencies = []
+
+    def set_currency_icon(self, icon_label: QLabel, currency_code: str):
+        default_icon_path = "static/images/icons/countries/default.png"
+        default_pixmap = QPixmap(default_icon_path).scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        if currency_code.lower() in self.currency_icons:
+            pixmap = self.currency_icons[currency_code.lower()].pixmap(QSize(30, 30))
+        else:
+            icon_path = f"static/images/icons/countries/{currency_code.lower()}.png"
+            if os.path.exists(icon_path):
+                pixmap = QPixmap(icon_path).scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                self.currency_icons[currency_code.lower()] = QIcon(pixmap)
+            else:
+                pixmap = default_pixmap
+        icon_label.setPixmap(pixmap)
+        
+    def convert_to_local_time(self, utc_time_str):
+        utc_time = datetime.strptime(utc_time_str, "%a, %d %b %Y %H:%M:%S +0000")
+        utc_time = pytz.utc.localize(utc_time)
+
+        local_tz = datetime.now().astimezone().tzinfo
+
+        local_time = utc_time.astimezone(local_tz)
+
+        return local_time.strftime("%d %b %Y %H:%M:%S")
+    
+    def zero_amounts(self):
+        for amount_input in self.currency_inputs:
+            amount_input.blockSignals(True)
+            amount_input.setText("0")
+            amount_input.setReadOnly(False)
+            amount_input.blockSignals(False)

@@ -4,6 +4,7 @@ from PyQt6.QtGui import QAction
 from ui.tf_frames_impl.tf_calculator import TFCalculator
 from ui.tf_frames_impl.tf_scientific_calculator import TFScientificCalculator
 from ui.tf_frames_impl.tf_currency_converter import TFCurrencyConverter
+from ui.tf_frames_impl.tf_coin_fliper import TFCoinFliper
 from utils.helper import resource_path
 from .tf_window_container import TFWindowContainer
 
@@ -28,6 +29,9 @@ class TFMenuBar(QMenuBar):
 
         add_currency_converter = file_menu.addAction("Add Currency Converter")
         add_currency_converter.triggered.connect(self._add_currency_converter)
+
+        add_coin_flipper = file_menu.addAction("Add Coin Flipper")
+        add_coin_flipper.triggered.connect(self._add_coin_flipper)
         
         self.addMenu(file_menu)
 
@@ -58,3 +62,7 @@ class TFMenuBar(QMenuBar):
     def _add_currency_converter(self):
         if isinstance(self.window_container, TFWindowContainer):
             self.window_container.add_window(window_class=TFCurrencyConverter)
+
+    def _add_coin_flipper(self):
+        if isinstance(self.window_container, TFWindowContainer):
+            self.window_container.add_window(window_class=TFCoinFliper)

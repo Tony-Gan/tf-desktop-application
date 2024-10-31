@@ -203,6 +203,18 @@ QPushButton#confirm_button:hover {
     background-color: #45a049;
 }
 
+QPushButton#zero_button {
+    background-color: #2196F3;
+    color: white;
+    border: 1px solid #1976D2;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+QPushButton#zero_button:hover {
+    background-color: #1976D2;
+}
+
 QFrame#currency_item {
     background-color: white;
     border: 1px solid #ddd;
@@ -226,7 +238,7 @@ QPushButton#reset_button {
     color: white;
     border: 1px solid #ff5252;
     border-radius: 5px;
-    padding: 10px;
+    padding: 5px;
 }
 
 QPushButton#reset_button:hover {
