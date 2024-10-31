@@ -1,9 +1,9 @@
 from ui.tf_draggable_window import TFDraggableWindow
 from ui.tf_widgets.tf_number_receiver import TFNumberReceiver
 
-from PyQt6.QtWidgets import QLineEdit, QPushButton, QVBoxLayout, QWidget, QComboBox, QHBoxLayout, QLabel, QFrame
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QPixmap, QIcon
+from PyQt6.QtWidgets import QCompleter, QLineEdit, QListView, QPushButton, QVBoxLayout, QWidget, QComboBox, QHBoxLayout, QLabel, QFrame, QStyledItemDelegate
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QFont, QPixmap, QIcon, QStandardItemModel, QStandardItem
 from typing import List
 from datetime import datetime, timedelta
 import requests
@@ -16,10 +16,16 @@ try:
 except ImportError:
     API_KEY = None
 
+class CleanTextBox(QComboBox):
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        if self.currentText() == "Select Currency":
+            self.lineEdit().clear()
+
 class TFCurrencyConverter(TFDraggableWindow):
 
     def __init__(self, parent=None, message_bar=None):
-        super().__init__(parent, (300, 500), "Currency Converter", 6, message_bar)
+        super().__init__(parent, (300, 500), "Currency Converter", 1, message_bar)
 
         self.container = QWidget(self)
         self.container.setGeometry(10, 30, 280, 460)
@@ -27,7 +33,7 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.selected_currencies: List[str] = []
         self.rates = {}
         self.last_update = None
-        self.full_currency_names = {
+        self.currency_names = {
             "USD": "United States Dollar - USD",
             "AED": "United Arab Emirates Dirham - AED",
             "AFN": "Afghan Afghani - AFN",
@@ -191,58 +197,7 @@ class TFCurrencyConverter(TFDraggableWindow):
             "ZMW": "Zambian Kwacha - ZMW",
             "ZWL": "Zimbabwean Dollar - ZWL"
         }
-        self.selected_currency_names = {
-            "USD": "United States Dollar - USD",
-            "AUD": "Australian Dollar - AUD",
-            "CAD": "Canadian Dollar - CAD",
-            "CHF": "Swiss Franc - CHF",
-            "CNY": "Chinese Yuan - CNY",
-            "EUR": "Euro - EUR",
-            "GBP": "British Pound Sterling - GBP",
-            "HKD": "Hong Kong Dollar - HKD",
-            "INR": "Indian Rupee - INR",
-            "JPY": "Japanese Yen - JPY",
-            "KRW": "South Korean Won - KRW",
-            "MOP": "Macanese Pataca - MOP",
-            "MYR": "Malaysian Ringgit - MYR",
-            "NOK": "Norwegian Krone - NOK",
-            "NZD": "New Zealand Dollar - NZD",
-            "PHP": "Philippine Peso - PHP",
-            "RUB": "Russian Ruble - RUB",
-            "SEK": "Swedish Krona - SEK",
-            "SGD": "Singapore Dollar - SGD",
-            "THB": "Thai Baht - THB",
-            "TWD": "New Taiwan Dollar - TWD",
-            "VND": "Vietnamese Đồng - VND"
-        }
-        self.currency_names = self.selected_currency_names
-        self.add_menu_action("Toggle Full/Simplified List", self.toggle_list)
         self.setup_ui()
-
-    def toggle_list(self):
-        if self.currency_names == self.full_currency_names:
-            self.currency_names = self.selected_currency_names
-        else:
-            self.currency_names = self.full_currency_names
-
-        for i, selector in enumerate(self.selectors):
-            self.setup_selector(selector)
-            selector.setCurrentIndex(0)
-            selector.setEnabled(i == 0)
-
-        self.confirm_button.setEnabled(True)
-        for frame in self.currency_frames:
-            icon_label = frame.findChildren(QLabel)[0]
-            currency_label = frame.findChildren(QLabel)[1]
-
-            self.set_currency_icon(icon_label, "default")
-            currency_label.setText("Select Currency")
-
-            amount_input = frame.findChild(QLineEdit)
-            amount_input.setEnabled(False)
-            amount_input.setText("0")
-
-        self.selected_currencies = []
         
     def load_exchange_rates(self):
         if not self.should_update_data():
@@ -318,7 +273,7 @@ class TFCurrencyConverter(TFDraggableWindow):
 
         self.selectors = []
         for i in range(3):
-            selector = QComboBox()
+            selector = CleanTextBox()
             selector.setObjectName("currency_selector")
             font = QFont("Nunito", 10)
             font.setStyleName("Condensed")
@@ -408,7 +363,6 @@ class TFCurrencyConverter(TFDraggableWindow):
         
         icon_label.setPixmap(pixmap.scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         
-
     def convert_to_local_time(self, utc_time_str):
         utc_time = datetime.strptime(utc_time_str, "%a, %d %b %Y %H:%M:%S +0000")
         utc_time = pytz.utc.localize(utc_time)
@@ -424,28 +378,56 @@ class TFCurrencyConverter(TFDraggableWindow):
         default_icon_path = "static/images/icons/countries/default.png"
         default_icon = QIcon(QPixmap(default_icon_path).scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 
-        selector.addItem(default_icon, "Select Currency")
+        selector.setEditable(True)
+        selector.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+
+        model = QStandardItemModel()
+        item = QStandardItem("Select Currency")
+        item.setIcon(default_icon)
+        model.appendRow(item)
 
         for code, name in self.currency_names.items():
             icon_path = f"static/images/icons/countries/{code.lower()}.png"
-            
+
             if os.path.exists(icon_path):
                 icon = QIcon(QPixmap(icon_path).scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
             else:
                 icon = default_icon
 
-            selector.addItem(icon, name)  
+            item = QStandardItem(name)
+            item.setIcon(icon)
+            item.setData(code, Qt.ItemDataRole.UserRole)
+            model.appendRow(item)
 
-    def on_selection_changed(self):
-        valid_selections = 0
-        for selector in self.selectors:
-            if selector.currentText() != "Select Currency":
-                valid_selections += 1
-            else:
-                break
-                
-        if valid_selections < len(self.selectors):
-            self.selectors[valid_selections].setEnabled(True)
+        selector.setModel(model)
+        selector.setModelColumn(0)
+
+        completer = QCompleter(model, selector)
+        completer.setCompletionRole(Qt.ItemDataRole.DisplayRole)
+        completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+
+        popup = QListView()
+        popup.setIconSize(QSize(24, 24))
+        popup.setUniformItemSizes(True)
+        completer.setPopup(popup)
+        selector.setCompleter(completer)
+
+        delegate = QStyledItemDelegate(selector)
+        selector.setItemDelegate(delegate)
+
+    def on_selection_changed(self, text):
+        sender = self.sender()
+        if text == "Select Currency" or text == "":
+            sender_index = self.selectors.index(sender)
+            for i in range(sender_index + 1, len(self.selectors)):
+                self.selectors[i].setCurrentIndex(0)
+                self.selectors[i].setEnabled(False)
+            return
+
+        sender_index = self.selectors.index(sender)
+        if sender_index + 1 < len(self.selectors):
+            self.selectors[sender_index + 1].setEnabled(True)
             
     def confirm_selection(self):
         selected = []
