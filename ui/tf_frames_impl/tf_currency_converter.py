@@ -27,7 +27,7 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.selected_currencies: List[str] = []
         self.rates = {}
         self.last_update = None
-        self.currency_names = {
+        self.full_currency_names = {
             "USD": "United States Dollar - USD",
             "AED": "United Arab Emirates Dirham - AED",
             "AFN": "Afghan Afghani - AFN",
@@ -191,8 +191,58 @@ class TFCurrencyConverter(TFDraggableWindow):
             "ZMW": "Zambian Kwacha - ZMW",
             "ZWL": "Zimbabwean Dollar - ZWL"
         }
-
+        self.selected_currency_names = {
+            "USD": "United States Dollar - USD",
+            "AUD": "Australian Dollar - AUD",
+            "CAD": "Canadian Dollar - CAD",
+            "CHF": "Swiss Franc - CHF",
+            "CNY": "Chinese Yuan - CNY",
+            "EUR": "Euro - EUR",
+            "GBP": "British Pound Sterling - GBP",
+            "HKD": "Hong Kong Dollar - HKD",
+            "INR": "Indian Rupee - INR",
+            "JPY": "Japanese Yen - JPY",
+            "KRW": "South Korean Won - KRW",
+            "MOP": "Macanese Pataca - MOP",
+            "MYR": "Malaysian Ringgit - MYR",
+            "NOK": "Norwegian Krone - NOK",
+            "NZD": "New Zealand Dollar - NZD",
+            "PHP": "Philippine Peso - PHP",
+            "RUB": "Russian Ruble - RUB",
+            "SEK": "Swedish Krona - SEK",
+            "SGD": "Singapore Dollar - SGD",
+            "THB": "Thai Baht - THB",
+            "TWD": "New Taiwan Dollar - TWD",
+            "VND": "Vietnamese Đồng - VND"
+        }
+        self.currency_names = self.selected_currency_names
+        self.add_menu_action("Toggle Full/Simplified List", self.toggle_list)
         self.setup_ui()
+
+    def toggle_list(self):
+        if self.currency_names == self.full_currency_names:
+            self.currency_names = self.selected_currency_names
+        else:
+            self.currency_names = self.full_currency_names
+
+        for i, selector in enumerate(self.selectors):
+            self.setup_selector(selector)
+            selector.setCurrentIndex(0)
+            selector.setEnabled(i == 0)
+
+        self.confirm_button.setEnabled(True)
+        for frame in self.currency_frames:
+            icon_label = frame.findChildren(QLabel)[0]
+            currency_label = frame.findChildren(QLabel)[1]
+
+            self.set_currency_icon(icon_label, "default")
+            currency_label.setText("Select Currency")
+
+            amount_input = frame.findChild(QLineEdit)
+            amount_input.setEnabled(False)
+            amount_input.setText("0")
+
+        self.selected_currencies = []
         
     def load_exchange_rates(self):
         if not self.should_update_data():
