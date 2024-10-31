@@ -1,0 +1,16 @@
+# Ignore build and dist folders
+build/
+dist/
+
+# Ignore all __pycache__ folders at any level
+**/__pycache__/
+
+# Ignore all .spec files
+*.spec
+
+# Ignore VSCode settings files and folders
+.vscode/
+.vscode/*
+
+# Ignore secret settings file
+settings/secret.py

@@ -1,0 +1,248 @@
+/* Background and border for TFDraggableWindow */
+QFrame#TFDraggableWindow {
+    background-color: #2e2e2e; /* Dark background */
+    border: 1px solid #444;    /* Darker border */
+}
+
+/* Title label */
+QLabel {
+    border: none;
+    color: #ffffff; /* Light text for visibility */
+}
+
+/* Close button */
+QPushButton#close_button {
+    background-color: transparent;
+    border: none;
+    color: #ffffff; /* Light color for contrast */
+}
+QPushButton#close_button:hover {
+    color: #ff4c4c; /* Hover color for emphasis */
+}
+
+/* Menu button */
+QPushButton#menu_button {
+    background-color: transparent;
+    border: none;
+    color: #c0c0c0; /* Softer gray for menu button */
+}
+QPushButton#menu_button:hover {
+    color: #d3d3d3; /* Lighter hover color */
+}
+
+/* Message Bar */
+QLabel#message_label {
+    background-color: #388e3c; /* Dark green */
+    color: #ffffff;
+    padding: 5px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Display styling */
+QLineEdit#display {
+    background-color: #444444; /* Dark gray */
+    border: 1px solid #666;
+    color: #ffffff;            /* White text */
+    padding: 10px;
+    font-size: 24px;
+}
+
+/* Calculator Styles */
+QLineEdit#calculator_display {
+    background-color: #444444;
+    border: 1px solid #666;
+    border-radius: 5px;
+    color: #ffffff;
+    padding: 10px;
+}
+
+QLineEdit#calculator_history {
+    background-color: #2e2e2e;
+    border: none;
+    color: #b0b0b0; /* Lighter gray for history */
+}
+
+QPushButton#calculator_number {
+    background-color: #555555;
+    border: 1px solid #777;
+    border-radius: 32px;
+    color: #ffffff;
+}
+
+QPushButton#calculator_number:hover {
+    background-color: #666666;
+}
+
+QPushButton#calculator_operator {
+    background-color: #ffab40; /* Soft orange */
+    border: 1px solid #ff9100;
+    border-radius: 32px;
+    color: #ffffff;
+}
+
+QPushButton#calculator_operator:hover {
+    background-color: #ff9100;
+}
+
+QPushButton#calculator_special {
+    background-color: #ff5252; /* Bright red */
+    color: white;
+    border: 1px solid #ff1744;
+    border-radius: 32px;
+}
+
+QPushButton#calculator_special:hover {
+    background-color: #ff1744;
+}
+
+QPushButton#calculator_equal {
+    background-color: #4caf50;
+    color: white;
+    border: 1px solid #388e3c;
+    border-radius: 32px;
+}
+
+QPushButton#calculator_equal:hover {
+    background-color: #388e3c;
+}
+
+/* Scientific Calculator Styles */
+QLineEdit#scientific_display {
+    background-color: #444444;
+    border: 1px solid #666;
+    border-radius: 5px;
+    color: #ffffff;
+    padding: 10px;
+}
+
+QLineEdit#scientific_history {
+    background-color: #2e2e2e;
+    border: none;
+    color: #b0b0b0;
+}
+
+QLineEdit#scientific_record {
+    background-color: #444444;
+    border: 1px solid #666;
+    border-radius: 5px;
+    color: #ffffff;
+}
+
+QPushButton#scientific_number, 
+QPushButton#scientific_function {
+    background-color: #555555;
+    border: 1px solid #777;
+    border-radius: 32px;
+    color: #ffffff;
+}
+
+QPushButton#scientific_number:hover,
+QPushButton#scientific_function:hover {
+    background-color: #666666;
+}
+
+QPushButton#scientific_operator {
+    background-color: #ffab40;
+    border: 1px solid #ff9100;
+    border-radius: 32px;
+    color: #ffffff;
+}
+
+QPushButton#scientific_operator:hover {
+    background-color: #ff9100;
+}
+
+QPushButton#scientific_special {
+    background-color: #ff5252;
+    color: white;
+    border: 1px solid #ff1744;
+    border-radius: 32px;
+}
+
+QPushButton#scientific_special:hover {
+    background-color: #ff1744;
+}
+
+QPushButton#scientific_equal {
+    background-color: #4caf50;
+    color: white;
+    border: 1px solid #388e3c;
+    border-radius: 32px;
+}
+
+QPushButton#scientific_equal:hover {
+    background-color: #388e3c;
+}
+
+/* Currency Converter Styles */
+QComboBox#currency_selector {
+    background-color: #444444;
+    border: 1px solid #666;
+    border-radius: 5px;
+    color: #ffffff;
+    padding: 5px 10px;
+    min-height: 30px;
+}
+
+QComboBox#currency_selector::drop-down {
+    border: none;
+}
+
+QComboBox#currency_selector::down-arrow {
+    image: url(static/images/icons/dropdown.png);
+    width: 12px;
+    height: 12px;
+}
+
+QLineEdit#currency_amount {
+    background-color: #444444;
+    border: 1px solid #666;
+    border-radius: 5px;
+    color: #ffffff;
+    padding: 10px;
+    font-size: 18px;
+}
+
+QPushButton#confirm_button {
+    background-color: #4caf50;
+    color: white;
+    border: 1px solid #388e3c;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+QPushButton#confirm_button:hover {
+    background-color: #388e3c;
+}
+
+QFrame#currency_item {
+    background-color: #2e2e2e;
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 2px;
+}
+
+QPushButton#add_button {
+    background-color: #4caf50;
+    border: none;
+    border-radius: 15px;
+    color: #ffffff;
+    padding: 5px;
+}
+
+QPushButton#add_button:hover {
+    background-color: #388e3c;
+}
+
+QPushButton#reset_button {
+    background-color: #ff5252;
+    color: white;
+    border: 1px solid #ff1744;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+QPushButton#reset_button:hover {
+    background-color: #ff1744;
+}
