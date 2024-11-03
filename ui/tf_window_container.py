@@ -1,20 +1,93 @@
 from PyQt6.QtWidgets import QWidget
 
 from .tf_draggable_window import TFDraggableWindow
+from .tf_frames_impl.tf_calculator import TFCalculator
+from .tf_frames_impl.tf_scientific_calculator import TFScientificCalculator
+from .tf_frames_impl.tf_currency_converter import TFCurrencyConverter
 from tools.tf_message_bar import TFMessageBar
+from database.tf_database import TFDatabase
+from database.models import TFWindowState
 from settings.general import MAX_WIDTH, MAX_HEIGHT
 
-from typing import List, Type
+from typing import List, Type, Dict
 
 class TFWindowContainer(QWidget):
     
-    def __init__(self, parent=None, message_bar: TFMessageBar =None):
+    def __init__(self, parent=None, message_bar: TFMessageBar=None, database: TFDatabase=None):
         super().__init__(parent)
         self.parent = parent
         self.message_bar = message_bar
+        self.database = database
         self.windows: List[TFDraggableWindow] = []
         self.setMinimumSize(MAX_WIDTH, MAX_HEIGHT)
+
+        if self.database:
+            self.restore_windows()
+
+    def save_window_state(self, window: TFDraggableWindow):
+        if not self.database:
+            return
         
+        with self.database.get_session() as session:
+            window_state = TFWindowState(
+                window_class=window.__class__.__name__,
+                title=window.display_title,
+                x_position=window.x(),
+                y_position=window.y()
+            )
+            session.add(window_state)
+            session.commit()
+
+    def restore_windows(self):
+        if not self.database:
+            return
+
+        window_classes = self.get_window_classes()  # You need to implement this
+
+        with self.database.get_session() as session:
+            saved_states = session.query(TFWindowState).all()
+            
+            for state in saved_states:
+                if state.window_class in window_classes:
+                    window_class = window_classes[state.window_class]
+                    
+                    window = window_class(parent=self, message_bar=self.message_bar)
+                    window.closed.connect(self.remove_specific_window)
+                    window.moved.connect(self.resize_container)
+                    
+                    window.bring_to_front.connect(lambda w: w.raise_())
+                    window.send_to_back.connect(lambda w: w.lower())
+                    window.raise_level.connect(lambda w: w.raise_())
+                    window.lower_level.connect(lambda w: w.lower())
+                    
+                    window.move(state.x_position, state.y_position)
+                    
+                    if window.display_title != state.title:
+                        window.rename(state.title)
+                        window.title_label.setText(state.title)
+                    
+                    self.windows.append(window)
+                    window.show()
+
+    def save_all_window_states(self):
+        if not self.database:
+            return
+        
+        with self.database.get_session() as session:
+            session.query(TFWindowState).delete()
+            
+            for window in self.windows:
+                window_state = TFWindowState(
+                    window_class=window.__class__.__name__,
+                    title=window.display_title,
+                    x_position=window.x(),
+                    y_position=window.y()
+                )
+                session.add(window_state)
+            
+            session.commit()
+
+
     def add_window(self, window_class: Type[TFDraggableWindow]) -> None:
         current_count = sum(1 for win in self.windows if isinstance(win, window_class))
         temp_window = window_class(parent=self)
@@ -23,10 +96,14 @@ class TFWindowContainer(QWidget):
             self.message_bar.show_message(message, 3000, 'green')
             return
 
-        window = window_class(parent=self, message_bar=self.message_bar)
-        window.mouse_released.connect(self.arrange_windows)
+        window = window_class(parent=self, message_bar=self.message_bar, database=self.database)
         window.closed.connect(self.remove_specific_window)
         size = window.size
+
+        window.bring_to_front.connect(lambda w: w.raise_())
+        window.send_to_back.connect(lambda w: w.lower())
+        window.raise_level.connect(lambda w: w.raise_())
+        window.lower_level.connect(lambda w: w.lower())
 
         x, y = 0, 0
         while self.is_position_occupied(x, y, size):
@@ -60,186 +137,6 @@ class TFWindowContainer(QWidget):
             window.deleteLater()
             self.resize_container()
 
-    def arrange_windows(self):
-        if not self.windows:
-            return
-            
-        current_window = max(self.windows, key=lambda w: w.last_moved_time)
-        if current_window.last_moved_time == 0:
-            return
-                
-        windows_info = [(w, w.x(), w.y()) for w in self.windows if w != current_window]
-        windows_info.sort(key=lambda x: (x[2], x[1]))
-        
-        rows, row_positions = self._group_windows_into_rows(windows_info)
-        
-        current_x = current_window.x()
-        current_y = current_window.y()
-        insert_row_index = -1
-        insert_position = -1
-        original_row_index = self._find_original_row_index(rows, current_y)
-            
-        insert_row_index, target_y, create_new_row, insert_position = self._find_insert_position(
-            current_window, current_x, current_y, rows, row_positions)
-        
-        self._handle_original_row(original_row_index, insert_row_index, rows, row_positions, current_window, current_x)
-        
-        self._handle_target_row(create_new_row, insert_row_index, target_y, rows, current_window, insert_position)
-        
-        self._adjust_all_rows_position(rows)
-        
-        self.resize_container()
-
-    def _group_windows_into_rows(self, windows_info):
-        rows = []
-        current_row = []
-        current_y = windows_info[0][2] if windows_info else 0
-        
-        for window, x, y in windows_info:
-            if abs(y - current_y) < 5:
-                current_row.append((window, x))
-            else:
-                if current_row:
-                    rows.append(sorted(current_row, key=lambda x: x[1]))
-                current_row = [(window, x)]
-                current_y = y
-        if current_row:
-            rows.append(sorted(current_row, key=lambda x: x[1]))
-                
-        row_positions = []
-        current_y = 0
-        for row in rows:
-            if row:
-                height = row[0][0].height()
-                row_positions.append((current_y, height))
-                current_y += height
-                
-        return rows, row_positions
-
-    def _find_original_row_index(self, rows, current_y):
-        for i, row in enumerate(rows):
-            for j, (window, x) in enumerate(row):
-                if abs(window.y() - current_y) < 5:
-                    return i
-        return -1
-
-    def _find_insert_position(self, current_window, current_x, current_y, rows, row_positions):
-        create_new_row = True
-        target_y = current_y
-        
-        closest_row_index = -1
-        min_distance = float('inf')
-        for i, (row_y, height) in enumerate(row_positions):
-            distance = abs(current_y - row_y)
-            if distance < min_distance:
-                min_distance = distance
-                closest_row_index = i
-        
-        if min_distance < 200:
-            create_new_row = False
-            insert_row_index = closest_row_index
-            target_y = row_positions[closest_row_index][0]
-            
-            target_row = rows[insert_row_index]
-            insert_position = self._find_row_insert_position(target_row, current_x)
-        else:
-            insert_row_index, target_y = self._find_new_row_position(current_window, current_y, row_positions)
-            insert_position = 0
-            rows.insert(insert_row_index, [])
-            row_positions.insert(insert_row_index, (target_y, current_window.height()))
-        
-        return insert_row_index, target_y, create_new_row, insert_position
-
-    def _find_row_insert_position(self, target_row, current_x):
-        for j, (window, x) in enumerate(target_row):
-            if current_x < x:
-                return j
-        return len(target_row)
-
-    def _find_new_row_position(self, current_window, current_y, row_positions):
-        insert_row_index = -1
-        target_y = current_y
-        
-        for i, (row_y, height) in enumerate(row_positions):
-            if current_y < row_y:
-                insert_row_index = i
-                target_y = row_y - height
-                break
-        
-        if insert_row_index == -1:
-            insert_row_index = len(row_positions)
-            if row_positions:
-                target_y = row_positions[-1][0] + row_positions[-1][1]
-            else:
-                target_y = 0
-                
-        return insert_row_index, target_y
-
-    def _handle_original_row(self, original_row_index, insert_row_index, rows, row_positions, current_window, current_x):
-        if original_row_index != -1 and original_row_index != insert_row_index:
-            original_row = rows[original_row_index]
-            updated_row = []
-            original_y = original_row[0][0].y() if original_row else 0
-            
-            remaining_windows = [(window, x) for window, x in original_row if window != current_window]
-            remaining_windows.sort(key=lambda x: x[1])
-            
-            current_x = 0
-            for window, _ in remaining_windows:
-                window.move(current_x, original_y)
-                current_x += window.width()
-                updated_row.append((window, current_x))
-            
-            if remaining_windows:
-                rows[original_row_index] = updated_row
-            else:
-                rows.pop(original_row_index)
-                row_positions.pop(original_row_index)
-                for i in range(original_row_index, len(rows)):
-                    row_y = row_positions[i][0]
-                    for window, _ in rows[i]:
-                        window.move(window.x(), row_y)
-
-    def _handle_target_row(self, create_new_row, insert_row_index, target_y, rows, current_window, insert_position):
-        if not create_new_row:
-            target_row = rows[insert_row_index]
-            new_positions = []
-            current_x = 0
-            
-            for i in range(insert_position):
-                window, _ = target_row[i]
-                new_positions.append((window, current_x))
-                current_x += window.width()
-            
-            new_positions.append((current_window, current_x))
-            current_x += current_window.width()
-            
-            for i in range(insert_position, len(target_row)):
-                window, _ = target_row[i]
-                new_positions.append((window, current_x))
-                current_x += window.width()
-            
-            for window, x in new_positions:
-                window.move(x, target_y)
-        else:
-            current_window.move(0, target_y)
-
-    def _adjust_all_rows_position(self, rows):
-        current_y = 0
-        for row in rows:
-            if row:
-                row_height = row[0][0].height()
-                for window, _ in row:
-                    window.move(window.x(), current_y)
-                current_y += row_height
-        
-    def remove_window(self) -> None:
-        if self.windows:
-            window = self.windows.pop()
-            window.close()
-            window.deleteLater()
-            self.resize_container()
-
     def append_window(self, window: TFDraggableWindow):
         count = 0
         max_number = 0
@@ -267,3 +164,22 @@ class TFWindowContainer(QWidget):
                (win.y() < y + size[1] and y < win.y() + win.height()):
                 return True
         return False
+    
+    def bring_window_to_front(self, window: TFDraggableWindow) -> None:
+        if window in self.windows:
+            window.raise_()
+
+    def get_window_classes(self) -> Dict[str, Type[TFDraggableWindow]]:
+        """
+        Return a mapping of window class names to their actual classes.
+        
+        Returns:
+            Dict[str, Type[TFDraggableWindow]]: Dictionary mapping class names to class types
+        """
+        return {
+            'TFCalculator': TFCalculator,
+            'TFScientificCalculator': TFScientificCalculator,
+            'TFCurrencyConverter': TFCurrencyConverter
+            # ... add other window classes ...
+        }
+    

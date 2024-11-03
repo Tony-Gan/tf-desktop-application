@@ -14,3 +14,6 @@ dist/
 
 # Ignore secret settings file
 settings/secret.py
+
+# Ignore documentation files
+docs/

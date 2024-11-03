@@ -4,9 +4,14 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
 class TFCalculator(TFDraggableWindow):
-    def __init__(self, parent=None, message_bar=None):
-        super().__init__(parent, (300, 500), "Calculator", 1, message_bar)
-        
+    def __init__(self, parent=None, message_bar=None, database=None):
+        self.current_value = 0
+        self.pending_operation = None
+        self.new_number = True
+        self.last_operator = None
+        super().__init__(parent, (300, 500), "Calculator", 1, message_bar, database)
+
+    def initialize_window(self):
         self.container = QWidget(self)
         self.container.setGeometry(10, 30, 280, 460)
         
@@ -59,14 +64,9 @@ class TFCalculator(TFDraggableWindow):
                 elif button_text == '±':
                     button.clicked.connect(self.toggle_sign)
                 else:
-                    button.clicked.connect(lambda checked, text=button_text: self.button_clicked(text))
+                    button.clicked.connect(lambda _, text=button_text: self.button_clicked(text))
                     
                 layout.addWidget(button, *position)
-        
-        self.current_value = 0
-        self.pending_operation = None
-        self.new_number = True
-        self.last_operator = None
         
     def button_clicked(self, text):
         if text in '0123456789.':

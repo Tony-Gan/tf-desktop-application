@@ -6,6 +6,7 @@ from PyQt6.QtGui import QPainter, QImage, QResizeEvent, QMouseEvent
 from PyQt6.QtCore import QTimer
 from ui.tf_draggable_window import TFDraggableWindow
 
+@DeprecationWarning
 class TFCoinFliper(TFDraggableWindow):
     def __init__(self, parent=None, size=(600, 400), title="Default Game", max_count=1, message_bar=None):
         super().__init__(parent, size=size, title=title, max_count=max_count, message_bar=message_bar)

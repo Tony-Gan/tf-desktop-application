@@ -1,12 +1,12 @@
 from ui.tf_draggable_window import TFDraggableWindow
 from ui.tf_widgets.tf_number_receiver import TFNumberReceiver
+from tools.tf_api_loader import TFAPILoader
 
 from PyQt6.QtWidgets import QCompleter, QLineEdit, QListView, QPushButton, QVBoxLayout, QWidget, QComboBox, QHBoxLayout, QLabel, QFrame, QStyledItemDelegate
-from PyQt6.QtCore import Qt, QSize, QThread, pyqtSignal
+from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QFont, QPixmap, QIcon, QStandardItemModel, QStandardItem
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
-import requests
 import pytz
 import json
 import os
@@ -22,36 +22,9 @@ class CleanTextBox(QComboBox):
         if self.currentText() == "Select Currency":
             self.lineEdit().clear()
 
-class ExchangeRateLoader(QThread):
-    data_loaded = pyqtSignal(dict)
-    error_occurred = pyqtSignal(str)
-
-    def __init__(self, api_key: str, parent=None):
-        super().__init__(parent)
-        self.api_key = api_key
-
-    def run(self):
-        url = f"https://v6.exchangerate-api.com/v6/{self.api_key}/latest/USD"
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-
-            if data.get("result") == "success":
-                self.data_loaded.emit(data)
-            else:
-                self.error_occurred.emit("Failed to fetch exchange rates")
-        except requests.RequestException as e:
-            self.error_occurred.emit(f"Error fetching data: {e}")
-
 class TFCurrencyConverter(TFDraggableWindow):
 
-    def __init__(self, parent=None, message_bar=None):
-        super().__init__(parent, (300, 500), "Currency Converter", 1, message_bar)
-
-        self.container = QWidget(self)
-        self.container.setGeometry(10, 30, 280, 460)
-
+    def __init__(self, parent=None, message_bar=None, database=None):
         self.selected_currencies: List[str] = []
         self.rates: Dict[str, float] = {}
         self.last_update: Optional[str] = None
@@ -220,6 +193,14 @@ class TFCurrencyConverter(TFDraggableWindow):
             "ZWL": "Zimbabwean Dollar - ZWL"
         }
         self.currency_icons: Dict[str, QIcon] = {}
+
+        self.selectors = []
+        self.currency_frames: List[QFrame] = []
+        self.currency_inputs: List[QLineEdit] = []
+
+        super().__init__(parent, (300, 500), "Currency Converter", 1, message_bar, database)
+
+    def initialize_window(self):
         self.setup_ui()
         
     def setup_ui(self):
@@ -406,10 +387,10 @@ class TFCurrencyConverter(TFDraggableWindow):
         if not API_KEY:
             self.message_bar.show_message("API key is missing", 3000, 'red')
             return
-
-        self.loader_thread = ExchangeRateLoader(API_KEY)
+        
+        self.loader_thread = TFAPILoader(f"https://v6.exchangerate-api.com/v6/{API_KEY}/latest/USD")
         self.loader_thread.data_loaded.connect(self.on_data_loaded)
-        self.loader_thread.error_occurred.connect(self.on_error_occurred)
+        self.loader_thread.error_occured.connect(self.on_error_occurred)
         self.loader_thread.start()
 
     def on_data_loaded(self, data):

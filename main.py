@@ -8,6 +8,9 @@ from utils.helper import resource_path
 from database.tf_database import TFDatabase
 
 def main():
+    """
+    Testing
+    """
     app = QApplication(sys.argv)
 
     app.setStyleSheet(load_styles())
@@ -22,7 +25,7 @@ def main():
 
     app.database = TFDatabase(db_url=db_url, db_path=db_path)
 
-    window = TFMainWindow()
+    window = TFMainWindow(app.database)
     window.show()
     
     sys.exit(app.exec())

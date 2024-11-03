@@ -6,9 +6,14 @@ import math
 import re
 
 class TFScientificCalculator(TFDraggableWindow):
-    def __init__(self, parent=None, message_bar=None):
-        super().__init__(parent, (450, 500), "Scientific Calculator", 1, message_bar)
+    def __init__(self, parent=None, message_bar=None, database=None):
+        self.angle_mode = 'deg'
+        self.math_error = False
+        self.functions = ['sin', 'cos', 'tan', 'ln', 'log', '√']
         
+        super().__init__(parent, (450, 500), "Scientific Calculator", 1, message_bar, database)
+
+    def initialize_window(self):
         self.container = QWidget(self)
         self.container.setGeometry(10, 30, 430, 460)
         
@@ -59,9 +64,6 @@ class TFScientificCalculator(TFDraggableWindow):
                 
             layout.addWidget(button, *position)
         
-        self.angle_mode = 'deg'
-        self.math_error = False
-        
     def button_clicked(self, text):
         if self.math_error:
             self.display.clear()
@@ -80,9 +82,9 @@ class TFScientificCalculator(TFDraggableWindow):
         cursor_pos = self.display.cursorPosition()
         current = self.display.text()
         
-        if text in ['sin', 'cos', 'tan', 'ln', 'log', '√']:
+        if text in self.functions:
             text = text + '('
-            
+        
         if text == '^':
             text = '**'
             
@@ -95,7 +97,8 @@ class TFScientificCalculator(TFDraggableWindow):
             expression = self.display.text()
             original_expression = expression
             
-            trig_functions = ['sin', 'cos', 'tan']
+            expression = self.preprocess_expression(expression)
+            
             pattern = r"(sin|cos|tan)\((.*?)\)"
             
             def replace_trig(match):
@@ -109,7 +112,7 @@ class TFScientificCalculator(TFDraggableWindow):
                     raise ValueError(f"Invalid argument for {func}: {arg}")
             
             expression = re.sub(pattern, replace_trig, expression)
-
+            
             expression = expression.replace('ln(', 'math.log(')
             expression = expression.replace('log(', 'math.log10(')
             expression = expression.replace('√(', 'math.sqrt(')
@@ -127,12 +130,73 @@ class TFScientificCalculator(TFDraggableWindow):
                 formatted_result = str(result)
                 
             self.history_display.append(f"{original_expression} = {formatted_result}")
-            
             self.display.setText(formatted_result)
             
         except Exception as e:
             self.math_error = True
             self.display.setText("Math Error")
+
+    def preprocess_expression(self, expression):
+        expression = expression.replace(' ', '')
+        
+        open_count = expression.count('(')
+        close_count = expression.count(')')
+        if open_count > close_count:
+            expression += ')' * (open_count - close_count)
+            
+        pattern = r'(\d+)([{}])'.format('|'.join(self.functions))
+        expression = re.sub(pattern, r'\1*\2', expression)
+        
+        expression = re.sub(r'(\d+)(π|e)', r'\1*\2', expression)
+        
+        expression = re.sub(r'(\d+)\(', r'\1*(', expression)
+        
+        while '√' in expression:
+            sqrt_pos = expression.find('√')
+            
+            if sqrt_pos + 1 < len(expression) and expression[sqrt_pos + 1] == '(':
+                break
+                
+            remaining = expression[sqrt_pos + 1:]
+            
+            if not remaining:
+                break
+                
+            if remaining[0].isdigit() or remaining[0] == '(':
+                if remaining[0] == '(':
+                    count = 1
+                    end_pos = 0
+                    for i, char in enumerate(remaining[1:], 1):
+                        if char == '(':
+                            count += 1
+                        elif char == ')':
+                            count -= 1
+                            if count == 0:
+                                end_pos = i
+                                break
+                    if end_pos > 0:
+                        expression = expression[:sqrt_pos] + '√(' + remaining[:end_pos+1] + ')' + remaining[end_pos+1:]
+                    else:
+                        expression = expression[:sqrt_pos] + '√(' + remaining + ')'
+                else:
+                    num = ''
+                    pos = 0
+                    for i, char in enumerate(remaining):
+                        if char.isdigit() or char == '.':
+                            num += char
+                            pos = i + 1
+                        else:
+                            break
+                    if num:
+                        expression = expression[:sqrt_pos] + f'√({num})' + remaining[pos:]
+                    else:
+                        break
+            else:
+                break
+        
+        expression = re.sub(r'\)\(', r')*(', expression)
+        
+        return expression
             
     def clear(self):
         self.display.clear()
