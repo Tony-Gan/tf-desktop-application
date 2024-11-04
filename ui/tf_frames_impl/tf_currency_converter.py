@@ -26,7 +26,7 @@ class CleanTextBox(QComboBox):
 
 class TFCurrencyConverter(TFDraggableWindow):
 
-    def __init__(self, parent=None, message_bar=None, database=None):
+    def __init__(self, parent=None):
         self.selected_currencies: List[str] = []
         self.rates: Dict[str, float] = {}
         self.last_update: Optional[str] = None
@@ -200,7 +200,7 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.currency_frames: List[QFrame] = []
         self.currency_inputs: List[QLineEdit] = []
 
-        super().__init__(parent, (300, 500), "Currency Converter", 1, message_bar, database)
+        super().__init__(parent, (300, 500), "Currency Converter", 1)
 
     def initialize_window(self):
         self.setup_ui()
@@ -215,7 +215,7 @@ class TFCurrencyConverter(TFDraggableWindow):
 
         selector_container = QWidget()
         selector_layout = QVBoxLayout(selector_container)
-        selector_layout.setSpacing(10)
+        selector_layout.setSpacing(12)
         selector_layout.setContentsMargins(0, 5, 0, 5)
 
         self.selectors = []
@@ -223,7 +223,6 @@ class TFCurrencyConverter(TFDraggableWindow):
             selector = CleanTextBox()
             selector.setObjectName("currency_selector")
             font = QFont("Nunito", 10)
-            font.setStyleName("Condensed")
             selector.setFont(font)
             self.setup_selector(selector)
             selector_layout.addWidget(selector)
@@ -296,7 +295,7 @@ class TFCurrencyConverter(TFDraggableWindow):
         
     def setup_selector(self, selector: QComboBox):
         selector.clear()
-        default_icon_path = "static/images/icons/countries/default.png"
+        default_icon_path = "static/images/countries/default.png"
         default_icon = QIcon(QPixmap(default_icon_path).scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 
         selector.setEditable(True)
@@ -311,7 +310,7 @@ class TFCurrencyConverter(TFDraggableWindow):
             if code.lower() in self.currency_icons:
                 icon = self.currency_icons[code.lower()]
             else:
-                icon_path = f"static/images/icons/countries/{code.lower()}.png"
+                icon_path = f"static/images/countries/{code.lower()}.png"
                 if os.path.exists(icon_path):
                     icon = QIcon(QPixmap(icon_path).scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
                 else:
@@ -362,7 +361,7 @@ class TFCurrencyConverter(TFDraggableWindow):
                     selected.append(currency)
 
         if len(selected) < 2:
-            self.message_bar.show_message('You need to select at least two currencies.', 3000, 'yellow')
+            self.app.show_message('You need to select at least two currencies.', 3000, 'yellow')
             return
 
         self.selected_currencies = selected
@@ -375,7 +374,7 @@ class TFCurrencyConverter(TFDraggableWindow):
             return
 
         if not API_KEY:
-            self.message_bar.show_message("API key is missing", 3000, 'red')
+            self.app.show_message("API key is missing", 3000, 'red')
             return
         
         self.loader_thread = TFAPILoader(f"https://v6.exchangerate-api.com/v6/{API_KEY}/latest/USD")
@@ -392,7 +391,7 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.update_ui_with_rates()
 
     def on_error_occurred(self, error_message):
-        self.message_bar.show_message(error_message, 3000, 'red')
+        self.app.show_message(error_message, 3000, 'red')
 
     def should_update_data(self):
         path = os.path.abspath("data/currency_record.json")
@@ -424,7 +423,7 @@ class TFCurrencyConverter(TFDraggableWindow):
             with open(path, "r") as f:
                 data = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
-            self.message_bar.show_message("Error loading saved data", 3000, 'red')
+            self.app.show_message("Error loading saved data", 3000, 'red')
             return
 
         self.rates = data['conversion_rates']
@@ -441,7 +440,7 @@ class TFCurrencyConverter(TFDraggableWindow):
             with open(path, "w") as f:
                 json.dump(data, f, indent=4)
         except IOError:
-            self.message_bar.show_message("Error saving data", 3000, 'red')
+            self.app.show_message("Error saving data", 3000, 'red')
 
 
     def update_ui_with_rates(self):
@@ -520,7 +519,7 @@ class TFCurrencyConverter(TFDraggableWindow):
                     target_input.setText(converted_text)
                     target_input.blockSignals(False)
         except ValueError:
-            self.message_bar.show_message('Invalid input', 3000, 'yellow')
+            self.app.show_message('Invalid input', 3000, 'yellow')
 
     def reset_converter(self):
         for i, selector in enumerate(self.selectors):
@@ -543,12 +542,12 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.selected_currencies = []
 
     def set_currency_icon(self, icon_label: QLabel, currency_code: str):
-        default_icon_path = "static/images/icons/countries/default.png"
+        default_icon_path = "static/images/countries/default.png"
         default_pixmap = QPixmap(default_icon_path).scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         if currency_code.lower() in self.currency_icons:
             pixmap = self.currency_icons[currency_code.lower()].pixmap(QSize(30, 30))
         else:
-            icon_path = f"static/images/icons/countries/{currency_code.lower()}.png"
+            icon_path = f"static/images/countries/{currency_code.lower()}.png"
             if os.path.exists(icon_path):
                 pixmap = QPixmap(icon_path).scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                 self.currency_icons[currency_code.lower()] = QIcon(pixmap)

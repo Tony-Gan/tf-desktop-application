@@ -1,11 +1,8 @@
 from time import time
-
 from PyQt6.QtWidgets import QFrame, QMenu, QLabel
 from PyQt6.QtGui import QMouseEvent, QFont
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
-
-from tools.tf_message_bar import TFMessageBar
-from database.tf_database import TFDatabase
+from tools.tf_application import TFApplication
 from ui.tf_widgets.tf_settings_widget import TFCloseButton, TFMenuButton
 
 class TFDraggableWindow(QFrame):
@@ -62,8 +59,9 @@ class TFDraggableWindow(QFrame):
     raise_level = pyqtSignal(object)
     lower_level = pyqtSignal(object)
 
-    def __init__(self, parent=None, size=(200, 150), title="Default Window", max_count=1, message_bar: TFMessageBar=None, database: TFDatabase=None):
+    def __init__(self, parent=None, size=(200, 150), title="Default Window", max_count=1):
         super().__init__(parent)
+        self.app = TFApplication.instance()
 
         self.setObjectName("TFDraggableWindow")
         self.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Raised)
@@ -71,8 +69,6 @@ class TFDraggableWindow(QFrame):
         self.size = size
         self.display_title = title
         self.max_count = max_count
-        self.message_bar = message_bar
-        self.database = database
         self.last_moved_time = 0
 
         self.title_label = QLabel(self.display_title, self)
@@ -129,7 +125,6 @@ class TFDraggableWindow(QFrame):
         if event.button() == Qt.MouseButton.LeftButton:
             self.dragging = True
             self.offset = event.position().toPoint()
-            
             self.parent().bring_window_to_front(self)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
@@ -202,4 +197,3 @@ class TFDraggableWindow(QFrame):
             self.dragging = False
             self.last_moved_time = time()
             self.mouse_released.emit()
-

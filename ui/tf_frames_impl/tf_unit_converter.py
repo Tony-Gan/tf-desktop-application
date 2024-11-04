@@ -21,4 +21,5 @@ class UnitSelector(QComboBox):
         self.setEnabled(False)
 
 class TFUnitConverter(TFDraggableWindow):
-    pass
+    def __init__(self, parent=None):
+        super().__init__(parent, (300, 500), "Unit Converter", 1)

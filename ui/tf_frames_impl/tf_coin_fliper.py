@@ -8,15 +8,14 @@ from PyQt6.QtCore import QTimer
 
 from ui.tf_draggable_window import TFDraggableWindow
 
-@DeprecationWarning
 class TFCoinFliper(TFDraggableWindow):
-    def __init__(self, parent=None, size=(600, 400), title="Default Game", max_count=1, message_bar=None):
-        super().__init__(parent, size=size, title=title, max_count=max_count, message_bar=message_bar)
-        self.initPygame()
-        self.initTimer()
+    def __init__(self, parent=None):
+        super().__init__(parent, (600, 400), "Coin Flipper", 1)
+        self.init_pygame()
+        self.init_timer()
         self.flip_flag = False
 
-    def initPygame(self):
+    def init_pygame(self):
         os.environ["SDL_VIDEODRIVER"] = "dummy"
         pygame.init()
         pygame.display.init()
@@ -37,12 +36,12 @@ class TFCoinFliper(TFDraggableWindow):
             sys.exit()
         self.current_image = self.coin_images[0]
 
-    def initTimer(self):
+    def init_timer(self):
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.updatePygame)
+        self.timer.timeout.connect(self.update_pygame)
         self.timer.start(30)
 
-    def updatePygame(self):
+    def update_pygame(self):
         if self.flip_flag:
             self.current_image = random.choice(self.coin_images)
             self.flip_flag = False

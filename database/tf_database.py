@@ -1,8 +1,10 @@
 import os
+from contextlib import contextmanager
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from .models import Base
 from .models.tf_system_state import TFSystemState
+from tools.tf_application import TFApplication
 
 class TFDatabase:
     def __init__(self, db_url, db_path):
@@ -14,12 +16,25 @@ class TFDatabase:
         else:
             Base.metadata.create_all(self.engine)
 
+    @contextmanager
     def get_session(self):
-        return Session(self.engine)
+        session = Session(self.engine)
+        try:
+            yield session
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
     
     def initialize_data(self):
         with self.get_session() as session:
             default_state = TFSystemState(dark_mode=False)
             session.add(default_state)
-            session.commit()
+
+    @classmethod
+    def get_instance(cls):
+        return TFApplication.instance().database
+    
             

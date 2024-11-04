@@ -1,34 +1,29 @@
 from typing import List, Type, Dict
 
 from PyQt6.QtWidgets import QWidget
+from PyQt6.QtCore import QTranslator
 
 from ui.tf_draggable_window import TFDraggableWindow
 from ui.tf_frames_impl.tf_calculator import TFCalculator
 from ui.tf_frames_impl.tf_scientific_calculator import TFScientificCalculator
 from ui.tf_frames_impl.tf_currency_converter import TFCurrencyConverter
-from tools.tf_message_bar import TFMessageBar
-from database.tf_database import TFDatabase
+from tools.tf_application import TFApplication
 from database.models import TFWindowState
 from settings.general import MAX_WIDTH, MAX_HEIGHT
 
 class TFWindowContainer(QWidget):
     
-    def __init__(self, parent=None, message_bar: TFMessageBar=None, database: TFDatabase=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        self.message_bar = message_bar
-        self.database = database
+        self.app = TFApplication.instance()
         self.windows: List[TFDraggableWindow] = []
         self.setMinimumSize(MAX_WIDTH, MAX_HEIGHT)
 
-        if self.database:
-            self.restore_windows()
+        self.restore_windows()
 
     def save_window_state(self, window: TFDraggableWindow):
-        if not self.database:
-            return
-        
-        with self.database.get_session() as session:
+        with self.app.database.get_session() as session:
             window_state = TFWindowState(
                 window_class=window.__class__.__name__,
                 title=window.display_title,
@@ -39,19 +34,16 @@ class TFWindowContainer(QWidget):
             session.commit()
 
     def restore_windows(self):
-        if not self.database:
-            return
-
         window_classes = self.get_window_classes()
 
-        with self.database.get_session() as session:
+        with self.app.database.get_session() as session:
             saved_states = session.query(TFWindowState).all()
             
             for state in saved_states:
                 if state.window_class in window_classes:
                     window_class = window_classes[state.window_class]
                     
-                    window = window_class(parent=self, message_bar=self.message_bar)
+                    window = window_class(parent=self)
                     window.closed.connect(self.remove_specific_window)
                     window.moved.connect(self.resize_container)
                     
@@ -70,10 +62,7 @@ class TFWindowContainer(QWidget):
                     window.show()
 
     def save_all_window_states(self):
-        if not self.database:
-            return
-        
-        with self.database.get_session() as session:
+        with self.app.database.get_session() as session:
             session.query(TFWindowState).delete()
             
             for window in self.windows:
@@ -93,10 +82,10 @@ class TFWindowContainer(QWidget):
         temp_window = window_class(parent=self)
         if current_count >= temp_window.max_count:
             message = f"Cannot add more '{temp_window.display_title}'. Maximum count of {temp_window.max_count} reached."
-            self.message_bar.show_message(message, 3000, 'green')
+            self.app.show_message(message, 3000, 'green')
             return
 
-        window = window_class(parent=self, message_bar=self.message_bar, database=self.database)
+        window = window_class(parent=self)
         window.closed.connect(self.remove_specific_window)
         size = window.size
 
@@ -123,11 +112,8 @@ class TFWindowContainer(QWidget):
                 x, y = 0, 0
 
         window.move(x, y)
-
         self.append_window(window)
-
         window.show()
-
         window.moved.connect(self.resize_container)
         self.resize_container()
 

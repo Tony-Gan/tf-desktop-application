@@ -106,3 +106,18 @@ QPushButton[id$="equal"] {
 QPushButton[id$="equal"]:hover {
     background-color: #45a049;
 }
+
+/* Currency Selector Styles */
+QComboBox#currency_selector {
+    min-height: 40px;
+    padding-left: 10px;
+}
+
+QComboBox#currency_selector::drop-down {
+    width: 25px;
+}
+
+QComboBox#currency_selector::down-arrow {
+    width: 14px;
+    height: 14px;
+}

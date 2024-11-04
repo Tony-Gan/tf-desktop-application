@@ -5,12 +5,12 @@ from PyQt6.QtGui import QFont
 from ui.tf_draggable_window import TFDraggableWindow
 
 class TFCalculator(TFDraggableWindow):
-    def __init__(self, parent=None, message_bar=None, database=None):
+    def __init__(self, parent=None):
         self.current_value = 0
         self.pending_operation = None
         self.new_number = True
         self.last_operator = None
-        super().__init__(parent, (300, 500), "Calculator", 1, message_bar, database)
+        super().__init__(parent, (300, 500), "Calculator", 1)
 
     def initialize_window(self):
         self.container = QWidget(self)

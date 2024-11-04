@@ -1,6 +1,7 @@
 # Ignore build and dist folders
 build/
 dist/
+data/
 
 # Ignore all __pycache__ folders at any level
 **/__pycache__/
@@ -17,3 +18,7 @@ settings/secret.py
 
 # Ignore documentation files
 docs/
+
+# Ignore translation source files and scripts
+translations/*.ts
+utils/scripts/*

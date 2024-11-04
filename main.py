@@ -1,14 +1,22 @@
 import os
 import sys
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtGui import QFontDatabase
 
+from PyQt6.QtGui import QFontDatabase
+from PyQt6.QtCore import QTranslator
+
+from tools.tf_application import TFApplication
+from tools.tf_message_bar import TFMessageBar
 from ui.tf_mainwindow import TFMainWindow
 from utils.helper import resource_path
 from database.tf_database import TFDatabase
 
 def main():
-    app = QApplication(sys.argv)
+    app = TFApplication(sys.argv)
+
+    translator = QTranslator()
+    if translator.load("translations/zh_CN.qm"):
+        app.installTranslator(translator)
+    app.translator = translator
 
     app.setStyleSheet(load_styles())
     load_font()
@@ -19,10 +27,10 @@ def main():
         os.makedirs(db_folder)
     db_path = os.path.join(db_folder, 'tf_database.db')
     db_url = f'sqlite:///{db_path}'
-
     app.database = TFDatabase(db_url=db_url, db_path=db_path)
 
-    window = TFMainWindow(app.database)
+    window = TFMainWindow()
+    app.message_bar = TFMessageBar(window)
     window.show()
     
     sys.exit(app.exec())
@@ -42,7 +50,7 @@ def load_font():
     QFontDatabase.addApplicationFont("fonts/Montserrat-Regular.ttf")
 
 def load_styles():
-    with open(resource_path("styles/styles.qss"), "r") as f:
+    with open(resource_path("styles/styles.qss"), "r", encoding='utf-8') as f:
         return f.read()
 
 if __name__ == '__main__':

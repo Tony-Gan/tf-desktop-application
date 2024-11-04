@@ -1,17 +1,16 @@
-from PyQt6.QtWidgets import QMainWindow, QScrollArea, QWidget, QVBoxLayout, QSplitter
+from PyQt6.QtWidgets import QMainWindow, QScrollArea, QWidget, QVBoxLayout, QSplitter, QApplication
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 
 from ui.tf_window_container import TFWindowContainer
 from ui.tf_menubar import TFMenuBar
 from ui.tf_output_panel import TFOutputPanel
-from tools.tf_message_bar import TFMessageBar
-from database.tf_database import TFDatabase
+from tools.tf_application import TFApplication
 
 class TFMainWindow(QMainWindow):
-    def __init__(self, database: TFDatabase):
+    def __init__(self):
         super().__init__()
-        self.database = database
+        self.app = TFApplication.instance()
         self.init_ui()
         self.init_menubar()
 
@@ -30,8 +29,7 @@ class TFMainWindow(QMainWindow):
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         
-        self.message_bar = TFMessageBar(self)
-        self.window_container = TFWindowContainer(self, self.message_bar, self.database)
+        self.window_container = TFWindowContainer(self)
         scroll_area.setWidget(self.window_container)
 
         self.splitter = QSplitter(Qt.Orientation.Vertical)
@@ -45,14 +43,15 @@ class TFMainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
     def init_menubar(self):
-        self.menu_bar = TFMenuBar(self, self.database)
+        self.menu_bar = TFMenuBar(self, self.database, self.translator)
         self.menu_bar.init_file_menu()
         self.menu_bar.init_theme_menu()
         self.menu_bar.init_view_menu()
+        self.menu_bar.init_language_menu()
         self.setMenuBar(self.menu_bar)
 
     def show_message(self, message: str, display_time=2000, colour='green'):
-        self.message_bar.show_message(message, display_time, colour)
+        self.app.show_message(message, display_time, colour)
 
     def display_output(self, text: str):
         if not self.output_panel.isVisible():
@@ -68,5 +67,7 @@ class TFMainWindow(QMainWindow):
     def closeEvent(self, event):
         if hasattr(self, 'window_container'):
             self.window_container.save_all_window_states()
+
+        QApplication.instance().removeTranslator(self.translator)
         
         event.accept()

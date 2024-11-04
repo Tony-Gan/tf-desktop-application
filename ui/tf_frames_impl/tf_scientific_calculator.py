@@ -8,12 +8,11 @@ from PyQt6.QtGui import QFont
 from ui.tf_draggable_window import TFDraggableWindow
 
 class TFScientificCalculator(TFDraggableWindow):
-    def __init__(self, parent=None, message_bar=None, database=None):
+    def __init__(self, parent=None):
         self.angle_mode = 'deg'
         self.math_error = False
         self.functions = ['sin', 'cos', 'tan', 'ln', 'log', '√']
-        
-        super().__init__(parent, (450, 500), "Scientific Calculator", 1, message_bar, database)
+        super().__init__(parent, (450, 500), "Scientific Calculator", 1)
 
     def initialize_window(self):
         self.container = QWidget(self)
