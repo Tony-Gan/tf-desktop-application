@@ -4,7 +4,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from .models import Base
 from .models.tf_system_state import TFSystemState
-from tools.tf_application import TFApplication
 
 class TFDatabase:
     def __init__(self, db_url, db_path):
@@ -34,7 +33,11 @@ class TFDatabase:
             session.add(default_state)
 
     @classmethod
+    def set_instance(cls, instance):
+        cls._instance = instance
+
+    @classmethod
     def get_instance(cls):
-        return TFApplication.instance().database
+        return cls._instance
     
             

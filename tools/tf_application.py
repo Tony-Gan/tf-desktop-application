@@ -15,8 +15,9 @@ class TFApplication(QApplication):
         return self._database
     
     @database.setter
-    def database(self, db: TFDatabase):
+    def database(self, db):
         self._database = db
+        db.set_instance(db)
         
     @property
     def translator(self) -> QTranslator:

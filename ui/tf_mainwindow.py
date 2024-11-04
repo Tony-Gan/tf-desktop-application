@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMainWindow, QScrollArea, QWidget, QVBoxLayout, QSplitter, QApplication
+from PyQt6.QtWidgets import QMainWindow, QScrollArea, QWidget, QVBoxLayout, QSplitter
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 
@@ -43,7 +43,7 @@ class TFMainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
     def init_menubar(self):
-        self.menu_bar = TFMenuBar(self, self.database, self.translator)
+        self.menu_bar = TFMenuBar(self)
         self.menu_bar.init_file_menu()
         self.menu_bar.init_theme_menu()
         self.menu_bar.init_view_menu()
@@ -68,6 +68,6 @@ class TFMainWindow(QMainWindow):
         if hasattr(self, 'window_container'):
             self.window_container.save_all_window_states()
 
-        QApplication.instance().removeTranslator(self.translator)
+        self.app.removeTranslator(self.app.translator)
         
         event.accept()
