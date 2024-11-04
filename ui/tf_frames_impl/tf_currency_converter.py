@@ -1,15 +1,17 @@
-from ui.tf_draggable_window import TFDraggableWindow
-from ui.tf_widgets.tf_number_receiver import TFNumberReceiver
-from tools.tf_api_loader import TFAPILoader
-
-from PyQt6.QtWidgets import QCompleter, QLineEdit, QListView, QPushButton, QVBoxLayout, QWidget, QComboBox, QHBoxLayout, QLabel, QFrame, QStyledItemDelegate
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QFont, QPixmap, QIcon, QStandardItemModel, QStandardItem
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional
 import pytz
 import json
 import os
+from datetime import datetime, timedelta
+from typing import List, Dict, Optional
+
+from PyQt6.QtWidgets import QCompleter, QLineEdit, QListView, QVBoxLayout, QWidget, QComboBox, QHBoxLayout, QLabel, QFrame, QStyledItemDelegate
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QFont, QPixmap, QIcon, QStandardItemModel, QStandardItem
+
+from ui.tf_draggable_window import TFDraggableWindow
+from ui.tf_widgets.tf_number_receiver import TFNumberReceiver
+from ui.tf_widgets.tf_buttons import TFPushButton, TFConfirmButton, TFResetButton
+from tools.tf_api_loader import TFAPILoader
 
 try:
     from settings.secret import API_KEY
@@ -237,25 +239,13 @@ class TFCurrencyConverter(TFDraggableWindow):
         button_layout = QHBoxLayout(button_container)
         button_layout.setSpacing(10)
 
-        self.confirm_button = QPushButton("Confirm")
-        self.confirm_button.setObjectName("confirm_button")
-        self.confirm_button.setFont(QFont("Montserrat", 10))
-        self.confirm_button.setFixedHeight(35)
-        self.confirm_button.clicked.connect(self.confirm_selection)
+        self.confirm_button = TFConfirmButton(self, self.confirm_selection)
         button_layout.addWidget(self.confirm_button)
 
-        self.reset_button = QPushButton("Reset")
-        self.reset_button.setObjectName("reset_button")
-        self.reset_button.setFont(QFont("Montserrat", 10))
-        self.reset_button.setFixedHeight(35)
-        self.reset_button.clicked.connect(self.reset_converter)
+        self.reset_button = TFResetButton(self, self.reset_converter)
         button_layout.addWidget(self.reset_button)
 
-        self.zero_button = QPushButton("Zero")
-        self.zero_button.setObjectName("zero_button")
-        self.zero_button.setFont(QFont("Montserrat", 10))
-        self.zero_button.setFixedHeight(35)
-        self.zero_button.clicked.connect(self.zero_amounts)
+        self.zero_button = TFPushButton("Zero", self, self.zero_amounts, "zero_button")
         button_layout.addWidget(self.zero_button)
 
         main_layout.addWidget(button_container)

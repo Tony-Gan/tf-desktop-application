@@ -1,24 +1,30 @@
-from PyQt6.QtWidgets import QMenuBar, QMenu, QMainWindow, QScrollArea, QWidget
+from PyQt6.QtWidgets import QMenuBar, QMenu, QMainWindow, QScrollArea, QWidget, QSplitter
 from PyQt6.QtGui import QAction
 
 from ui.tf_frames_impl.tf_calculator import TFCalculator
 from ui.tf_frames_impl.tf_scientific_calculator import TFScientificCalculator
 from ui.tf_frames_impl.tf_currency_converter import TFCurrencyConverter
 from ui.tf_frames_impl.tf_coin_fliper import TFCoinFliper
+from ui.tf_window_container import TFWindowContainer
 from database.tf_database import TFDatabase
 from database.models import TFSystemState
 from utils.helper import resource_path
-from .tf_window_container import TFWindowContainer
+from settings.general import THEME_COLOURS
 
 class TFMenuBar(QMenuBar):
     def __init__(self, parent: QMainWindow, database: TFDatabase):
         super().__init__(parent)
-        self.main_window = parent
+        self.parent = parent
         self.database = database
+        self.window_container = None
         
-        scroll_area = self.main_window.centralWidget()
-        if isinstance(scroll_area, QScrollArea):
-            self.window_container = scroll_area.widget()
+        central_widget = self.parent.centralWidget()
+        if isinstance(central_widget, QWidget):
+            splitter = central_widget.findChild(QSplitter)
+            if splitter:
+                scroll_area = splitter.widget(0)
+                if isinstance(scroll_area, QScrollArea):
+                    self.window_container = scroll_area.widget()
         
         self.current_mode = 'dark' if self.get_theme_mode() else 'light'
         
@@ -41,6 +47,14 @@ class TFMenuBar(QMenuBar):
         
         self.addMenu(file_menu)
 
+    def init_view_menu(self):
+        view_menu = QMenu("View", self)
+        
+        toggle_output_action = view_menu.addAction("Toggle Output Panel")
+        toggle_output_action.triggered.connect(self.parent.toggle_output_panel)
+        
+        self.addMenu(view_menu)        
+
     def init_theme_menu(self):
         theme_menu = QMenu("Theme", self)
         self.toggle_theme_action = QAction("Toggle Light/Dark Mode", self)
@@ -59,16 +73,41 @@ class TFMenuBar(QMenuBar):
         self.toggle_theme_action.setChecked(self.current_mode == 'dark')
     
     def _apply_stylesheet(self):
-        style_file = "styles/styles_dark.qss" if self.current_mode == 'dark' else "styles/styles_light.qss"
-        with open(resource_path(style_file), "r") as f:
-            stylesheet = f.read()
+        with open(resource_path("styles/styles.qss"), "r") as f:
+            base_stylesheet = f.read()
+        
+        colours = THEME_COLOURS[self.current_mode]
+        
+        replacements = {
+            'background-color: white;': f'background-color: {colours["background-primary"]};',
+            'background-color: #f0f0f0;': f'background-color: {colours["background-secondary"]};',
+            'background-color: #e0e0e0;': f'background-color: {colours["background-secondary-hover"]};',
+            'border: 1px solid #ccc;': f'border: 1px solid {colours["border-color-dark"]};',
+            'border: 1px solid #ddd;': f'border: 1px solid {colours["border-color"]};',
+            'color: black;': f'color: {colours["text-primary"]};',
+            'color: gray;': f'color: {colours["text-secondary"]};',
+            'background-color: #ffd700;': f'background-color: {colours["button-operator"]};',
+            'background-color: #ffcd00;': f'background-color: {colours["button-operator-hover"]};',
+            'border: 1px solid #daa520;': f'border: 1px solid {colours["button-operator-border"]};',
+            'background-color: #ff6b6b;': f'background-color: {colours["button-special"]};',
+            'background-color: #ff5252;': f'background-color: {colours["button-special-hover"]};',
+            'border: 1px solid #ff5252;': f'border: 1px solid {colours["button-special-border"]};',
+            'background-color: #4CAF50;': f'background-color: {colours["button-equal"]};',
+            'background-color: #45a049;': f'background-color: {colours["button-equal-hover"]};',
+            'border: 1px solid #45a049;': f'border: 1px solid {colours["button-equal-border"]};',
+            'background-color: green;': f'background-color: {colours["message-success"]};',
+        }
 
-        self.main_window.setStyleSheet(stylesheet)
+        stylesheet = base_stylesheet
+        for old, new in replacements.items():
+            stylesheet = stylesheet.replace(old, new)
 
-        self.main_window.style().unpolish(self.main_window)
-        self.main_window.style().polish(self.main_window)
-
-        for widget in self.main_window.findChildren(QWidget):
+        self.parent.setStyleSheet(stylesheet)
+        
+        self.parent.style().unpolish(self.parent)
+        self.parent.style().polish(self.parent)
+        
+        for widget in self.parent.findChildren(QWidget):
             widget.style().unpolish(widget)
             widget.style().polish(widget)
             widget.update()

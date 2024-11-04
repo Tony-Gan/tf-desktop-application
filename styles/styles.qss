@@ -1,0 +1,108 @@
+/* Base Window */
+QFrame#TFDraggableWindow {
+    background-color: white;
+    border: 1px solid #ccc;
+}
+
+/* Common Label Styles */
+QLabel {
+    border: none;
+    color: black;
+}
+
+/* Window Controls */
+QPushButton#close_button {
+    background-color: transparent;
+    border: none;
+    color: black;
+}
+QPushButton#close_button:hover {
+    color: #ff4c4c;
+}
+
+QPushButton#menu_button {
+    background-color: transparent;
+    border: none;
+    color: gray;
+}
+QPushButton#menu_button:hover {
+    color: darkgray;
+}
+
+/* Message Bar */
+QLabel#message_label {
+    background-color: green;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Common Display Elements */
+QLineEdit#display,
+QLineEdit#calculator_display,
+QLineEdit#scientific_display {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    color: black;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+QLineEdit#display {
+    font-size: 24px;
+}
+
+QLineEdit#calculator_history,
+QLineEdit#scientific_history {
+    background-color: white;
+    border: none;
+    color: gray;
+}
+
+/* Calculator Buttons */
+QPushButton[id$="number"],
+QPushButton#scientific_function {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 32px;
+    color: black;
+}
+
+QPushButton[id$="number"]:hover,
+QPushButton#scientific_function:hover {
+    background-color: #e0e0e0;
+}
+
+QPushButton[id$="operator"] {
+    background-color: #ffd700;
+    border: 1px solid #daa520;
+    border-radius: 32px;
+    color: black;
+}
+
+QPushButton[id$="operator"]:hover {
+    background-color: #ffcd00;
+}
+
+QPushButton[id$="special"] {
+    background-color: #ff6b6b;
+    color: white;
+    border: 1px solid #ff5252;
+    border-radius: 32px;
+}
+
+QPushButton[id$="special"]:hover {
+    background-color: #ff5252;
+}
+
+QPushButton[id$="equal"] {
+    background-color: #4CAF50;
+    color: white;
+    border: 1px solid #45a049;
+    border-radius: 32px;
+}
+
+QPushButton[id$="equal"]:hover {
+    background-color: #45a049;
+}

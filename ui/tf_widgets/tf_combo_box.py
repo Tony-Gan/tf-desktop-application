@@ -2,16 +2,6 @@ from PyQt6.QtWidgets import QComboBox, QCompleter
 from PyQt6.QtGui import QFont
 
 class TFComboBox(QComboBox):
-    """
-    通用的可搜索下拉框组件
-    
-    特性：
-    - 支持实时搜索过滤
-    - 可自定义是否区分大小写
-    - 可自定义失去焦点时的行为
-    - 支持自定义字体和样式
-    """
-    
     def __init__(self, parent=None, case_sensitive=False, reset_on_focus_out=True, font_family="Montserrat", font_size=12):
         super().__init__(parent)
         self.case_sensitive = case_sensitive

@@ -8,9 +8,6 @@ from utils.helper import resource_path
 from database.tf_database import TFDatabase
 
 def main():
-    """
-    Testing
-    """
     app = QApplication(sys.argv)
 
     app.setStyleSheet(load_styles())
@@ -45,7 +42,7 @@ def load_font():
     QFontDatabase.addApplicationFont("fonts/Montserrat-Regular.ttf")
 
 def load_styles():
-    with open(resource_path("styles/styles_light.qss"), "r") as f:
+    with open(resource_path("styles/styles.qss"), "r") as f:
         return f.read()
 
 if __name__ == '__main__':

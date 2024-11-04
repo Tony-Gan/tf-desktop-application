@@ -1,15 +1,15 @@
+from typing import List, Type, Dict
+
 from PyQt6.QtWidgets import QWidget
 
-from .tf_draggable_window import TFDraggableWindow
-from .tf_frames_impl.tf_calculator import TFCalculator
-from .tf_frames_impl.tf_scientific_calculator import TFScientificCalculator
-from .tf_frames_impl.tf_currency_converter import TFCurrencyConverter
+from ui.tf_draggable_window import TFDraggableWindow
+from ui.tf_frames_impl.tf_calculator import TFCalculator
+from ui.tf_frames_impl.tf_scientific_calculator import TFScientificCalculator
+from ui.tf_frames_impl.tf_currency_converter import TFCurrencyConverter
 from tools.tf_message_bar import TFMessageBar
 from database.tf_database import TFDatabase
 from database.models import TFWindowState
 from settings.general import MAX_WIDTH, MAX_HEIGHT
-
-from typing import List, Type, Dict
 
 class TFWindowContainer(QWidget):
     
@@ -42,7 +42,7 @@ class TFWindowContainer(QWidget):
         if not self.database:
             return
 
-        window_classes = self.get_window_classes()  # You need to implement this
+        window_classes = self.get_window_classes()
 
         with self.database.get_session() as session:
             saved_states = session.query(TFWindowState).all()
@@ -170,16 +170,9 @@ class TFWindowContainer(QWidget):
             window.raise_()
 
     def get_window_classes(self) -> Dict[str, Type[TFDraggableWindow]]:
-        """
-        Return a mapping of window class names to their actual classes.
-        
-        Returns:
-            Dict[str, Type[TFDraggableWindow]]: Dictionary mapping class names to class types
-        """
         return {
             'TFCalculator': TFCalculator,
             'TFScientificCalculator': TFScientificCalculator,
             'TFCurrencyConverter': TFCurrencyConverter
-            # ... add other window classes ...
         }
     

@@ -1,7 +1,8 @@
-from ui.tf_draggable_window import TFDraggableWindow
 from PyQt6.QtWidgets import QLineEdit, QPushButton, QGridLayout, QWidget
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
+
+from ui.tf_draggable_window import TFDraggableWindow
 
 class TFCalculator(TFDraggableWindow):
     def __init__(self, parent=None, message_bar=None, database=None):

@@ -1,9 +1,11 @@
-from ui.tf_draggable_window import TFDraggableWindow
+import math
+import re
+
 from PyQt6.QtWidgets import QLineEdit, QPushButton, QGridLayout, QWidget, QTextEdit
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
-import math
-import re
+
+from ui.tf_draggable_window import TFDraggableWindow
 
 class TFScientificCalculator(TFDraggableWindow):
     def __init__(self, parent=None, message_bar=None, database=None):

@@ -2,8 +2,10 @@ import random
 import os
 import sys
 import pygame
+
 from PyQt6.QtGui import QPainter, QImage, QResizeEvent, QMouseEvent
 from PyQt6.QtCore import QTimer
+
 from ui.tf_draggable_window import TFDraggableWindow
 
 @DeprecationWarning

@@ -1,11 +1,12 @@
-from PyQt6.QtWidgets import QFrame, QPushButton, QMenu, QLabel
-from PyQt6.QtGui import QMouseEvent, QAction, QIcon, QFont
-from PyQt6.QtCore import Qt, QPoint, pyqtSignal
-
 from time import time
+
+from PyQt6.QtWidgets import QFrame, QMenu, QLabel
+from PyQt6.QtGui import QMouseEvent, QFont
+from PyQt6.QtCore import Qt, QPoint, pyqtSignal
 
 from tools.tf_message_bar import TFMessageBar
 from database.tf_database import TFDatabase
+from ui.tf_widgets.tf_settings_widget import TFCloseButton, TFMenuButton
 
 class TFDraggableWindow(QFrame):
     """
@@ -79,26 +80,18 @@ class TFDraggableWindow(QFrame):
         font = QFont("Open Sans", 11)
         self.title_label.setFont(font)
 
-        self.close_button = QPushButton(self)
-        self.close_button.setObjectName("close_button")
-        self.close_button.setIcon(QIcon("static/images/icons/close.png"))
-        self.close_button.setFixedSize(20, 20)
-        self.close_button.move(size[0] - 25, 5)
-        self.close_button.clicked.connect(self.request_close)
-
-        self.menu_button = QPushButton(self)
-        self.menu_button.setObjectName("menu_button")
-        self.menu_button.setIcon(QIcon("static/images/icons/settings.png"))
-        self.menu_button.setFixedSize(20, 20)
-        self.menu_button.move(size[0] - 50, 5)
+        self.init_buttons()
 
         self.menu = QMenu(self)
-        self.init_default_actions()
     
         self.initialize_window()
 
         self.dragging = False
         self.offset = QPoint()
+
+    def init_buttons(self):
+        self.close_button = TFCloseButton(parent=self, position=(self.size[0] - 25, 5))
+        self.menu_button = TFMenuButton(parent=self, position=(self.size[0] - 50, 5))
 
     def initialize_window(self):
         """
@@ -111,57 +104,6 @@ class TFDraggableWindow(QFrame):
             NotImplementedError: This method must be implemented by subclasses.
         """
         raise NotImplementedError("Subclasses must implement initialize_window()")
-
-    def init_default_actions(self):
-        bring_to_front_action = QAction("Bring to Front", self)
-        bring_to_front_action.triggered.connect(lambda: self.bring_to_front.emit(self))
-        
-        raise_one_level_action = QAction("Raise One Level", self)
-        raise_one_level_action.triggered.connect(lambda: self.raise_level.emit(self))
-        
-        lower_one_level_action = QAction("Lower One Level", self)
-        lower_one_level_action.triggered.connect(lambda: self.lower_level.emit(self))
-        
-        send_to_back_action = QAction("Send to Back", self)
-        send_to_back_action.triggered.connect(lambda: self.send_to_back.emit(self))
-        
-        close_action = QAction("Close Window", self)
-        close_action.triggered.connect(self.request_close)
-        
-        self.menu.addAction(bring_to_front_action)
-        self.menu.addAction(raise_one_level_action)
-        self.menu.addAction(lower_one_level_action)
-        self.menu.addAction(send_to_back_action)
-        self.menu.addSeparator()
-        self.menu.addAction(close_action)
-        
-        self.menu_button.clicked.connect(self.show_menu)
-
-    def add_menu_action(self, text, callback):
-        """
-        Add a custom action to the window's menu.
-
-        Args:
-            text (str): Display text for the menu item.
-            callback (callable): Function to be called when the menu item is selected.
-        """
-        action = QAction(text, self)
-        action.triggered.connect(callback)
-        self.menu.addAction(action)
-
-    def show_menu(self):
-        """Display the window's menu at the current menu button position."""
-        self.menu.exec(self.menu_button.mapToGlobal(self.menu_button.rect().bottomLeft()))
-
-    def request_close(self):
-        """
-        Handle window close request.
-
-        Emits the closed signal and hides the window.
-        """
-        self.closed.emit(self)
-        self.hide()
-
 
     def rename(self, name: str) -> None:
         """
