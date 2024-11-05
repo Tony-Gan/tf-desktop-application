@@ -1,0 +1,9 @@
+TFMenubar
+=========
+
+.. automodule:: ui.tf_menubar
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :exclude-members: moved,mouse_released,closed
+   :noindex:

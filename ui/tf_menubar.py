@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QMenuBar, QMenu, QMainWindow, QScrollArea, QWidget, QSplitter
 from PyQt6.QtGui import QAction, QIcon
 
-from ui.tf_window_container import TFWindowContainer
 from ui.tf_application import TFApplication
 from tools.tf_tool_registry import TFToolRegistry
 from database.models import TFSystemState

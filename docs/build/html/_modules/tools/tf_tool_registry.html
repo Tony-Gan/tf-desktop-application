@@ -1,0 +1,197 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tools.tf_tool_registry &mdash; TF Desktop 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            TF Desktop
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/ui/index.html">Ui Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/tools/index.html">Tools Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/settings/index.html">Settings Components</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">TF Desktop</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tools.tf_tool_registry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tools.tf_tool_registry</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">importlib</span> <span class="kn">import</span> <span class="n">import_module</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Dict</span>
+
+<div class="viewcode-block" id="TFToolRegistry">
+<a class="viewcode-back" href="../../modules/tools/tf_tool_registry.html#tools.tf_tool_registry.TFToolRegistry">[docs]</a>
+<span class="k">class</span> <span class="nc">TFToolRegistry</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Singleton registry for managing tool registration and discovery.</span>
+<span class="sd">    </span>
+<span class="sd">    This class maintains a central registry of all tool classes and provides</span>
+<span class="sd">    functionality for automatic tool discovery and registration. It ensures</span>
+<span class="sd">    tools are properly configured with metadata before registration.</span>
+
+<span class="sd">    Class Attributes:</span>
+<span class="sd">        _instance: Internal singleton instance reference.</span>
+<span class="sd">        _tools (Dict[str, Type]): Dictionary mapping tool class names to tool classes.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Tool classes must define a `metadata` attribute of type `TFToolMetadata`</span>
+<span class="sd">        to be successfully registered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_instance</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_tools</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    
+<div class="viewcode-block" id="TFToolRegistry.register">
+<a class="viewcode-back" href="../../modules/tools/tf_tool_registry.html#tools.tf_tool_registry.TFToolRegistry.register">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">tool_class</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register a tool class with the registry.</span>
+
+<span class="sd">        The tool class must have a metadata attribute defining its configuration.</span>
+<span class="sd">        Registration makes the tool available for use in the application.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tool_class (Type): Tool class to register.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the tool class doesn&#39;t have the required metadata attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tool_class</span><span class="p">,</span> <span class="s1">&#39;metadata&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tool class </span><span class="si">{</span><span class="n">tool_class</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> must have metadata attribute&quot;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">tool_class</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">tool_class</span></div>
+
+    
+<div class="viewcode-block" id="TFToolRegistry.get_tools">
+<a class="viewcode-back" href="../../modules/tools/tf_tool_registry.html#tools.tf_tool_registry.TFToolRegistry.get_tools">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_tools</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a copy of all registered tools.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict[str, Type]: Dictionary mapping tool class names to tool classes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+    
+<div class="viewcode-block" id="TFToolRegistry.auto_discover_tools">
+<a class="viewcode-back" href="../../modules/tools/tf_tool_registry.html#tools.tf_tool_registry.TFToolRegistry.auto_discover_tools">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">auto_discover_tools</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">tools_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;ui/tf_frames_impl&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Automatically discover and register tools from the specified directory.</span>
+
+<span class="sd">        Scans the given directory for Python files and attempts to import and</span>
+<span class="sd">        register any tool classes found within them.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tools_dir (str, optional): </span>
+<span class="sd">                Directory path containing tool implementations.</span>
+<span class="sd">                Defaults to &#39;ui/tf_frames_impl&#39;.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Tool files must end with &#39;.py&#39; and not start with &#39;__&#39; to be discovered.</span>
+<span class="sd">            Tools must have proper metadata to be registered successfully.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; TFToolRegistry.auto_discover_tools(&#39;ui/custom_tools&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))</span>
+        <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="n">tools_dir</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">full_path</span><span class="p">):</span>
+            <span class="k">return</span>
+            
+        <span class="n">module_path</span> <span class="o">=</span> <span class="n">tools_dir</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">full_path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.py&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">):</span>
+                <span class="n">module_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">module_path</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Tony G.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

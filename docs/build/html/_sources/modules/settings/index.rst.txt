@@ -1,0 +1,11 @@
+Settings Components
+===================
+
+Core Components
+---------------
+
+.. toctree::
+   :maxdepth: 1
+
+   general
+   secret

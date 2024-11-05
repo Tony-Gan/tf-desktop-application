@@ -6,15 +6,24 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
 from ui.tf_draggable_window import TFDraggableWindow
+from tools.tf_tool_matadata import TFToolMetadata
 
 class TFScientificCalculator(TFDraggableWindow):
+    metadata = TFToolMetadata(
+        name="scientific_calculator",
+        menu_path="Tools/Calculators",
+        menu_title="Scientific Calculator",
+        window_title="Scientific Calculator",
+        window_size=(450, 500),
+        description="Advanced calculator with scientific functions",
+        max_instances=1
+    )
+
     def __init__(self, parent=None):
         self.angle_mode = 'deg'
         self.math_error = False
         self.functions = ['sin', 'cos', 'tan', 'ln', 'log', '√']
-        super().__init__(parent, (450, 500), "Scientific Calculator", 1)
-
-        self.setWindowTitle(self.tr("Scientific Calculator"))
+        super().__init__(parent)
 
     def initialize_window(self):
         self.container = QWidget(self)

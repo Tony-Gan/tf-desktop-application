@@ -1,0 +1,355 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ui.tf_frames_impl.tf_scientific_calculator &mdash; TF Desktop 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            TF Desktop
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/ui/index.html">Ui Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/tools/index.html">Tools Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/settings/index.html">Settings Components</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TF Desktop</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ui.tf_frames_impl.tf_scientific_calculator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ui.tf_frames_impl.tf_scientific_calculator</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">PyQt6.QtWidgets</span> <span class="kn">import</span> <span class="n">QLineEdit</span><span class="p">,</span> <span class="n">QPushButton</span><span class="p">,</span> <span class="n">QGridLayout</span><span class="p">,</span> <span class="n">QWidget</span><span class="p">,</span> <span class="n">QTextEdit</span>
+<span class="kn">from</span> <span class="nn">PyQt6.QtCore</span> <span class="kn">import</span> <span class="n">Qt</span>
+<span class="kn">from</span> <span class="nn">PyQt6.QtGui</span> <span class="kn">import</span> <span class="n">QFont</span>
+
+<span class="kn">from</span> <span class="nn">ui.tf_draggable_window</span> <span class="kn">import</span> <span class="n">TFDraggableWindow</span>
+<span class="kn">from</span> <span class="nn">tools.tf_tool_matadata</span> <span class="kn">import</span> <span class="n">TFToolMetadata</span>
+
+<div class="viewcode-block" id="TFScientificCalculator">
+<a class="viewcode-back" href="../../../modules/ui/tf_frames_impl/tf_scientific_calculator.html#ui.tf_frames_impl.tf_scientific_calculator.TFScientificCalculator">[docs]</a>
+<span class="k">class</span> <span class="nc">TFScientificCalculator</span><span class="p">(</span><span class="n">TFDraggableWindow</span><span class="p">):</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">TFToolMetadata</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;scientific_calculator&quot;</span><span class="p">,</span>
+        <span class="n">menu_path</span><span class="o">=</span><span class="s2">&quot;Tools/Calculators&quot;</span><span class="p">,</span>
+        <span class="n">menu_title</span><span class="o">=</span><span class="s2">&quot;Scientific Calculator&quot;</span><span class="p">,</span>
+        <span class="n">window_title</span><span class="o">=</span><span class="s2">&quot;Scientific Calculator&quot;</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="o">=</span><span class="p">(</span><span class="mi">450</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Advanced calculator with scientific functions&quot;</span><span class="p">,</span>
+        <span class="n">max_instances</span><span class="o">=</span><span class="mi">1</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="TFScientificCalculator.__init__">
+<a class="viewcode-back" href="../../../modules/ui/tf_frames_impl/tf_scientific_calculator.html#ui.tf_frames_impl.tf_scientific_calculator.TFScientificCalculator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">angle_mode</span> <span class="o">=</span> <span class="s1">&#39;deg&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">math_error</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">functions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sin&#39;</span><span class="p">,</span> <span class="s1">&#39;cos&#39;</span><span class="p">,</span> <span class="s1">&#39;tan&#39;</span><span class="p">,</span> <span class="s1">&#39;ln&#39;</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="s1">&#39;√&#39;</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TFScientificCalculator.initialize_window">
+<a class="viewcode-back" href="../../../modules/ui/tf_frames_impl/tf_scientific_calculator.html#ui.tf_frames_impl.tf_scientific_calculator.TFScientificCalculator.initialize_window">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_window</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">430</span><span class="p">,</span> <span class="mi">460</span><span class="p">)</span>
+        
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QGridLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">setSpacing</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s2">&quot;scientific_display&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">setAlignment</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignmentFlag</span><span class="o">.</span><span class="n">AlignRight</span><span class="p">)</span>
+        <span class="n">display_font</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s2">&quot;Montserrat&quot;</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="n">QFont</span><span class="o">.</span><span class="n">Weight</span><span class="o">.</span><span class="n">Bold</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">display_font</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">setFixedHeight</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">history_display</span> <span class="o">=</span> <span class="n">QTextEdit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history_display</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s2">&quot;scientific_record&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history_display</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">history_font</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s2">&quot;Montserrat&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history_display</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">history_font</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history_display</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        
+        <span class="n">buttons</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;special&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;sin&#39;</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;⌫&#39;</span><span class="p">,</span> <span class="s1">&#39;special&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;rad&#39;</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;cos&#39;</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;tan&#39;</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;ln&#39;</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;÷&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;7&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;8&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;9&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;5&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;6&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;√&#39;</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;π&#39;</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;^&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="s1">&#39;equal&#39;</span><span class="p">),</span>
+        <span class="p">]</span>
+        
+        <span class="n">button_font</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s2">&quot;Montserrat&quot;</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
+        
+        <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">btn_type</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">buttons</span><span class="p">):</span>
+            <span class="n">button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="n">button</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;scientific_</span><span class="si">{</span><span class="n">btn_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">button</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">button_font</span><span class="p">)</span>
+            <span class="n">button</span><span class="o">.</span><span class="n">setFixedSize</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">65</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;=&#39;</span><span class="p">:</span>
+                <span class="n">button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calculate</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
+                <span class="n">button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;⌫&#39;</span><span class="p">:</span>
+                <span class="n">button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backspace</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">checked</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="n">text</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">button_clicked</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+                
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">button</span><span class="p">,</span> <span class="o">*</span><span class="n">position</span><span class="p">)</span></div>
+
+        
+<div class="viewcode-block" id="TFScientificCalculator.button_clicked">
+<a class="viewcode-back" href="../../../modules/ui/tf_frames_impl/tf_scientific_calculator.html#ui.tf_frames_impl.tf_scientific_calculator.TFScientificCalculator.button_clicked">[docs]</a>
+    <span class="k">def</span> <span class="nf">button_clicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">math_error</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">math_error</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;rad&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">angle_mode</span> <span class="o">=</span> <span class="s1">&#39;rad&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">history_display</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Switched to radian mode&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+            
+        <span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;π&#39;</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">e</span><span class="p">)</span>
+            
+        <span class="n">cursor_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">cursorPosition</span><span class="p">()</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">text</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">text</span> <span class="o">+</span> <span class="s1">&#39;(&#39;</span>
+        
+        <span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;^&#39;</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;**&#39;</span>
+            
+        <span class="n">new_text</span> <span class="o">=</span> <span class="n">current</span><span class="p">[:</span><span class="n">cursor_pos</span><span class="p">]</span> <span class="o">+</span> <span class="n">text</span> <span class="o">+</span> <span class="n">current</span><span class="p">[</span><span class="n">cursor_pos</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">new_text</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">setCursorPosition</span><span class="p">(</span><span class="n">cursor_pos</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">))</span></div>
+
+        
+<div class="viewcode-block" id="TFScientificCalculator.calculate">
+<a class="viewcode-back" href="../../../modules/ui/tf_frames_impl/tf_scientific_calculator.html#ui.tf_frames_impl.tf_scientific_calculator.TFScientificCalculator.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">expression</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+            <span class="n">original_expression</span> <span class="o">=</span> <span class="n">expression</span>
+            
+            <span class="n">expression</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_expression</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+            
+            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(sin|cos|tan)\((.*?)\)&quot;</span>
+            
+            <span class="k">def</span> <span class="nf">replace_trig</span><span class="p">(</span><span class="n">match</span><span class="p">):</span>
+                <span class="n">func</span><span class="p">,</span> <span class="n">arg</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">arg_val</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle_mode</span> <span class="o">==</span> <span class="s1">&#39;deg&#39;</span><span class="p">:</span>
+                        <span class="n">arg_val</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">arg_val</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">math</span><span class="p">,</span> <span class="n">func</span><span class="p">)(</span><span class="n">arg_val</span><span class="p">))</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid argument for </span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+            <span class="n">expression</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">replace_trig</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+            
+            <span class="n">expression</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;ln(&#39;</span><span class="p">,</span> <span class="s1">&#39;math.log(&#39;</span><span class="p">)</span>
+            <span class="n">expression</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;log(&#39;</span><span class="p">,</span> <span class="s1">&#39;math.log10(&#39;</span><span class="p">)</span>
+            <span class="n">expression</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;√(&#39;</span><span class="p">,</span> <span class="s1">&#39;math.sqrt(&#39;</span><span class="p">)</span>
+            
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+                    <span class="n">formatted_result</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span>
+                <span class="k">elif</span> <span class="n">result</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
+                    <span class="n">formatted_result</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">formatted_result</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="si">:</span><span class="s2">.10g</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">formatted_result</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                
+            <span class="bp">self</span><span class="o">.</span><span class="n">history_display</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">original_expression</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">formatted_result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">formatted_result</span><span class="p">)</span>
+            
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">math_error</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;Math Error&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TFScientificCalculator.preprocess_expression">
+<a class="viewcode-back" href="../../../modules/ui/tf_frames_impl/tf_scientific_calculator.html#ui.tf_frames_impl.tf_scientific_calculator.TFScientificCalculator.preprocess_expression">[docs]</a>
+    <span class="k">def</span> <span class="nf">preprocess_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expression</span><span class="p">):</span>
+        <span class="n">expression</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        
+        <span class="n">open_count</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)</span>
+        <span class="n">close_count</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">open_count</span> <span class="o">&gt;</span> <span class="n">close_count</span><span class="p">:</span>
+            <span class="n">expression</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">open_count</span> <span class="o">-</span> <span class="n">close_count</span><span class="p">)</span>
+            
+        <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;(\d+)([</span><span class="si">{}</span><span class="s1">])&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">functions</span><span class="p">))</span>
+        <span class="n">expression</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1*\2&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+        
+        <span class="n">expression</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\d+)(π|e)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1*\2&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+        
+        <span class="n">expression</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\d+)\(&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1*(&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+        
+        <span class="k">while</span> <span class="s1">&#39;√&#39;</span> <span class="ow">in</span> <span class="n">expression</span><span class="p">:</span>
+            <span class="n">sqrt_pos</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;√&#39;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">sqrt_pos</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span> <span class="ow">and</span> <span class="n">expression</span><span class="p">[</span><span class="n">sqrt_pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;(&#39;</span><span class="p">:</span>
+                <span class="k">break</span>
+                
+            <span class="n">remaining</span> <span class="o">=</span> <span class="n">expression</span><span class="p">[</span><span class="n">sqrt_pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+            
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">remaining</span><span class="p">:</span>
+                <span class="k">break</span>
+                
+            <span class="k">if</span> <span class="n">remaining</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">or</span> <span class="n">remaining</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;(&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">remaining</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;(&#39;</span><span class="p">:</span>
+                    <span class="n">count</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="n">end_pos</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">remaining</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;(&#39;</span><span class="p">:</span>
+                            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">elif</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;)&#39;</span><span class="p">:</span>
+                            <span class="n">count</span> <span class="o">-=</span> <span class="mi">1</span>
+                            <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="n">end_pos</span> <span class="o">=</span> <span class="n">i</span>
+                                <span class="k">break</span>
+                    <span class="k">if</span> <span class="n">end_pos</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">expression</span> <span class="o">=</span> <span class="n">expression</span><span class="p">[:</span><span class="n">sqrt_pos</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;√(&#39;</span> <span class="o">+</span> <span class="n">remaining</span><span class="p">[:</span><span class="n">end_pos</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span> <span class="o">+</span> <span class="n">remaining</span><span class="p">[</span><span class="n">end_pos</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">expression</span> <span class="o">=</span> <span class="n">expression</span><span class="p">[:</span><span class="n">sqrt_pos</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;√(&#39;</span> <span class="o">+</span> <span class="n">remaining</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">num</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                    <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">remaining</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">char</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">or</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;.&#39;</span><span class="p">:</span>
+                            <span class="n">num</span> <span class="o">+=</span> <span class="n">char</span>
+                            <span class="n">pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">break</span>
+                    <span class="k">if</span> <span class="n">num</span><span class="p">:</span>
+                        <span class="n">expression</span> <span class="o">=</span> <span class="n">expression</span><span class="p">[:</span><span class="n">sqrt_pos</span><span class="p">]</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;√(</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s1">)&#39;</span> <span class="o">+</span> <span class="n">remaining</span><span class="p">[</span><span class="n">pos</span><span class="p">:]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        
+        <span class="n">expression</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\)\(&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;)*(&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">expression</span></div>
+
+            
+<div class="viewcode-block" id="TFScientificCalculator.clear">
+<a class="viewcode-back" href="../../../modules/ui/tf_frames_impl/tf_scientific_calculator.html#ui.tf_frames_impl.tf_scientific_calculator.TFScientificCalculator.clear">[docs]</a>
+    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">math_error</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+        
+<div class="viewcode-block" id="TFScientificCalculator.backspace">
+<a class="viewcode-back" href="../../../modules/ui/tf_frames_impl/tf_scientific_calculator.html#ui.tf_frames_impl.tf_scientific_calculator.TFScientificCalculator.backspace">[docs]</a>
+    <span class="k">def</span> <span class="nf">backspace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">math_error</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">math_error</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">return</span>
+        
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="n">cursor_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">cursorPosition</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">cursor_pos</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">new_text</span> <span class="o">=</span> <span class="n">current</span><span class="p">[:</span><span class="n">cursor_pos</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">current</span><span class="p">[</span><span class="n">cursor_pos</span><span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">new_text</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">setCursorPosition</span><span class="p">(</span><span class="n">cursor_pos</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Tony G.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

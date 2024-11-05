@@ -1,0 +1,9 @@
+TFDraggableWindow
+=================
+
+.. automodule:: ui.tf_draggable_window
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :exclude-members: moved,mouse_released,closed
+   :noindex:

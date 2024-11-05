@@ -12,6 +12,7 @@ from ui.tf_draggable_window import TFDraggableWindow
 from ui.tf_widgets.tf_number_receiver import TFNumberReceiver
 from ui.tf_widgets.tf_buttons import TFPushButton, TFConfirmButton, TFResetButton
 from tools.tf_api_loader import TFAPILoader
+from tools.tf_tool_matadata import TFToolMetadata
 
 try:
     from settings.secret import API_KEY
@@ -25,6 +26,15 @@ class CleanTextBox(QComboBox):
             self.lineEdit().clear()
 
 class TFCurrencyConverter(TFDraggableWindow):
+    metadata = TFToolMetadata(
+        name="currency_converter",
+        menu_path="Tools",
+        menu_title="Currency Converter",
+        window_title="Currency Converter",
+        window_size=(300, 500),
+        description="Convert between different currencies using real-time exchange rates",
+        max_instances=1
+    )
 
     def __init__(self, parent=None):
         self.selected_currencies: List[str] = []
@@ -200,16 +210,14 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.currency_frames: List[QFrame] = []
         self.currency_inputs: List[QLineEdit] = []
 
-        super().__init__(parent, (300, 500), "Currency Converter", 1)
-
-        self.setWindowTitle(self.tr("Currency Converter"))
+        super().__init__(parent)
 
     def initialize_window(self):
         self.setup_ui()
         
     def setup_ui(self):
         self.container = QWidget(self)
-        self.container.setGeometry(0, 30, self.size[0], self.size[1] - 30)
+        self.container.setGeometry(0, 30, self.metadata.window_size[0], self.metadata.window_size[1] - 30)
 
         main_layout = QVBoxLayout(self.container)
         main_layout.setSpacing(15)

@@ -2,7 +2,8 @@ import requests
 from PyQt6.QtCore import QThread, pyqtSignal
 
 class TFAPILoader(QThread):
-    """A threaded API loader for making HTTP requests.
+    """
+    A threaded API loader for making HTTP requests.
 
     This class extends QThread to perform API requests in a separate thread,
     preventing UI freezes during network operations.
@@ -11,11 +12,13 @@ class TFAPILoader(QThread):
         url (str): The API endpoint URL to fetch data from.
         parent (QObject, optional): The parent object. Defaults to None.
 
-    Signals: \n
-        data_loaded (dict): Emitted when data is successfully loaded from the API.
-            The signal contains the parsed JSON response data. \n
-        error_occured (str): Emitted when an error occurs during the API request.
-            The signal contains the error message. \n
+    Signals:
+        data_loaded (dict): 
+            Emitted when data is successfully loaded from the API.
+            The signal contains the parsed JSON response data.
+        error_occured (str): 
+            Emitted when an error occurs during the API request.
+            The signal contains the error message.
 
     Example:
         >>> # Create and set up the loader

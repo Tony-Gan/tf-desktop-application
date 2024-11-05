@@ -1,0 +1,9 @@
+TFComboBox
+==========
+
+.. automodule:: ui.tf_widgets.tf_combo_box
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :exclude-members: moved,mouse_released,closed
+   :noindex:

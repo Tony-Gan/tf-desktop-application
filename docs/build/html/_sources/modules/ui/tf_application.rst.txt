@@ -1,0 +1,9 @@
+TFApplication
+=============
+
+.. automodule:: ui.tf_application
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :exclude-members: moved,mouse_released,closed
+   :noindex:

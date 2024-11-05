@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ui.tf_draggable_window &mdash; TF Desktop 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            TF Desktop
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/ui/index.html">Ui Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/tools/index.html">Tools Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/settings/index.html">Settings Components</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">TF Desktop</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ui.tf_draggable_window</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ui.tf_draggable_window</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="nn">PyQt6.QtWidgets</span> <span class="kn">import</span> <span class="n">QFrame</span><span class="p">,</span> <span class="n">QLabel</span>
+<span class="kn">from</span> <span class="nn">PyQt6.QtGui</span> <span class="kn">import</span> <span class="n">QMouseEvent</span><span class="p">,</span> <span class="n">QFont</span>
+<span class="kn">from</span> <span class="nn">PyQt6.QtCore</span> <span class="kn">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QPoint</span><span class="p">,</span> <span class="n">pyqtSignal</span>
+<span class="kn">from</span> <span class="nn">tools.tf_tool_matadata</span> <span class="kn">import</span> <span class="n">TFToolMetadata</span>
+<span class="kn">from</span> <span class="nn">ui.tf_application</span> <span class="kn">import</span> <span class="n">TFApplication</span>
+<span class="kn">from</span> <span class="nn">ui.tf_widgets.tf_settings_widget</span> <span class="kn">import</span> <span class="n">TFCloseButton</span><span class="p">,</span> <span class="n">TFMenuButton</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<div class="viewcode-block" id="TFDraggableWindow">
+<a class="viewcode-back" href="../../modules/ui/tf_draggable_window.html#ui.tf_draggable_window.TFDraggableWindow">[docs]</a>
+<span class="k">class</span> <span class="nc">TFDraggableWindow</span><span class="p">(</span><span class="n">QFrame</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A draggable window frame that can be moved within its parent container.</span>
+
+<span class="sd">    This base class provides draggable window functionality with snapping to edges,</span>
+<span class="sd">    window management signals, and basic window controls. It serves as the base for</span>
+<span class="sd">    all draggable tool windows in the application.</span>
+
+<span class="sd">    Class Attributes:</span>
+<span class="sd">        metadata (Optional[TFToolMetadata]): </span>
+<span class="sd">            Required tool metadata that must be defined by subclasses. Contains window </span>
+<span class="sd">            configuration like size and title.</span>
+
+<span class="sd">    Signals:</span>
+<span class="sd">        moved: </span>
+<span class="sd">            Emitted when the window is moved.</span>
+<span class="sd">        mouse_released: </span>
+<span class="sd">            Emitted when the mouse button is released.</span>
+<span class="sd">        closed:  </span>
+<span class="sd">            Emitted when the window is closed. Passes window object.</span>
+<span class="sd">        bring_to_front: </span>
+<span class="sd">            Emitted to request window be brought to front. Passes window object.</span>
+<span class="sd">        send_to_back: </span>
+<span class="sd">            Emitted to request window be sent to back. Passes window object.</span>
+<span class="sd">        raise_level: </span>
+<span class="sd">            Emitted to request window be raised one level. Passes window object.</span>
+<span class="sd">        lower_level: </span>
+<span class="sd">            Emitted to request window be lowered one level. Passes window object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        parent (QWidget): Parent widget containing this window.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the subclass has not defined the required metadata attribute.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        app (TFApplication): Reference to the main application instance.</span>
+<span class="sd">        title_label (QLabel): Label displaying the window title.</span>
+<span class="sd">        close_button (TFCloseButton): Button to close the window.</span>
+<span class="sd">        menu_button (TFMenuButton): Button for accessing the window menu.</span>
+<span class="sd">        last_moved_time (float): Timestamp of the last window movement.</span>
+
+<span class="sd">    Implementation Notes:</span>
+<span class="sd">        For customized developer - Inheritance this class for developing, you don&#39;t need to</span>
+<span class="sd">        modify other part of the project.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; class MyToolWindow(TFDraggableWindow):</span>
+<span class="sd">        ...     metadata = TFToolMetadata(</span>
+<span class="sd">        ...         window_title=&quot;My Tool&quot;,</span>
+<span class="sd">        ...         window_size=(400, 300)</span>
+<span class="sd">        ...     )</span>
+<span class="sd">        ...     </span>
+<span class="sd">        ...     def initialize_window(self):</span>
+<span class="sd">        ...         # Add custom widgets and layout</span>
+<span class="sd">        ...         pass</span>
+<span class="sd">        ... </span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        All tool windows must define a class-level `metadata` attribute of type</span>
+<span class="sd">        `TFToolMetadata` that specifies the window configuration. Tool classes are</span>
+<span class="sd">        automatically registered with the `TFToolRegistry` when defined.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">moved</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+    <span class="n">mouse_released</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+    <span class="n">closed</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+    <span class="n">bring_to_front</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+    <span class="n">send_to_back</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+    <span class="n">raise_level</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+    <span class="n">lower_level</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="n">metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TFToolMetadata</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="TFDraggableWindow.__init__">
+<a class="viewcode-back" href="../../modules/ui/tf_draggable_window.html#ui.tf_draggable_window.TFDraggableWindow.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tool class </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> must define metadata&quot;</span><span class="p">)</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">TFApplication</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s2">&quot;TFDraggableWindow&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFrameStyle</span><span class="p">(</span><span class="n">QFrame</span><span class="o">.</span><span class="n">Shape</span><span class="o">.</span><span class="n">Box</span> <span class="o">|</span> <span class="n">QFrame</span><span class="o">.</span><span class="n">Shadow</span><span class="o">.</span><span class="n">Raised</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFixedSize</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">window_size</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">title_label</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">window_title</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title_label</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">font</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s2">&quot;Open Sans&quot;</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title_label</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">font</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_buttons</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dragging</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="n">QPoint</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_moved_time</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_window</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">tools.tf_tool_registry</span> <span class="kn">import</span> <span class="n">TFToolRegistry</span>
+            <span class="n">TFToolRegistry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TFDraggableWindow.initialize_window">
+<a class="viewcode-back" href="../../modules/ui/tf_draggable_window.html#ui.tf_draggable_window.TFDraggableWindow.initialize_window">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_window</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize window content and layout.</span>
+<span class="sd">        </span>
+<span class="sd">        This method must be implemented by subclasses to set up their specific</span>
+<span class="sd">        window content and layout.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            NotImplementedError: If subclass doesn&#39;t implement this method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Subclasses must implement initialize_window()&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_init_buttons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">window_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close_button</span> <span class="o">=</span> <span class="n">TFCloseButton</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="p">(</span><span class="n">width</span> <span class="o">-</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">menu_button</span> <span class="o">=</span> <span class="n">TFMenuButton</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="p">(</span><span class="n">width</span> <span class="o">-</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<div class="viewcode-block" id="TFDraggableWindow.rename">
+<a class="viewcode-back" href="../../modules/ui/tf_draggable_window.html#ui.tf_draggable_window.TFDraggableWindow.rename">[docs]</a>
+    <span class="k">def</span> <span class="nf">rename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_title</span> <span class="o">=</span> <span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="TFDraggableWindow.mousePressEvent">
+<a class="viewcode-back" href="../../modules/ui/tf_draggable_window.html#ui.tf_draggable_window.TFDraggableWindow.mousePressEvent">[docs]</a>
+    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QMouseEvent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle mouse press events for window dragging.</span>
+<span class="sd">        </span>
+<span class="sd">        Initiates dragging on left button press and brings window to front.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event (QMouseEvent): Mouse event object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">MouseButton</span><span class="o">.</span><span class="n">LeftButton</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dragging</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">position</span><span class="p">()</span><span class="o">.</span><span class="n">toPoint</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span><span class="o">.</span><span class="n">bring_window_to_front</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TFDraggableWindow.mouseMoveEvent">
+<a class="viewcode-back" href="../../modules/ui/tf_draggable_window.html#ui.tf_draggable_window.TFDraggableWindow.mouseMoveEvent">[docs]</a>
+    <span class="k">def</span> <span class="nf">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QMouseEvent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle mouse move events for window dragging.</span>
+<span class="sd">        </span>
+<span class="sd">        Manages window movement with edge snapping to other windows.</span>
+<span class="sd">        Constrains movement within parent container bounds.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event (QMouseEvent): Mouse event object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dragging</span><span class="p">:</span>
+            <span class="n">current_pos</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">position</span><span class="p">()</span><span class="o">.</span><span class="n">toPoint</span><span class="p">()</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">current_pos</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span>
+            <span class="n">new_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span> <span class="o">+</span> <span class="n">delta</span>
+
+            <span class="n">container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">container</span><span class="p">:</span>
+                <span class="n">min_x</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">min_y</span> <span class="o">=</span> <span class="mi">0</span>
+                
+                <span class="n">new_x</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_x</span><span class="p">,</span> <span class="n">new_pos</span><span class="o">.</span><span class="n">x</span><span class="p">())</span>
+                <span class="n">new_y</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_y</span><span class="p">,</span> <span class="n">new_pos</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+                
+                <span class="k">for</span> <span class="n">window</span> <span class="ow">in</span> <span class="n">container</span><span class="o">.</span><span class="n">windows</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">window</span> <span class="o">!=</span> <span class="bp">self</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">new_y</span> <span class="o">-</span> <span class="n">window</span><span class="o">.</span><span class="n">y</span><span class="p">())</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+                            <span class="n">new_y</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">y</span><span class="p">()</span>
+                        <span class="k">elif</span> <span class="nb">abs</span><span class="p">((</span><span class="n">new_y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">())</span> <span class="o">-</span> <span class="n">window</span><span class="o">.</span><span class="n">y</span><span class="p">())</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+                            <span class="n">new_y</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+                        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">new_y</span> <span class="o">-</span> <span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">+</span> <span class="n">window</span><span class="o">.</span><span class="n">height</span><span class="p">()))</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+                            <span class="n">new_y</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">+</span> <span class="n">window</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+                            
+                        <span class="k">if</span> <span class="p">(</span><span class="n">new_y</span> <span class="o">&lt;</span> <span class="n">window</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">+</span> <span class="n">window</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="ow">and</span> 
+                            <span class="n">new_y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">window</span><span class="o">.</span><span class="n">y</span><span class="p">()):</span>
+                            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">new_x</span> <span class="o">-</span> <span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">+</span> <span class="n">window</span><span class="o">.</span><span class="n">width</span><span class="p">()))</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+                                <span class="n">new_x</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">+</span> <span class="n">window</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+                            <span class="k">elif</span> <span class="nb">abs</span><span class="p">((</span><span class="n">new_x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">())</span> <span class="o">-</span> <span class="n">window</span><span class="o">.</span><span class="n">x</span><span class="p">())</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+                                <span class="n">new_x</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+                
+                <span class="bp">self</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">new_x</span><span class="p">,</span> <span class="n">new_y</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">moved</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+                
+                <span class="n">container</span><span class="o">.</span><span class="n">resize_container</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TFDraggableWindow.mouseReleaseEvent">
+<a class="viewcode-back" href="../../modules/ui/tf_draggable_window.html#ui.tf_draggable_window.TFDraggableWindow.mouseReleaseEvent">[docs]</a>
+    <span class="k">def</span> <span class="nf">mouseReleaseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QMouseEvent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle mouse release events.</span>
+<span class="sd">        </span>
+<span class="sd">        Ends dragging operation and records movement timestamp.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event (QMouseEvent): Mouse event object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">MouseButton</span><span class="o">.</span><span class="n">LeftButton</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dragging</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_moved_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mouse_released</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Tony G.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

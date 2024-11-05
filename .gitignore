@@ -1,8 +1,8 @@
 # Ignore folders
-build/
 dist/
 data/
-docs/
+docs/*
+!docs/build/
 *.db
 
 # Logs

@@ -5,16 +5,15 @@ from PyQt6.QtCore import Qt
 from ui.tf_draggable_window import TFDraggableWindow
 from ui.tf_widgets.tf_buttons import TFConfirmButton, TFResetButton
 from ui.tf_widgets.tf_number_receiver import TFNumberReceiver
+from tools.tf_tool_matadata import TFToolMetadata
 
 class UnitTypeSelector(QComboBox):
     def __init__(self, parent=None):
+        super().__init__(parent)
         self.setObjectName("unit_type_selector")
         font = QFont("Nunito", 10)
         font.setStyleName("Condensed")
         self.setFont(font)
-        super().__init__(parent, (300, 500), "Unit Converter", 1)
-
-        self.setWindowTitle(self.tr("Unit Converter"))
         
 class UnitSelector(QComboBox):
     def __init__(self, parent=None):
@@ -26,6 +25,16 @@ class UnitSelector(QComboBox):
         self.setEnabled(False)
 
 class TFUnitConverter(TFDraggableWindow):
+    metadata = TFToolMetadata(
+        name="unit_converter",
+        menu_path="Tools",
+        menu_title="Unit Converter",
+        window_title="Unit Converter",
+        window_size=(300, 500),
+        description="Convert between different units of measurement",
+        max_instances=1
+    )
+
     def __init__(self, parent=None):
         self.conversion_factors = {
             "Length": {
@@ -79,14 +88,14 @@ class TFUnitConverter(TFDraggableWindow):
                 "Kelvin": "K"
             }
         }
-        super().__init__(parent, (300, 500), "Unit Converter", 1)
+        super().__init__(parent)
 
     def initialize_window(self):
         self.setup_ui()
 
     def setup_ui(self):
         self.container = QWidget(self)
-        self.container.setGeometry(0, 30, self.size[0], self.size[1] - 30)
+        self.container.setGeometry(0, 30, self.metadata.window_size[0], self.metadata.window_size[1] - 30)
         
         main_layout = QVBoxLayout(self.container)
         main_layout.setSpacing(15)
@@ -125,46 +134,44 @@ class TFUnitConverter(TFDraggableWindow):
         conversion_layout = QVBoxLayout(conversion_container)
         conversion_layout.setSpacing(15)
 
-        from_frame = QFrame()
-        from_frame.setObjectName("conversion_item")
-        from_layout = QVBoxLayout(from_frame)
-        
-        from_label = QLabel("From:")
-        from_label.setFont(QFont("Open Sans", 10))
-        from_layout.addWidget(from_label)
-        
-        self.from_unit = UnitSelector()
-        from_layout.addWidget(self.from_unit)
-        
-        self.from_input = TFNumberReceiver("0", Qt.AlignmentFlag.AlignRight)
-        self.from_input.setObjectName("conversion_amount")
-        self.from_input.setEnabled(False)
-        self.from_input.textChanged.connect(lambda: self.update_conversion("from"))
-        from_layout.addWidget(self.from_input)
-        
+        from_frame = self._create_conversion_frame("From:", self.from_unit_changed)
+        self.from_unit = from_frame.findChild(UnitSelector)
+        self.from_input = from_frame.findChild(TFNumberReceiver)
         conversion_layout.addWidget(from_frame)
 
-        to_frame = QFrame()
-        to_frame.setObjectName("conversion_item")
-        to_layout = QVBoxLayout(to_frame)
-        
-        to_label = QLabel("To:")
-        to_label.setFont(QFont("Open Sans", 10))
-        to_layout.addWidget(to_label)
-        
-        self.to_unit = UnitSelector()
-        to_layout.addWidget(self.to_unit)
-        
-        self.to_input = TFNumberReceiver("0", Qt.AlignmentFlag.AlignRight)
-        self.to_input.setObjectName("conversion_amount")
-        self.to_input.setEnabled(False)
-        self.to_input.textChanged.connect(lambda: self.update_conversion("to"))
-        to_layout.addWidget(self.to_input)
-        
+        to_frame = self._create_conversion_frame("To:", self.to_unit_changed)
+        self.to_unit = to_frame.findChild(UnitSelector)
+        self.to_input = to_frame.findChild(TFNumberReceiver)
         conversion_layout.addWidget(to_frame)
 
         main_layout.addWidget(conversion_container)
         main_layout.addStretch()
+
+    def _create_conversion_frame(self, label_text: str, input_callback) -> QFrame:
+        frame = QFrame()
+        frame.setObjectName("conversion_item")
+        layout = QVBoxLayout(frame)
+        
+        label = QLabel(label_text)
+        label.setFont(QFont("Open Sans", 10))
+        layout.addWidget(label)
+        
+        unit_selector = UnitSelector()
+        layout.addWidget(unit_selector)
+        
+        number_input = TFNumberReceiver("0", Qt.AlignmentFlag.AlignRight)
+        number_input.setObjectName("conversion_amount")
+        number_input.setEnabled(False)
+        number_input.textChanged.connect(input_callback)
+        layout.addWidget(number_input)
+        
+        return frame
+    
+    def from_unit_changed(self):
+        self.update_conversion("from")
+
+    def to_unit_changed(self):
+        self.update_conversion("to")
 
     def on_type_changed(self):
         self.from_unit.setEnabled(False)

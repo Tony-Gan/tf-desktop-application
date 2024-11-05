@@ -1,0 +1,302 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ui.tf_menubar &mdash; TF Desktop 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            TF Desktop
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/ui/index.html">Ui Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/tools/index.html">Tools Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/settings/index.html">Settings Components</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">TF Desktop</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ui.tf_menubar</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ui.tf_menubar</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">PyQt6.QtWidgets</span> <span class="kn">import</span> <span class="n">QMenuBar</span><span class="p">,</span> <span class="n">QMenu</span><span class="p">,</span> <span class="n">QMainWindow</span><span class="p">,</span> <span class="n">QScrollArea</span><span class="p">,</span> <span class="n">QWidget</span><span class="p">,</span> <span class="n">QSplitter</span>
+<span class="kn">from</span> <span class="nn">PyQt6.QtGui</span> <span class="kn">import</span> <span class="n">QAction</span><span class="p">,</span> <span class="n">QIcon</span>
+
+<span class="kn">from</span> <span class="nn">ui.tf_application</span> <span class="kn">import</span> <span class="n">TFApplication</span>
+<span class="kn">from</span> <span class="nn">tools.tf_tool_registry</span> <span class="kn">import</span> <span class="n">TFToolRegistry</span>
+<span class="kn">from</span> <span class="nn">database.models</span> <span class="kn">import</span> <span class="n">TFSystemState</span>
+<span class="kn">from</span> <span class="nn">utils.helper</span> <span class="kn">import</span> <span class="n">resource_path</span>
+<span class="kn">from</span> <span class="nn">settings.general</span> <span class="kn">import</span> <span class="n">THEME_COLOURS</span>
+
+<div class="viewcode-block" id="TFMenuBar">
+<a class="viewcode-back" href="../../modules/ui/tf_menubar.html#ui.tf_menubar.TFMenuBar">[docs]</a>
+<span class="k">class</span> <span class="nc">TFMenuBar</span><span class="p">(</span><span class="n">QMenuBar</span><span class="p">):</span>
+<div class="viewcode-block" id="TFMenuBar.__init__">
+<a class="viewcode-back" href="../../modules/ui/tf_menubar.html#ui.tf_menubar.TFMenuBar.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">QMainWindow</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">TFApplication</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_container</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_menus</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="n">central_widget</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">centralWidget</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">central_widget</span><span class="p">,</span> <span class="n">QWidget</span><span class="p">):</span>
+            <span class="n">splitter</span> <span class="o">=</span> <span class="n">central_widget</span><span class="o">.</span><span class="n">findChild</span><span class="p">(</span><span class="n">QSplitter</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">splitter</span><span class="p">:</span>
+                <span class="n">scroll_area</span> <span class="o">=</span> <span class="n">splitter</span><span class="o">.</span><span class="n">widget</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scroll_area</span><span class="p">,</span> <span class="n">QScrollArea</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">window_container</span> <span class="o">=</span> <span class="n">scroll_area</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span>
+        
+        <span class="c1"># Load saved preferences</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_mode</span> <span class="o">=</span> <span class="s1">&#39;dark&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_system_state</span><span class="p">(</span><span class="s1">&#39;dark_mode&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;light&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_language</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_system_state</span><span class="p">(</span><span class="s1">&#39;language&#39;</span><span class="p">,</span> <span class="s1">&#39;en&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># Apply saved language</span>
+        <span class="n">qm_file</span> <span class="o">=</span> <span class="s1">&#39;zh_CN.qm&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_language</span> <span class="o">==</span> <span class="s1">&#39;zh&#39;</span> <span class="k">else</span> <span class="s1">&#39;en_US.qm&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">translator</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">resource_path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;translations/</span><span class="si">{</span><span class="n">qm_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">installTranslator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">translator</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_stylesheet</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_menus</span><span class="p">()</span></div>
+
+        
+<div class="viewcode-block" id="TFMenuBar.init_menus">
+<a class="viewcode-back" href="../../modules/ui/tf_menubar.html#ui.tf_menubar.TFMenuBar.init_menus">[docs]</a>
+    <span class="k">def</span> <span class="nf">init_menus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_tool_menus</span><span class="p">()</span>
+
+        <span class="n">view_menu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_or_create_menu</span><span class="p">(</span><span class="s2">&quot;View&quot;</span><span class="p">)</span>
+        <span class="n">view_menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_action</span><span class="p">(</span>
+                <span class="s2">&quot;Toggle Output Panel&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">output_panel</span><span class="o">.</span><span class="n">toggle_panel</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">theme_menu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_or_create_menu</span><span class="p">(</span><span class="s2">&quot;Theme&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toggle_theme_action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_action</span><span class="p">(</span>
+            <span class="s2">&quot;Toggle Light/Dark Mode&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_toggle_theme</span><span class="p">,</span>
+            <span class="n">checkable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">checked</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_mode</span> <span class="o">==</span> <span class="s1">&#39;dark&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">theme_menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">toggle_theme_action</span><span class="p">)</span>
+
+        <span class="n">language_menu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_or_create_menu</span><span class="p">(</span><span class="s2">&quot;Language&quot;</span><span class="p">)</span>
+        <span class="n">languages</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tr</span><span class="p">(</span><span class="s2">&quot;English&quot;</span><span class="p">):</span> <span class="s2">&quot;en_US.qm&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Chinese&quot;</span><span class="p">):</span> <span class="s2">&quot;zh_CN.qm&quot;</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">language_name</span><span class="p">,</span> <span class="n">qm_file</span> <span class="ow">in</span> <span class="n">languages</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">language_menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_create_action</span><span class="p">(</span>
+                    <span class="n">language_name</span><span class="p">,</span>
+                    <span class="k">lambda</span> <span class="n">q</span><span class="o">=</span><span class="n">qm_file</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_switch_language</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TFMenuBar.get_or_create_menu">
+<a class="viewcode-back" href="../../modules/ui/tf_menubar.html#ui.tf_menubar.TFMenuBar.get_or_create_menu">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_or_create_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QMenu</span><span class="p">:</span>
+        <span class="n">path_parts</span> <span class="o">=</span> <span class="n">menu_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="n">current_menu</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="n">current_path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">path_parts</span><span class="p">:</span>
+            <span class="n">current_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">current_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">part</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">current_path</span> <span class="k">else</span> <span class="n">part</span>
+            <span class="k">if</span> <span class="n">current_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menus</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_menu</span><span class="p">,</span> <span class="n">QMenuBar</span><span class="p">):</span>
+                    <span class="n">new_menu</span> <span class="o">=</span> <span class="n">QMenu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tr</span><span class="p">(</span><span class="n">part</span><span class="p">),</span> <span class="bp">self</span><span class="p">)</span>
+                    <span class="n">current_menu</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="n">new_menu</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_menu</span> <span class="o">=</span> <span class="n">current_menu</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tr</span><span class="p">(</span><span class="n">part</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_menus</span><span class="p">[</span><span class="n">current_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_menu</span>
+            <span class="n">current_menu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menus</span><span class="p">[</span><span class="n">current_path</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">current_menu</span></div>
+
+    
+    <span class="k">def</span> <span class="nf">_create_tool_menus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">tool_class</span> <span class="ow">in</span> <span class="n">TFToolRegistry</span><span class="o">.</span><span class="n">get_tools</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">menu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_or_create_menu</span><span class="p">(</span><span class="n">tool_class</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">menu_path</span><span class="p">)</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_action</span><span class="p">(</span>
+                <span class="n">tool_class</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">menu_title</span><span class="p">,</span>
+                <span class="k">lambda</span> <span class="n">checked</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tc</span><span class="o">=</span><span class="n">tool_class</span><span class="p">:</span> 
+                    <span class="bp">self</span><span class="o">.</span><span class="n">window_container</span><span class="o">.</span><span class="n">add_window</span><span class="p">(</span><span class="n">window_class</span><span class="o">=</span><span class="n">tc</span><span class="p">),</span>
+                <span class="n">tooltip</span><span class="o">=</span><span class="n">tool_class</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                <span class="n">icon_path</span><span class="o">=</span><span class="n">tool_class</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">icon_path</span>
+            <span class="p">)</span>
+            <span class="n">menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">slot</span><span class="p">,</span> <span class="n">tooltip</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">icon_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">checkable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">checked</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QAction</span><span class="p">:</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">QAction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tr</span><span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">slot</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">tooltip</span><span class="p">:</span>
+            <span class="n">action</span><span class="o">.</span><span class="n">setStatusTip</span><span class="p">(</span><span class="n">tooltip</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">icon_path</span><span class="p">:</span>
+            <span class="n">action</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="n">QIcon</span><span class="p">(</span><span class="n">icon_path</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">checkable</span><span class="p">:</span>
+            <span class="n">action</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">action</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">checked</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">action</span>
+
+    <span class="k">def</span> <span class="nf">_switch_language</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qm_file</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_language</span> <span class="o">=</span> <span class="s1">&#39;zh&#39;</span> <span class="k">if</span> <span class="n">qm_file</span> <span class="o">==</span> <span class="s1">&#39;zh_CN.qm&#39;</span> <span class="k">else</span> <span class="s1">&#39;en&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_system_state</span><span class="p">(</span><span class="s1">&#39;language&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_language</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">translator</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">resource_path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;translations/</span><span class="si">{</span><span class="n">qm_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">installTranslator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">translator</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_menus</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_menus</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_toggle_theme</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_mode</span> <span class="o">=</span> <span class="s1">&#39;dark&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_mode</span> <span class="o">==</span> <span class="s1">&#39;light&#39;</span> <span class="k">else</span> <span class="s1">&#39;light&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_system_state</span><span class="p">(</span><span class="s1">&#39;dark_mode&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_mode</span> <span class="o">==</span> <span class="s1">&#39;dark&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_stylesheet</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toggle_theme_action</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_mode</span> <span class="o">==</span> <span class="s1">&#39;dark&#39;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_apply_stylesheet</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">resource_path</span><span class="p">(</span><span class="s2">&quot;styles/styles.qss&quot;</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">base_stylesheet</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        
+        <span class="n">colours</span> <span class="o">=</span> <span class="n">THEME_COLOURS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_mode</span><span class="p">]</span>
+        
+        <span class="n">replacements</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;background-color: white;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;background-color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;background-primary&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;background-color: #f0f0f0;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;background-color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;background-secondary&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;background-color: #e0e0e0;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;background-color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;background-secondary-hover&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;border: 1px solid #ccc;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;border: 1px solid </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;border-color-dark&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;border: 1px solid #ddd;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;border: 1px solid </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;border-color&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;color: black;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;text-primary&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;color: gray;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;text-secondary&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;background-color: #ffd700;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;background-color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;button-operator&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;background-color: #ffcd00;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;background-color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;button-operator-hover&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;border: 1px solid #daa520;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;border: 1px solid </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;button-operator-border&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;background-color: #ff6b6b;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;background-color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;button-special&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;background-color: #ff5252;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;background-color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;button-special-hover&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;border: 1px solid #ff5252;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;border: 1px solid </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;button-special-border&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;background-color: #4CAF50;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;background-color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;button-equal&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;background-color: #45a049;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;background-color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;button-equal-hover&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;border: 1px solid #45a049;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;border: 1px solid </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;button-equal-border&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;background-color: green;&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;background-color: </span><span class="si">{</span><span class="n">colours</span><span class="p">[</span><span class="s2">&quot;message-success&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">stylesheet</span> <span class="o">=</span> <span class="n">base_stylesheet</span>
+        <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">replacements</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">stylesheet</span> <span class="o">=</span> <span class="n">stylesheet</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="n">stylesheet</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">style</span><span class="p">()</span><span class="o">.</span><span class="n">unpolish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">style</span><span class="p">()</span><span class="o">.</span><span class="n">polish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">widget</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">findChildren</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">style</span><span class="p">()</span><span class="o">.</span><span class="n">unpolish</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">style</span><span class="p">()</span><span class="o">.</span><span class="n">polish</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_system_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">system_state</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TFSystemState</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">system_state</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)</span> <span class="k">if</span> <span class="n">system_state</span> <span class="k">else</span> <span class="n">default_value</span>
+
+    <span class="k">def</span> <span class="nf">_set_system_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">system_state</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TFSystemState</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">system_state</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">system_state</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">system_state</span> <span class="o">=</span> <span class="n">TFSystemState</span><span class="p">()</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">system_state</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">system_state</span><span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Tony G.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

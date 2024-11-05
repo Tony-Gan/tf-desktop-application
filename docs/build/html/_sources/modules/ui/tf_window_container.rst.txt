@@ -1,0 +1,9 @@
+TFWindowContainer
+=================
+
+.. automodule:: ui.tf_window_container
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :exclude-members: moved,mouse_released,closed
+   :noindex:

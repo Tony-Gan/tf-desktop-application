@@ -9,49 +9,66 @@ from ui.tf_widgets.tf_settings_widget import TFCloseButton, TFMenuButton
 from typing import Optional
 
 class TFDraggableWindow(QFrame):
-    """
-    A draggable window frame that can be moved within its parent container.
+    """A draggable window frame that can be moved within its parent container.
 
     This base class provides draggable window functionality with snapping to edges,
     window management signals, and basic window controls. It serves as the base for
-    all draggable windows in the application.
+    all draggable tool windows in the application.
+
+    Class Attributes:
+        metadata (Optional[TFToolMetadata]): 
+            Required tool metadata that must be defined by subclasses. Contains window 
+            configuration like size and title.
+
+    Signals:
+        moved: 
+            Emitted when the window is moved.
+        mouse_released: 
+            Emitted when the mouse button is released.
+        closed:  
+            Emitted when the window is closed. Passes window object.
+        bring_to_front: 
+            Emitted to request window be brought to front. Passes window object.
+        send_to_back: 
+            Emitted to request window be sent to back. Passes window object.
+        raise_level: 
+            Emitted to request window be raised one level. Passes window object.
+        lower_level: 
+            Emitted to request window be lowered one level. Passes window object.
 
     Args:
         parent (QWidget): Parent widget containing this window.
-        size (tuple): Window size as (width, height).
-        title (str): Window title text.
-        max_count (int, optional): Maximum number of instances allowed. Defaults to 1.
+
+    Raises:
+        ValueError: If the subclass has not defined the required metadata attribute.
+
+    Attributes:
+        app (TFApplication): Reference to the main application instance.
+        title_label (QLabel): Label displaying the window title.
+        close_button (TFCloseButton): Button to close the window.
+        menu_button (TFMenuButton): Button for accessing the window menu.
+        last_moved_time (float): Timestamp of the last window movement.
+
+    Implementation Notes:
+        For customized developer - Inheritance this class for developing, you don't need to
+        modify other part of the project.
 
     Example:
-        >>> # Creating a custom draggable window
-        >>> class MyWindow(TFDraggableWindow):
+        >>> class MyToolWindow(TFDraggableWindow):
+        ...     metadata = TFToolMetadata(
+        ...         window_title="My Tool",
+        ...         window_size=(400, 300)
+        ...     )
+        ...     
         ...     def initialize_window(self):
         ...         # Add custom widgets and layout
         ...         pass
-        >>> 
-        >>> window = MyWindow(
-        ...     parent=container,
-        ...     size=(400, 300),
-        ...     title="My Window"
-        ... )
+        ... 
 
-    Attributes:
-        display_title (str): Window's display title.
-        size (tuple): Window dimensions (width, height).
-        max_count (int): Maximum allowed instances.
-        title_label (QLabel): Label displaying window title.
-        close_button (TFCloseButton): Button to close window.
-        menu_button (TFMenuButton): Button for window menu.
-        last_moved_time (float): Timestamp of last window movement.
-
-    Signals: \n
-        moved: Emitted when window is moved. \n
-        mouse_released: Emitted when mouse button is released. \n
-        closed: Emitted when window is closed, passes window object. \n
-        bring_to_front: Emitted to request window be brought to front. \n
-        send_to_back: Emitted to request window be sent to back. \n
-        raise_level: Emitted to request window be raised one level. \n
-        lower_level: Emitted to request window be lowered one level. \n
+    Note:
+        All tool windows must define a class-level `metadata` attribute of type
+        `TFToolMetadata` that specifies the window configuration. Tool classes are
+        automatically registered with the `TFToolRegistry` when defined.
     """
 
     moved = pyqtSignal()

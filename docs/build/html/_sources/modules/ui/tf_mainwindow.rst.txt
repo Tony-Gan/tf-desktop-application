@@ -1,0 +1,9 @@
+TFMainwindow
+============
+
+.. automodule:: ui.tf_mainwindow
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :exclude-members: moved,mouse_released,closed
+   :noindex:

@@ -1,0 +1,189 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tools.tf_api_loader &mdash; TF Desktop 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            TF Desktop
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/ui/index.html">Ui Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/tools/index.html">Tools Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/settings/index.html">Settings Components</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">TF Desktop</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tools.tf_api_loader</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tools.tf_api_loader</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">PyQt6.QtCore</span> <span class="kn">import</span> <span class="n">QThread</span><span class="p">,</span> <span class="n">pyqtSignal</span>
+
+<div class="viewcode-block" id="TFAPILoader">
+<a class="viewcode-back" href="../../modules/tools/tf_api_loader.html#tools.tf_api_loader.TFAPILoader">[docs]</a>
+<span class="k">class</span> <span class="nc">TFAPILoader</span><span class="p">(</span><span class="n">QThread</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A threaded API loader for making HTTP requests.</span>
+
+<span class="sd">    This class extends QThread to perform API requests in a separate thread,</span>
+<span class="sd">    preventing UI freezes during network operations.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        url (str): The API endpoint URL to fetch data from.</span>
+<span class="sd">        parent (QObject, optional): The parent object. Defaults to None.</span>
+
+<span class="sd">    Signals:</span>
+<span class="sd">        data_loaded (dict): </span>
+<span class="sd">            Emitted when data is successfully loaded from the API.</span>
+<span class="sd">            The signal contains the parsed JSON response data.</span>
+<span class="sd">        error_occured (str): </span>
+<span class="sd">            Emitted when an error occurs during the API request.</span>
+<span class="sd">            The signal contains the error message.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; # Create and set up the loader</span>
+<span class="sd">        &gt;&gt;&gt; loader = TFAPILoader(&quot;https://api.example.com/data&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; loader.data_loaded.connect(on_data_received)</span>
+<span class="sd">        &gt;&gt;&gt; loader.error_occured.connect(on_error)</span>
+<span class="sd">        &gt;&gt;&gt; loader.start()</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # In your callback functions</span>
+<span class="sd">        &gt;&gt;&gt; def on_data_received(data: dict):</span>
+<span class="sd">        ...     print(f&quot;Received data: {data}&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; def on_error(message: str):</span>
+<span class="sd">        ...     print(f&quot;Error: {message}&quot;)</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        url (str): The target API endpoint URL.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        - The class expects the API response to contain a &quot;result&quot; field with value &quot;success&quot;</span>
+<span class="sd">        - The response must be valid JSON data</span>
+<span class="sd">        - Network errors are caught and emitted through error_occured signal</span>
+<span class="sd">        - Runs in a separate thread to prevent UI blocking</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_loaded</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">error_occured</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TFAPILoader.__init__">
+<a class="viewcode-back" href="../../modules/tools/tf_api_loader.html#tools.tf_api_loader.TFAPILoader.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span></div>
+
+
+<div class="viewcode-block" id="TFAPILoader.run">
+<a class="viewcode-back" href="../../modules/tools/tf_api_loader.html#tools.tf_api_loader.TFAPILoader.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute the API request in a separate thread.</span>
+<span class="sd">        </span>
+<span class="sd">        Makes a GET request to the specified URL and processes the response.</span>
+<span class="sd">        Successful responses must contain a &quot;result&quot;: &quot;success&quot; field and</span>
+<span class="sd">        valid JSON data.</span>
+<span class="sd">        </span>
+<span class="sd">        Signals:</span>
+<span class="sd">            data_loaded: Emitted with parsed JSON data on successful request.</span>
+<span class="sd">            error_occured: Emitted with error message on any failure.</span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            All exceptions are caught and emitted via error_occured signal</span>
+<span class="sd">            rather than being raised.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;result&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;success&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data_loaded</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error_occurred</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="s2">&quot;Failed to fetch exchange rates&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error_occurred</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error fetching data: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Tony G.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
