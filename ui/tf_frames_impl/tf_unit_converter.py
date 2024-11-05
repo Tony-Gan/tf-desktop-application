@@ -8,12 +8,14 @@ from ui.tf_widgets.tf_number_receiver import TFNumberReceiver
 
 class UnitTypeSelector(QComboBox):
     def __init__(self, parent=None):
-        super().__init__(parent)
         self.setObjectName("unit_type_selector")
         font = QFont("Nunito", 10)
         font.setStyleName("Condensed")
         self.setFont(font)
+        super().__init__(parent, (300, 500), "Unit Converter", 1)
 
+        self.setWindowTitle(self.tr("Unit Converter"))
+        
 class UnitSelector(QComboBox):
     def __init__(self, parent=None):
         super().__init__(parent)

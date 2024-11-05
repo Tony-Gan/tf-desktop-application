@@ -75,10 +75,6 @@ class TFMainWindow(QMainWindow):
         menus. Each menu is initialized through separate methods of the TFMenuBar class.
         """
         self.menu_bar = TFMenuBar(self)
-        self.menu_bar.init_file_menu()
-        self.menu_bar.init_theme_menu()
-        self.menu_bar.init_view_menu()
-        self.menu_bar.init_language_menu()
         self.setMenuBar(self.menu_bar)
 
     def closeEvent(self, event):

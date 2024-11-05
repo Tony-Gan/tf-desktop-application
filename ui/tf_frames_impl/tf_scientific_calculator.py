@@ -14,6 +14,8 @@ class TFScientificCalculator(TFDraggableWindow):
         self.functions = ['sin', 'cos', 'tan', 'ln', 'log', '√']
         super().__init__(parent, (450, 500), "Scientific Calculator", 1)
 
+        self.setWindowTitle(self.tr("Scientific Calculator"))
+
     def initialize_window(self):
         self.container = QWidget(self)
         self.container.setGeometry(10, 30, 430, 460)

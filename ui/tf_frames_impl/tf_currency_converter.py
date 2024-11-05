@@ -202,6 +202,8 @@ class TFCurrencyConverter(TFDraggableWindow):
 
         super().__init__(parent, (300, 500), "Currency Converter", 1)
 
+        self.setWindowTitle(self.tr("Currency Converter"))
+
     def initialize_window(self):
         self.setup_ui()
         

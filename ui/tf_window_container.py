@@ -1,13 +1,13 @@
 from typing import List, Type, Dict
 
 from PyQt6.QtWidgets import QWidget
-from PyQt6.QtCore import QTranslator
 
 from ui.tf_draggable_window import TFDraggableWindow
 from ui.tf_frames_impl.tf_calculator import TFCalculator
 from ui.tf_frames_impl.tf_scientific_calculator import TFScientificCalculator
 from ui.tf_frames_impl.tf_currency_converter import TFCurrencyConverter
 from ui.tf_application import TFApplication
+from tools.tf_tool_registry import TFToolRegistry
 from database.models import TFWindowState
 from settings.general import MAX_WIDTH, MAX_HEIGHT
 
@@ -60,7 +60,7 @@ class TFWindowContainer(QWidget):
             for window in self.windows:
                 window_state = TFWindowState(
                     window_class=window.__class__.__name__,
-                    title=window.display_title,
+                    title=window.metadata.window_title,
                     x_position=window.x(),
                     y_position=window.y()
                 )
@@ -80,15 +80,15 @@ class TFWindowContainer(QWidget):
             window_class (Type[TFDraggableWindow]): Class of the window to create.
         """
         current_count = sum(1 for win in self.windows if isinstance(win, window_class))
-        temp_window = window_class(parent=self)
-        if current_count >= temp_window.max_count:
-            message = f"Cannot add more '{temp_window.display_title}'. Maximum count of {temp_window.max_count} reached."
+        if current_count >= window_class.metadata.max_instances:
+            message = (f"Cannot add more '{window_class.metadata.window_title}'. "
+                      f"Maximum count of {window_class.metadata.max_instances} reached.")
             self.app.show_message(message, 3000, 'green')
             return
 
         window = window_class(parent=self)
         window.closed.connect(self._remove_specific_window)
-        size = window.size
+        window_size = window.metadata.window_size
 
         window.bring_to_front.connect(lambda w: w.raise_())
         window.send_to_back.connect(lambda w: w.lower())
@@ -96,15 +96,15 @@ class TFWindowContainer(QWidget):
         window.lower_level.connect(lambda w: w.lower())
 
         x, y = 0, 0
-        while self._is_position_occupied(x, y, size):
-            x += size[0]
-            if x + size[0] > self.width():
+        while self._is_position_occupied(x, y, window_size):
+            x += window_size[0]
+            if x + window_size[0] > self.width():
                 x = 0
-                y += size[1]
-            if y + size[1] > self.height():
+                y += window_size[1]
+            if y + window_size[1] > self.height():
                 break
         
-        if y + size[1] > self.height():
+        if y + window_size[1] > self.height():
             if self.windows:
                 rightmost_window = max(self.windows, key=lambda w: w.x() + w.width())
                 x = rightmost_window.x() + rightmost_window.width()
@@ -144,7 +144,10 @@ class TFWindowContainer(QWidget):
             window.raise_()
 
     def _restore_windows(self):
-        window_classes = self._get_window_classes()
+        window_classes = {
+            cls.__name__: cls 
+            for cls in TFToolRegistry.get_tools().values()
+        }
 
         with self.app.database.get_session() as session:
             saved_states = session.query(TFWindowState).all()
@@ -164,7 +167,7 @@ class TFWindowContainer(QWidget):
                     
                     window.move(state.x_position, state.y_position)
                     
-                    if window.display_title != state.title:
+                    if state.title != window.metadata.window_title:
                         window.rename(state.title)
                         window.title_label.setText(state.title)
                     
@@ -180,17 +183,27 @@ class TFWindowContainer(QWidget):
     def _append_window(self, window: TFDraggableWindow):
         count = 0
         max_number = 0
+        base_title = window.metadata.window_title
+        
         for w in self.windows:
-            if w.__class__ == window.__class__:
+            if isinstance(w, type(window)):
                 count += 1
                 try:
-                    max_number = int(w.display_title.split(" ")[-1])
-                except ValueError:
-                    max_number = 0
-        if count != 0:
-            window.rename(window.display_title + f' {max_number + 1}')
+                    current_title = w.title_label.text()
+                    if current_title != base_title:
+                        number = int(current_title.split(" ")[-1])
+                        max_number = max(max_number, number)
+                except (ValueError, IndexError):
+                    continue
+
+        if count > 0:
+            new_title = f"{base_title} {max_number + 1}"
+            window.rename(new_title)
+            window.title_label.setText(new_title)
+        else:
+            window.title_label.setText(base_title)
+
         self.windows.append(window)
-        window.title_label.setText(window.display_title)
 
     def _is_position_occupied(self, x, y, size) -> bool:
         for win in self.windows:
@@ -198,11 +211,4 @@ class TFWindowContainer(QWidget):
                (win.y() < y + size[1] and y < win.y() + win.height()):
                 return True
         return False
-
-    def _get_window_classes(self) -> Dict[str, Type[TFDraggableWindow]]:
-        return {
-            'TFCalculator': TFCalculator,
-            'TFScientificCalculator': TFScientificCalculator,
-            'TFCurrencyConverter': TFCurrencyConverter
-        }
     

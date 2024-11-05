@@ -1,13 +1,9 @@
 from PyQt6.QtWidgets import QMenuBar, QMenu, QMainWindow, QScrollArea, QWidget, QSplitter
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QIcon
 
-from ui.tf_frames_impl.tf_calculator import TFCalculator
-from ui.tf_frames_impl.tf_scientific_calculator import TFScientificCalculator
-from ui.tf_frames_impl.tf_currency_converter import TFCurrencyConverter
-from ui.tf_frames_impl.tf_unit_converter import TFUnitConverter
-from ui.tf_frames_impl.tf_coin_fliper import TFCoinFliper
 from ui.tf_window_container import TFWindowContainer
 from ui.tf_application import TFApplication
+from tools.tf_tool_registry import TFToolRegistry
 from database.models import TFSystemState
 from utils.helper import resource_path
 from settings.general import THEME_COLOURS
@@ -18,6 +14,7 @@ class TFMenuBar(QMenuBar):
         self.parent = parent
         self.app = TFApplication.instance()
         self.window_container = None
+        self._menus = {}
         
         central_widget = self.parent.centralWidget()
         if isinstance(central_widget, QWidget):
@@ -37,60 +34,85 @@ class TFMenuBar(QMenuBar):
         self.app.installTranslator(self.app.translator)
         
         self._apply_stylesheet()
-        
-    def init_file_menu(self):
-        file_menu = QMenu(self.tr("File"), self)
-        
-        add_calc_action = file_menu.addAction(self.tr("Add Calculator"))
-        add_calc_action.triggered.connect(self._add_calc_window)
-        
-        add_adv_calc_action = file_menu.addAction(self.tr("Add Advanced Calculator"))
-        add_adv_calc_action.triggered.connect(self._add_adv_calc_window)
 
-        add_currency_converter = file_menu.addAction(self.tr("Add Currency Converter"))
-        add_currency_converter.triggered.connect(self._add_currency_converter)
+        self.init_menus()
+        
+    def init_menus(self):
+        self._create_tool_menus()
 
-        add_unit_converter = file_menu.addAction(self.tr("Add Unit Converter"))
-        add_unit_converter.triggered.connect(self._add_unit_converter)
+        view_menu = self.get_or_create_menu("View")
+        view_menu.addAction(
+            self._create_action(
+                "Toggle Output Panel",
+                self.app.output_panel.toggle_panel
+            )
+        )
 
-        add_coin_flipper = file_menu.addAction(self.tr("Add Coin Flipper"))
-        add_coin_flipper.triggered.connect(self._add_coin_flipper)
-        
-        self.addMenu(file_menu)
-
-    def init_view_menu(self):
-        view_menu = QMenu(self.tr("View"), self)
-        
-        toggle_output_action = view_menu.addAction(self.tr("Toggle Output Panel"))
-        toggle_output_action.triggered.connect(self.app.output_panel.toggle_panel)
-        
-        self.addMenu(view_menu)    
-
-    def init_theme_menu(self):
-        theme_menu = QMenu(self.tr("Theme"), self)
-        self.toggle_theme_action = QAction(self.tr("Toggle Light/Dark Mode"), self)
-        self.toggle_theme_action.triggered.connect(self._toggle_theme)
-        
-        self.toggle_theme_action.setCheckable(True)
-        self.toggle_theme_action.setChecked(self.current_mode == 'dark')
-        
+        theme_menu = self.get_or_create_menu("Theme")
+        self.toggle_theme_action = self._create_action(
+            "Toggle Light/Dark Mode",
+            self._toggle_theme,
+            checkable=True,
+            checked=(self.current_mode == 'dark')
+        )
         theme_menu.addAction(self.toggle_theme_action)
-        self.addMenu(theme_menu)
 
-    def init_language_menu(self):
-        language_menu = QMenu(self.tr("Language"), self)
-        
+        language_menu = self.get_or_create_menu("Language")
         languages = {
             self.tr("English"): "en_US.qm",
             self.tr("Chinese"): "zh_CN.qm"
         }
-
         for language_name, qm_file in languages.items():
-            action = QAction(language_name, self)
-            action.triggered.connect(lambda _, q=qm_file: self._switch_language(q))
-            language_menu.addAction(action)
+            language_menu.addAction(
+                self._create_action(
+                    language_name,
+                    lambda q=qm_file: self._switch_language(q)
+                )
+            )
+
+    def get_or_create_menu(self, menu_path: str) -> QMenu:
+        path_parts = menu_path.split('/')
+        current_menu = self
+        current_path = ""
         
-        self.addMenu(language_menu)
+        for part in path_parts:
+            current_path = f"{current_path}/{part}" if current_path else part
+            if current_path not in self._menus:
+                if isinstance(current_menu, QMenuBar):
+                    new_menu = QMenu(self.tr(part), self)
+                    current_menu.addMenu(new_menu)
+                else:
+                    new_menu = current_menu.addMenu(self.tr(part))
+                self._menus[current_path] = new_menu
+            current_menu = self._menus[current_path]
+        
+        return current_menu
+    
+    def _create_tool_menus(self):
+        for tool_class in TFToolRegistry.get_tools().values():
+            menu = self.get_or_create_menu(tool_class.metadata.menu_path)
+            action = self._create_action(
+                tool_class.metadata.menu_title,
+                lambda checked=False, tc=tool_class: 
+                    self.window_container.add_window(window_class=tc),
+                tooltip=tool_class.metadata.description,
+                icon_path=tool_class.metadata.icon_path
+            )
+            menu.addAction(action)
+
+    def _create_action(self, text: str, slot, tooltip: str = None, icon_path: str = None, checkable: bool = False, checked: bool = False) -> QAction:
+        action = QAction(self.tr(text), self)
+        action.triggered.connect(slot)
+        
+        if tooltip:
+            action.setStatusTip(tooltip)
+        if icon_path:
+            action.setIcon(QIcon(icon_path))
+        if checkable:
+            action.setCheckable(True)
+            action.setChecked(checked)
+            
+        return action
 
     def _switch_language(self, qm_file):
         self.current_language = 'zh' if qm_file == 'zh_CN.qm' else 'en'
@@ -98,12 +120,10 @@ class TFMenuBar(QMenuBar):
         
         self.app.translator.load(resource_path(f"translations/{qm_file}"))
         self.app.installTranslator(self.app.translator)
-
+        
         self.clear()
-        self.init_file_menu()
-        self.init_view_menu()
-        self.init_theme_menu()
-        self.init_language_menu()
+        self._menus.clear()
+        self.init_menus()
 
     def _toggle_theme(self):
         self.current_mode = 'dark' if self.current_mode == 'light' else 'light'
@@ -150,26 +170,6 @@ class TFMenuBar(QMenuBar):
             widget.style().unpolish(widget)
             widget.style().polish(widget)
             widget.update()
-        
-    def _add_calc_window(self):
-        if isinstance(self.window_container, TFWindowContainer):
-            self.window_container.add_window(window_class=TFCalculator)
-        
-    def _add_adv_calc_window(self):
-        if isinstance(self.window_container, TFWindowContainer):
-            self.window_container.add_window(window_class=TFScientificCalculator)
-
-    def _add_currency_converter(self):
-        if isinstance(self.window_container, TFWindowContainer):
-            self.window_container.add_window(window_class=TFCurrencyConverter)
-
-    def _add_unit_converter(self):
-        if isinstance(self.window_container, TFWindowContainer):
-            self.window_container.add_window(window_class=TFUnitConverter)
-
-    def _add_coin_flipper(self):
-        if isinstance(self.window_container, TFWindowContainer):
-            self.window_container.add_window(window_class=TFCoinFliper)
 
     def _get_system_state(self, attribute, default_value=None):
         with self.app.database.get_session() as session:

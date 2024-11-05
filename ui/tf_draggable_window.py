@@ -2,8 +2,11 @@ from time import time
 from PyQt6.QtWidgets import QFrame, QLabel
 from PyQt6.QtGui import QMouseEvent, QFont
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
+from tools.tf_tool_matadata import TFToolMetadata
 from ui.tf_application import TFApplication
 from ui.tf_widgets.tf_settings_widget import TFCloseButton, TFMenuButton
+
+from typing import Optional
 
 class TFDraggableWindow(QFrame):
     """
@@ -59,29 +62,37 @@ class TFDraggableWindow(QFrame):
     raise_level = pyqtSignal(object)
     lower_level = pyqtSignal(object)
 
-    def __init__(self, parent, size, title, max_count=1):
+    metadata: Optional[TFToolMetadata] = None
+
+    def __init__(self, parent):
+        if self.metadata is None:
+            raise ValueError(f"Tool class {self.__class__.__name__} must define metadata")
+        
         super().__init__(parent)
         self.app = TFApplication.instance()
 
         self.setObjectName("TFDraggableWindow")
         self.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Raised)
-        self.setFixedSize(*size)
-        self.size = size
-        self.display_title = title
-        self.max_count = max_count
-        self.last_moved_time = 0
+        self.setFixedSize(*self.metadata.window_size)
 
-        self.title_label = QLabel(self.display_title, self)
+        self.title_label = QLabel(self.metadata.window_title, self)
         self.title_label.move(10, 5)
         font = QFont("Open Sans", 11)
         self.title_label.setFont(font)
 
         self._init_buttons()
-    
-        self.initialize_window()
 
         self._dragging = False
         self._offset = QPoint()
+        self.last_moved_time = 0
+        
+        self.initialize_window()
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if cls.metadata is not None:
+            from tools.tf_tool_registry import TFToolRegistry
+            TFToolRegistry.register(cls)
 
     def initialize_window(self):
         """
@@ -96,8 +107,9 @@ class TFDraggableWindow(QFrame):
         raise NotImplementedError("Subclasses must implement initialize_window()")
 
     def _init_buttons(self):
-        self.close_button = TFCloseButton(parent=self, position=(self.size[0] - 25, 5))
-        self.menu_button = TFMenuButton(parent=self, position=(self.size[0] - 50, 5))
+        width = self.metadata.window_size[0]
+        self.close_button = TFCloseButton(parent=self, position=(width - 25, 5))
+        self.menu_button = TFMenuButton(parent=self, position=(width - 50, 5))
 
     def rename(self, name: str) -> None:
         self.display_title = name

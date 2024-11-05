@@ -3,14 +3,25 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
 from ui.tf_draggable_window import TFDraggableWindow
+from tools.tf_tool_matadata import TFToolMetadata
 
 class TFCalculator(TFDraggableWindow):
+    metadata = TFToolMetadata(
+        name="calculator",
+        menu_path="Tools/Calculators",
+        window_title="Calculator",
+        menu_title="Add Calculator",
+        window_size=(300, 500),
+        description="Basic calculator for simple calculations",
+        max_instances=1
+    )
+
     def __init__(self, parent=None):
         self.current_value = 0
         self.pending_operation = None
         self.new_number = True
         self.last_operator = None
-        super().__init__(parent, (300, 500), "Calculator", 1)
+        super().__init__(parent)
 
     def initialize_window(self):
         self.container = QWidget(self)
