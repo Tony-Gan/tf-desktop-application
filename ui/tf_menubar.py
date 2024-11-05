@@ -4,9 +4,10 @@ from PyQt6.QtGui import QAction
 from ui.tf_frames_impl.tf_calculator import TFCalculator
 from ui.tf_frames_impl.tf_scientific_calculator import TFScientificCalculator
 from ui.tf_frames_impl.tf_currency_converter import TFCurrencyConverter
+from ui.tf_frames_impl.tf_unit_converter import TFUnitConverter
 from ui.tf_frames_impl.tf_coin_fliper import TFCoinFliper
 from ui.tf_window_container import TFWindowContainer
-from tools.tf_application import TFApplication
+from ui.tf_application import TFApplication
 from database.models import TFSystemState
 from utils.helper import resource_path
 from settings.general import THEME_COLOURS
@@ -26,7 +27,14 @@ class TFMenuBar(QMenuBar):
                 if isinstance(scroll_area, QScrollArea):
                     self.window_container = scroll_area.widget()
         
-        self.current_mode = 'dark' if self.get_theme_mode() else 'light'
+        # Load saved preferences
+        self.current_mode = 'dark' if self._get_system_state('dark_mode', False) else 'light'
+        self.current_language = self._get_system_state('language', 'en')
+        
+        # Apply saved language
+        qm_file = 'zh_CN.qm' if self.current_language == 'zh' else 'en_US.qm'
+        self.app.translator.load(resource_path(f"translations/{qm_file}"))
+        self.app.installTranslator(self.app.translator)
         
         self._apply_stylesheet()
         
@@ -42,6 +50,9 @@ class TFMenuBar(QMenuBar):
         add_currency_converter = file_menu.addAction(self.tr("Add Currency Converter"))
         add_currency_converter.triggered.connect(self._add_currency_converter)
 
+        add_unit_converter = file_menu.addAction(self.tr("Add Unit Converter"))
+        add_unit_converter.triggered.connect(self._add_unit_converter)
+
         add_coin_flipper = file_menu.addAction(self.tr("Add Coin Flipper"))
         add_coin_flipper.triggered.connect(self._add_coin_flipper)
         
@@ -51,7 +62,7 @@ class TFMenuBar(QMenuBar):
         view_menu = QMenu(self.tr("View"), self)
         
         toggle_output_action = view_menu.addAction(self.tr("Toggle Output Panel"))
-        toggle_output_action.triggered.connect(self.parent.toggle_output_panel)
+        toggle_output_action.triggered.connect(self.app.output_panel.toggle_panel)
         
         self.addMenu(view_menu)    
 
@@ -82,6 +93,9 @@ class TFMenuBar(QMenuBar):
         self.addMenu(language_menu)
 
     def _switch_language(self, qm_file):
+        self.current_language = 'zh' if qm_file == 'zh_CN.qm' else 'en'
+        self._set_system_state('language', self.current_language)
+        
         self.app.translator.load(resource_path(f"translations/{qm_file}"))
         self.app.installTranslator(self.app.translator)
 
@@ -93,7 +107,7 @@ class TFMenuBar(QMenuBar):
 
     def _toggle_theme(self):
         self.current_mode = 'dark' if self.current_mode == 'light' else 'light'
-        self.set_theme_mode(self.current_mode == 'dark')
+        self._set_system_state('dark_mode', self.current_mode == 'dark')
         self._apply_stylesheet()
         self.toggle_theme_action.setChecked(self.current_mode == 'dark')
     
@@ -149,21 +163,26 @@ class TFMenuBar(QMenuBar):
         if isinstance(self.window_container, TFWindowContainer):
             self.window_container.add_window(window_class=TFCurrencyConverter)
 
+    def _add_unit_converter(self):
+        if isinstance(self.window_container, TFWindowContainer):
+            self.window_container.add_window(window_class=TFUnitConverter)
+
     def _add_coin_flipper(self):
         if isinstance(self.window_container, TFWindowContainer):
             self.window_container.add_window(window_class=TFCoinFliper)
 
-    def get_theme_mode(self) -> bool:
+    def _get_system_state(self, attribute, default_value=None):
         with self.app.database.get_session() as session:
             system_state = session.query(TFSystemState).first()
-            return system_state.dark_mode if system_state else False
-        
-    def set_theme_mode(self, is_dark_mode: bool) -> None:
+            return getattr(system_state, attribute) if system_state else default_value
+
+    def _set_system_state(self, attribute, value):
         with self.app.database.get_session() as session:
             system_state = session.query(TFSystemState).first()
             if system_state:
-                system_state.dark_mode = is_dark_mode
+                setattr(system_state, attribute, value)
             else:
-                system_state = TFSystemState(dark_mode=is_dark_mode)
+                system_state = TFSystemState()
+                setattr(system_state, attribute, value)
                 session.add(system_state)
             session.commit()

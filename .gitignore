@@ -1,7 +1,12 @@
-# Ignore build and dist folders
+# Ignore folders
 build/
 dist/
 data/
+docs/
+*.db
+
+# Logs
+*.log
 
 # Ignore all __pycache__ folders at any level
 **/__pycache__/
@@ -16,9 +21,13 @@ data/
 # Ignore secret settings file
 settings/secret.py
 
-# Ignore documentation files
-docs/
-
 # Ignore translation source files and scripts
 translations/*.ts
 utils/scripts/*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes

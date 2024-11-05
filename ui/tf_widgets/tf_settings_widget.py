@@ -4,9 +4,20 @@ from typing import Optional, Callable, Tuple, List, Dict
 from PyQt6.QtWidgets import QPushButton, QMenu
 from PyQt6.QtGui import QIcon, QAction
 
-class TFIconButton(QPushButton):
-    DEFAULT_SIZE = (20, 20)
+from settings.general import ICON_BUTTON_SIZE
 
+class TFIconButton(QPushButton):
+    """
+    A base class for icon-based buttons with fixed size and position.
+
+    Args:
+        parent (QWidget): Parent widget.
+        icon_path (str): Path to the icon image.
+        position (Tuple[int, int]): Button position (x, y).
+        on_click (Optional[Callable]): Callback function for click event.
+        size (Optional[Tuple[int, int]], optional): Button size (width, height). 
+            Defaults to ICON_BUTTON_SIZE (20, 20).
+    """
     def __init__(
         self,
         parent,
@@ -17,12 +28,25 @@ class TFIconButton(QPushButton):
     ):
         super().__init__(parent)
 
-        self.setFixedSize(*(size or self.DEFAULT_SIZE))
+        self.setFixedSize(*(size or ICON_BUTTON_SIZE))
         self.move(*position)
         self.setIcon(QIcon(icon_path))
         self.clicked.connect(on_click)
 
 class TFCloseButton(TFIconButton):
+    """
+    A specialized button for closing windows or panels.
+
+    Args:
+        parent (QWidget): Parent widget to be closed.
+        position (Tuple[int, int], optional): Button position (x, y).
+
+    Example:
+        >>> close_btn = TFCloseButton(
+        ...     parent=window,
+        ...     position=(380, 5)
+        ... )
+    """
     def __init__(
         self,
         parent,
@@ -42,16 +66,41 @@ class TFCloseButton(TFIconButton):
         self.parent.hide()
 
 class MenuSection(Enum):
+    """
+    Enumeration of menu sections for organizing actions.
+
+    Attributes:
+        WINDOW_CONTROL: Section for window positioning controls.
+        CUSTOM: Section for custom user-added actions.
+        WINDOW_MANAGEMENT: Section for window management actions like close.
+    """
     WINDOW_CONTROL = 1
     CUSTOM = 2
     WINDOW_MANAGEMENT = 3
 
 class TFMenuButton(TFIconButton):
-    def __init__(
-        self,
-        parent,
-        position: Tuple[int, int] = None
-    ):
+    """
+    A button that displays a configurable menu when clicked.
+
+    Provides a hierarchical menu system with sections for window control,
+    custom actions, and window management.
+
+    Args:
+        parent (QWidget): Parent widget.
+        position (Tuple[int, int], optional): Button position (x, y).
+
+    Example:
+        >>> menu_btn = TFMenuButton(parent=window, position=(355, 5))
+        >>> menu_btn.add_action(
+        ...     text="Custom Action",
+        ...     callback=lambda: print("Custom action"),
+        ...     section=MenuSection.CUSTOM
+        ... )
+
+    Attributes:
+        actions (Dict[MenuSection, List[QAction]]): Actions organized by menu section.
+    """
+    def __init__(self, parent, position: Tuple[int, int] = None):
         super().__init__(
             parent=parent,
             icon_path="static/images/icons/settings.png",
@@ -91,11 +140,16 @@ class TFMenuButton(TFIconButton):
         for text, callback in window_management:
             self.add_action(text, callback, MenuSection.WINDOW_MANAGEMENT)
 
-    def add_action(self, 
-                  text: str, 
-                  callback: Callable, 
-                  section: MenuSection = MenuSection.CUSTOM,
-                  index: int = -1):
+    def add_action(self, text: str, callback: Callable, section: MenuSection = MenuSection.CUSTOM, index: int = -1):
+        """
+        Add a new action to the menu.
+
+        Args:
+            text (str): Action text label.
+            callback (Callable): Function to call when action triggered.
+            section (MenuSection, optional): Menu section. Defaults to CUSTOM.
+            index (int, optional): Position in section. Defaults to -1 (append).
+        """
         action = QAction(text, self.parent)
         action.triggered.connect(callback)
         
@@ -107,6 +161,14 @@ class TFMenuButton(TFIconButton):
         self.rebuild_menu()
 
     def remove_action(self, text: str, section: Optional[MenuSection] = None):
+        """
+        Remove an action from the menu.
+
+        Args:
+            text (str): Text of action to remove.
+            section (Optional[MenuSection], optional): Section to search in. 
+                If None, searches all sections.
+        """
         sections = [section] if section else list(MenuSection)
         
         for sect in sections:
@@ -117,13 +179,24 @@ class TFMenuButton(TFIconButton):
                     return
                 
     def clear_section(self, section: MenuSection):
+        """
+        Remove all actions from a specific section.
+
+        Args:
+            section (MenuSection): Section to clear.
+        """
         self.actions[section].clear()
         self.rebuild_menu()
 
-    def move_action(self, 
-                   text: str, 
-                   new_section: MenuSection, 
-                   new_index: int = -1):
+    def move_action(self, text: str, new_section: MenuSection, new_index: int = -1):
+        """
+        Move an action to a different section.
+
+        Args:
+            text (str): Text of action to move.
+            new_section (MenuSection): Destination section.
+            new_index (int, optional): Position in new section. Defaults to -1 (append).
+        """
         action_to_move = None
         for section in MenuSection:
             for action in self.actions[section]:
@@ -142,6 +215,12 @@ class TFMenuButton(TFIconButton):
             self.rebuild_menu()
 
     def rebuild_menu(self):
+        """
+        Rebuild the menu structure with current actions.
+        
+        Clears and reconstructs menu with actions in proper sections,
+        separated by dividers where appropriate.
+        """
         self.menu.clear()
         
         for action in self.actions[MenuSection.WINDOW_CONTROL]:

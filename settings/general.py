@@ -3,6 +3,8 @@ MAX_HEIGHT = 600
 
 GENERAL_BUTTON_HEIGHT = 35
 
+ICON_BUTTON_SIZE = (20, 20)
+
 THEME_COLOURS = {
     'light': {
         'background-primary': 'white',

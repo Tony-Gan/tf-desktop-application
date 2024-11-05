@@ -29,7 +29,7 @@ class TFDatabase:
     
     def initialize_data(self):
         with self.get_session() as session:
-            default_state = TFSystemState(dark_mode=False)
+            default_state = TFSystemState(dark_mode=False, language='en')
             session.add(default_state)
 
     @classmethod

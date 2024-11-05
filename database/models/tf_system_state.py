@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Boolean
+from sqlalchemy import Column, Integer, Boolean, String
 from . import Base
 
 class TFSystemState(Base):
@@ -6,3 +6,4 @@ class TFSystemState(Base):
 
     id = Column(Integer, primary_key=True)
     dark_mode = Column(Boolean, default=False)
+    language = Column(String, default='en')

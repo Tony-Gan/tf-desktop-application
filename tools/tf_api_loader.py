@@ -11,22 +11,33 @@ class TFAPILoader(QThread):
         url (str): The API endpoint URL to fetch data from.
         parent (QObject, optional): The parent object. Defaults to None.
 
-    Signals:
+    Signals: \n
         data_loaded (dict): Emitted when data is successfully loaded from the API.
-            The signal contains the parsed JSON response data.\n
+            The signal contains the parsed JSON response data. \n
         error_occured (str): Emitted when an error occurs during the API request.
-            The signal contains the error message.\n
+            The signal contains the error message. \n
 
     Example:
+        >>> # Create and set up the loader
         >>> loader = TFAPILoader("https://api.example.com/data")
         >>> loader.data_loaded.connect(on_data_received)
         >>> loader.error_occured.connect(on_error)
         >>> loader.start()
+        >>>
+        >>> # In your callback functions
+        >>> def on_data_received(data: dict):
+        ...     print(f"Received data: {data}")
+        >>> def on_error(message: str):
+        ...     print(f"Error: {message}")
+
+    Attributes:
+        url (str): The target API endpoint URL.
 
     Note:
         - The class expects the API response to contain a "result" field with value "success"
         - The response must be valid JSON data
         - Network errors are caught and emitted through error_occured signal
+        - Runs in a separate thread to prevent UI blocking
     """
     data_loaded = pyqtSignal(dict)
     error_occured = pyqtSignal(str)
@@ -39,11 +50,16 @@ class TFAPILoader(QThread):
         """Execute the API request in a separate thread.
         
         Makes a GET request to the specified URL and processes the response.
-        Emits either data_loaded with parsed JSON data on success,
-        or error_occured with error message on failure.
+        Successful responses must contain a "result": "success" field and
+        valid JSON data.
         
-        Raises:
-            No exceptions are raised; all errors are emitted via error_occured signal.
+        Signals:
+            data_loaded: Emitted with parsed JSON data on successful request.
+            error_occured: Emitted with error message on any failure.
+        
+        Note:
+            All exceptions are caught and emitted via error_occured signal
+            rather than being raised.
         """
         try:
             response = requests.get(self.url)

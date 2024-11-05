@@ -1,54 +1,54 @@
 from time import time
-from PyQt6.QtWidgets import QFrame, QMenu, QLabel
+from PyQt6.QtWidgets import QFrame, QLabel
 from PyQt6.QtGui import QMouseEvent, QFont
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
-from tools.tf_application import TFApplication
+from ui.tf_application import TFApplication
 from ui.tf_widgets.tf_settings_widget import TFCloseButton, TFMenuButton
 
 class TFDraggableWindow(QFrame):
     """
-    An abstract base class for creating draggable window widgets with title bar, close button, and customizable menu.
+    A draggable window frame that can be moved within its parent container.
 
-    This class provides the base implementation for draggable window frames that can be moved around their parent widget.
-    It includes a title bar, close button, and a customizable menu system. This class should not be instantiated directly;
-    instead, create a subclass to implement specific window functionality.
+    This base class provides draggable window functionality with snapping to edges,
+    window management signals, and basic window controls. It serves as the base for
+    all draggable windows in the application.
 
     Args:
-        parent (QWidget, optional): The parent widget. Defaults to None.
-        size (tuple[int, int], optional): Window size as (width, height). Defaults to (200, 150).
-        title (str, optional): Window title text. Defaults to "Default Window".
+        parent (QWidget): Parent widget containing this window.
+        size (tuple): Window size as (width, height).
+        title (str): Window title text.
         max_count (int, optional): Maximum number of instances allowed. Defaults to 1.
-        message_bar (TFMessageBar, optional): Message bar for displaying temporary notifications. Defaults to None.
-
-    Signals:
-        moved: Emitted when the window is moved.\n
-        mouse_released: Emitted when the mouse button is released after dragging.\n
-        closed: Emitted when the window is closed, passes the window instance.\n
-        bring_to_front: Emit when the window is asking bring it to front.\n
-        send_to_back: Emit when the window is asking send it to back.\n
-        raise_level: Emit when the window is asking raising level.\n
-        lower_level: Emit when the window is asking lowering level.\n
 
     Example:
-        >>> class MyCustomWindow(TFDraggableWindow):
-        ...     def __init__(self, parent=None):
-        ...         super().__init__(parent, size=(300, 200), title="My Custom Window")
-        ...         # Add custom widgets and functionality
-        ...         self.add_menu_action("Custom Action", self.my_custom_action)
-        ...     
-        ...     def my_custom_action(self):
-        ...         # Implement custom functionality
+        >>> # Creating a custom draggable window
+        >>> class MyWindow(TFDraggableWindow):
+        ...     def initialize_window(self):
+        ...         # Add custom widgets and layout
         ...         pass
-        ...
-        >>> custom_window = MyCustomWindow(parent=main_window)
-        >>> custom_window.show()
+        >>> 
+        >>> window = MyWindow(
+        ...     parent=container,
+        ...     size=(400, 300),
+        ...     title="My Window"
+        ... )
 
     Attributes:
-        size (tuple[int, int]): Current window size.
-        display_title (str): Current window title.
+        display_title (str): Window's display title.
+        size (tuple): Window dimensions (width, height).
         max_count (int): Maximum allowed instances.
-        message_bar (TFMessageBar): Associated message bar for temporary notifications.
-        last_moved_time (float): Timestamp of last movement.
+        title_label (QLabel): Label displaying window title.
+        close_button (TFCloseButton): Button to close window.
+        menu_button (TFMenuButton): Button for window menu.
+        last_moved_time (float): Timestamp of last window movement.
+
+    Signals: \n
+        moved: Emitted when window is moved. \n
+        mouse_released: Emitted when mouse button is released. \n
+        closed: Emitted when window is closed, passes window object. \n
+        bring_to_front: Emitted to request window be brought to front. \n
+        send_to_back: Emitted to request window be sent to back. \n
+        raise_level: Emitted to request window be raised one level. \n
+        lower_level: Emitted to request window be lowered one level. \n
     """
 
     moved = pyqtSignal()
@@ -59,7 +59,7 @@ class TFDraggableWindow(QFrame):
     raise_level = pyqtSignal(object)
     lower_level = pyqtSignal(object)
 
-    def __init__(self, parent=None, size=(200, 150), title="Default Window", max_count=1):
+    def __init__(self, parent, size, title, max_count=1):
         super().__init__(parent)
         self.app = TFApplication.instance()
 
@@ -76,77 +76,59 @@ class TFDraggableWindow(QFrame):
         font = QFont("Open Sans", 11)
         self.title_label.setFont(font)
 
-        self.init_buttons()
-
-        self.menu = QMenu(self)
+        self._init_buttons()
     
         self.initialize_window()
 
-        self.dragging = False
-        self.offset = QPoint()
-
-    def init_buttons(self):
-        self.close_button = TFCloseButton(parent=self, position=(self.size[0] - 25, 5))
-        self.menu_button = TFMenuButton(parent=self, position=(self.size[0] - 50, 5))
+        self._dragging = False
+        self._offset = QPoint()
 
     def initialize_window(self):
         """
-        Initialize the window content and setup.
+        Initialize window content and layout.
         
         This method must be implemented by subclasses to set up their specific
-        window content, widgets, and any additional initialization.
-        
+        window content and layout.
+
         Raises:
-            NotImplementedError: This method must be implemented by subclasses.
+            NotImplementedError: If subclass doesn't implement this method.
         """
         raise NotImplementedError("Subclasses must implement initialize_window()")
 
-    def rename(self, name: str) -> None:
-        """
-        Rename the window.
+    def _init_buttons(self):
+        self.close_button = TFCloseButton(parent=self, position=(self.size[0] - 25, 5))
+        self.menu_button = TFMenuButton(parent=self, position=(self.size[0] - 50, 5))
 
-        Args:
-            name (str): New title for the window.
-        """
+    def rename(self, name: str) -> None:
         self.display_title = name
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """
-        Handle mouse press events for initiating window dragging.
-
-        This method is called when a mouse button is pressed on the window. It initiates
-        the dragging operation when the left mouse button is pressed by recording the
-        initial click position relative to the window.
+        Handle mouse press events for window dragging.
+        
+        Initiates dragging on left button press and brings window to front.
 
         Args:
-            event (QMouseEvent): The mouse event containing button and position information.
-                            Only left button clicks are processed for dragging.
+            event (QMouseEvent): Mouse event object.
         """
         if event.button() == Qt.MouseButton.LeftButton:
-            self.dragging = True
-            self.offset = event.position().toPoint()
+            self._dragging = True
+            self._offset = event.position().toPoint()
             self.parent().bring_window_to_front(self)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """
         Handle mouse move events for window dragging.
-
-        This method is called when the mouse is moved while a button is pressed. If dragging
-        is active (initiated by mousePressEvent), it calculates the new window position based
-        on the mouse movement delta and updates the window position. The window movement is
-        constrained to stay within the parent widget's boundaries.
+        
+        Manages window movement with edge snapping to other windows.
+        Constrains movement within parent container bounds.
 
         Args:
-            event (QMouseEvent): The mouse event containing the current cursor position.
-                            Used to calculate movement delta from the initial press position.
-        
-        Note:
-            The window position is constrained to prevent moving outside the parent widget's
-            boundaries by enforcing minimum x and y coordinates of 0.
+            event (QMouseEvent): Mouse event object.
         """
-        if self.dragging:
+        if self._dragging:
             current_pos = event.position().toPoint()
-            delta = current_pos - self.offset
+            delta = current_pos - self._offset
             new_pos = self.pos() + delta
 
             container = self.parent()
@@ -179,21 +161,15 @@ class TFDraggableWindow(QFrame):
                 container.resize_container()
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        """Handle mouse release events for completing window dragging.
-
-        This method is called when a mouse button is released. If it was a left button release
-        during an active drag operation, it finalizes the drag operation, updates the last
-        moved timestamp, and emits the mouse_released signal.
+        """
+        Handle mouse release events.
+        
+        Ends dragging operation and records movement timestamp.
 
         Args:
-            event (QMouseEvent): The mouse event containing button information.
-                            Only left button releases are processed.
-
-        Note:
-            Updates last_moved_time with the current timestamp which can be used to track
-            the most recent window movement.
+            event (QMouseEvent): Mouse event object.
         """
         if event.button() == Qt.MouseButton.LeftButton:
-            self.dragging = False
+            self._dragging = False
             self.last_moved_time = time()
             self.mouse_released.emit()

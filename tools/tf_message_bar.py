@@ -1,9 +1,10 @@
 from PyQt6.QtWidgets import QLabel
-from PyQt6.QtCore import QTimer, Qt, QTranslator
+from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QFont, QFontMetrics
 
 class TFMessageBar(QLabel):
-    """A temporary message display widget for notifications.
+    """
+    A temporary message display widget for notifications.
 
     This class extends QLabel to create a temporary notification bar that appears
     at the top of the parent widget and automatically hides after a specified duration.
