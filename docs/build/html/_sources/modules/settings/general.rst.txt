@@ -1,9 +1,0 @@
-General
-=======
-
-.. automodule:: settings.general
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :exclude-members: moved,mouse_released,closed
-   :noindex:

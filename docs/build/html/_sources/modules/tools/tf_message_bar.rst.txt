@@ -1,9 +1,0 @@
-TFMessageBar
-============
-
-.. automodule:: tools.tf_message_bar
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :exclude-members: moved,mouse_released,closed
-   :noindex:

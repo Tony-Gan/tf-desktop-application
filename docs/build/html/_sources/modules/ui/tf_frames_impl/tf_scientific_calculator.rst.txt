@@ -1,9 +1,0 @@
-TFScientificCalculator
-======================
-
-.. automodule:: ui.tf_frames_impl.tf_scientific_calculator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :exclude-members: moved,mouse_released,closed
-   :noindex:

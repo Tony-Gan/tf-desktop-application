@@ -1,9 +1,0 @@
-TFSettingsWidget
-================
-
-.. automodule:: ui.tf_widgets.tf_settings_widget
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :exclude-members: moved,mouse_released,closed
-   :noindex:

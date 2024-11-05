@@ -1,9 +1,0 @@
-TFWebView
-=========
-
-.. automodule:: ui.tf_web_view
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :exclude-members: moved,mouse_released,closed
-   :noindex:

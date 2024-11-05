@@ -1,9 +1,0 @@
-TFToolMatadata
-==============
-
-.. automodule:: tools.tf_tool_matadata
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :exclude-members: moved,mouse_released,closed
-   :noindex:

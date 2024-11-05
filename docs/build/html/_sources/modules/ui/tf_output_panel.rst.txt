@@ -1,9 +1,0 @@
-TFOutputPanel
-=============
-
-.. automodule:: ui.tf_output_panel
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :exclude-members: moved,mouse_released,closed
-   :noindex:

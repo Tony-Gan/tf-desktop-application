@@ -1,9 +1,0 @@
-TFButtons
-=========
-
-.. automodule:: ui.tf_widgets.tf_buttons
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :exclude-members: moved,mouse_released,closed
-   :noindex:

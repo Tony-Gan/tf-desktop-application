@@ -1,9 +1,0 @@
-TFCoinFliper
-============
-
-.. automodule:: ui.tf_frames_impl.tf_coin_fliper
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :exclude-members: moved,mouse_released,closed
-   :noindex:

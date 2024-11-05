@@ -1,9 +1,0 @@
-TFNumberReceiver
-================
-
-.. automodule:: ui.tf_widgets.tf_number_receiver
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :exclude-members: moved,mouse_released,closed
-   :noindex:

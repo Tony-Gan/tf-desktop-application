@@ -1,9 +1,0 @@
-TFUnitConverter
-===============
-
-.. automodule:: ui.tf_frames_impl.tf_unit_converter
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :exclude-members: moved,mouse_released,closed
-   :noindex:
