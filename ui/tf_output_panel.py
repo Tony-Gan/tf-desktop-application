@@ -28,6 +28,7 @@ class TFOutputPanel(QTextEdit):
     def _init_ui(self):
         self.setObjectName("output_panel")
         self.setReadOnly(True)
+        
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         
