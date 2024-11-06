@@ -1,6 +1,6 @@
-# tf_output_panel.py
-from PyQt6.QtWidgets import QTextEdit, QApplication, QMainWindow
-from PyQt6.QtCore import pyqtSignal, Qt, QRect
+from PyQt6.QtWidgets import QTextEdit, QApplication
+from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtGui import QPainter, QColor
 
 from ui.tf_widgets.tf_settings_widget import TFCloseButton, TFMenuButton
 from settings.general import ICON_BUTTON_SIZE
@@ -10,8 +10,7 @@ class TFOutputPanel(QTextEdit):
     A floating output panel that stays at the bottom of the main window.
     Allows vertical resizing only and maintains width equal to parent window.
     """
-    closed = pyqtSignal()
-    visibility_changed = pyqtSignal(bool)
+    closed = pyqtSignal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -24,6 +23,8 @@ class TFOutputPanel(QTextEdit):
         self._init_ui()
         self._init_buttons()
         self.hide()
+
+        self.setMouseTracking(True)
 
     def _init_ui(self):
         self.setObjectName("output_panel")
@@ -45,34 +46,20 @@ class TFOutputPanel(QTextEdit):
         self.setContentsMargins(5, 5, 5, 5)
 
     def _init_buttons(self):
-        self._close_button = TFCloseButton(parent=self, position=(0, 0))
-        self._menu_button = TFMenuButton(parent=self, position=(0, 0), skip_default=True)
-        self._update_button_positions()
+        self._close_button = TFCloseButton(self, (0, 0))
+        self._menu_button = TFMenuButton(self, (0, 0), skip_default=True)
 
-    def _update_button_positions(self):
-        width = self.width()
+    def update_button_positions(self):
         margin = 5
         spacing = 5
         button_size = ICON_BUTTON_SIZE[0]
 
-        close_btn_x = width - margin - button_size
+        close_btn_x = self.width() - margin - button_size
         menu_btn_x = close_btn_x - spacing - button_size
         btn_y = margin
 
         self._close_button.move(close_btn_x, btn_y)
         self._menu_button.move(menu_btn_x, btn_y)
-
-    def update_position(self):
-        pass
-
-    def showEvent(self, event):
-        super().showEvent(event)
-        self.update_position()
-        self.visibility_changed.emit(True)
-        
-    def hideEvent(self, event):
-        super().hideEvent(event)
-        self.visibility_changed.emit(False)
 
     def display_output(self, text):
         self.append(text)
@@ -89,16 +76,25 @@ class TFOutputPanel(QTextEdit):
             self.show()
             self.raise_()
 
-    def showEvent(self, event):
-        super().showEvent(event)
-        self.update_position()
-        self.visibility_changed.emit(True)
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and 0 <= event.position().y() <= self.resize_area_height:
+            self.dragging = True
+            self.drag_start_y = event.globalPosition().y()
+            self.initial_height = self.height()
+            event.accept()
+        else:
+            super().mousePressEvent(event)
 
-    def hideEvent(self, event):
-        super().hideEvent(event)
-        self.visibility_changed.emit(False)
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and self.dragging:
+            self.dragging = False
+            event.accept()
+        else:
+            super().mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event):
+        pass
+        # 世纪难题：为什么缩放没用
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self._update_button_positions()
-    

@@ -36,6 +36,7 @@ class TFMainWindow(QMainWindow):
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll_area.setMinimumSize(200, 200)
+        
         self.scroll_area.setWidget(self.window_container)
         self.window_container.setParent(self.scroll_area)
         self.scroll_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -61,23 +62,14 @@ class TFMainWindow(QMainWindow):
 
     def _setup_output_panel(self):
         self.app.output_panel.setParent(self)
-        self.app.output_panel.hide()
-
-    def adjust_container_height(self, *args):
-        available_height = self.central_widget.height()
-        panel_height = (self.app.output_panel.height() if self.app.output_panel.isVisible() else 0)
-        
-        self.scroll_area.setFixedHeight(available_height - panel_height)
+        self.app.output_panel.setFixedWidth(self.width())
+        self.app.output_panel.move(0, self.height() - self.app.output_panel.height())
+        self.app.output_panel.update_button_positions()
 
     def resizeEvent(self, event):
-        super().resizeEvent(event)
-        if self.app.output_panel.isVisible():
-            self.app.output_panel.update_position()
-
-    def moveEvent(self, event):
-        super().moveEvent(event)
-        if self.app.output_panel.isVisible():
-            self.app.output_panel.update_position()
+        self.app.output_panel.setFixedWidth(self.width())
+        self.app.output_panel.move(0, self.height() - self.app.output_panel.height())
+        self.app.output_panel.update_button_positions()
 
     def closeEvent(self, event):
         if hasattr(self, 'window_container'):
