@@ -3,6 +3,7 @@ dist/
 data/
 docs/
 *.db
+.idea/
 
 # Logs
 *.log
