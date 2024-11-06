@@ -49,7 +49,7 @@ def main():
 
     app.message_bar = TFMessageBar(window)
 
-    app.logger.info("Application initialized successfully")
+    app.logger.info("Application initialized successfully.")
     window.show()
     
     sys.exit(app.exec())
