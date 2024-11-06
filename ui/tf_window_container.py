@@ -1,9 +1,9 @@
-from typing import List, Type, Dict
+from typing import List, Type
 
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtCore import QSize
+from PyQt6.QtWidgets import QWidget, QScrollArea
 
 from ui.tf_draggable_window import TFDraggableWindow
-from ui.tf_frames_impl.tf_calculator import TFCalculator
 from ui.tf_application import TFApplication
 from tools.tf_tool_registry import TFToolRegistry
 from database.models import TFWindowState
@@ -41,8 +41,10 @@ class TFWindowContainer(QWidget):
         self.parent = parent
         self.app = TFApplication.instance()
         self.windows: List[TFDraggableWindow] = []
+        
+        # Set initial size to ensure scrolling works properly
         self.setMinimumSize(MAX_WIDTH, MAX_HEIGHT)
-
+        
         self._restore_windows()
 
     def save_all_window_states(self):
@@ -118,16 +120,31 @@ class TFWindowContainer(QWidget):
 
     def resize_container(self) -> None:
         """
-        Resize the container to accommodate all windows.
-        
-        Adjusts the container size based on the position and size of all
-        contained windows, ensuring minimum dimensions are maintained.
-        Uses MAX_WIDTH and MAX_HEIGHT as minimum constraints.
+        Resize the container to accommodate all windows, considering both width and height.
+        Ensures proper scrolling in both directions.
         """
-        max_width = max((window.x() + window.width() for window in self.windows), default=MAX_WIDTH)
-        max_height = max((window.y() + window.height() for window in self.windows), default=MAX_HEIGHT)
+        max_right = max((window.x() + window.width() for window in self.windows), default=0)
+        max_bottom = max((window.y() + window.height() for window in self.windows), default=0)
+        
+        padding = 20
+        new_width = max(max_right + padding, MAX_WIDTH)
+        new_height = max(max_bottom + padding, MAX_HEIGHT)
+        
+        self.setMinimumWidth(new_width)
+        self.setMinimumHeight(new_height)
+        self.resize(new_width, new_height)
+        
+        scroll_area = self._find_parent_scroll_area()
+        if scroll_area:
+            scroll_area.updateGeometry()
 
-        self.setMinimumSize(max(max_width, MAX_WIDTH), max(max_height, MAX_HEIGHT))
+    def _find_parent_scroll_area(self) -> QScrollArea:
+        widget = self
+        while widget:
+            if isinstance(widget.parentWidget(), QScrollArea):
+                return widget.parentWidget()
+            widget = widget.parentWidget()
+        return None
     
     def bring_window_to_front(self, window: TFDraggableWindow) -> None:
         """
@@ -208,3 +225,15 @@ class TFWindowContainer(QWidget):
                 return True
         return False
     
+    def sizeHint(self) -> QSize:
+        return self.minimumSizeHint()
+    
+    def minimumSizeHint(self) -> QSize:
+        max_right = max((window.x() + window.width() for window in self.windows), default=0)
+        max_bottom = max((window.y() + window.height() for window in self.windows), default=0)
+        
+        padding = 50
+        width = max(max_right + padding, MAX_WIDTH)
+        height = max(max_bottom + padding, MAX_HEIGHT)
+        
+        return QSize(width, height)

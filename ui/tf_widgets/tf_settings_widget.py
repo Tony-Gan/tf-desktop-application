@@ -100,7 +100,7 @@ class TFMenuButton(TFIconButton):
     Attributes:
         actions (Dict[MenuSection, List[QAction]]): Actions organized by menu section.
     """
-    def __init__(self, parent, position: Tuple[int, int] = None):
+    def __init__(self, parent, position: Tuple[int, int] = None, skip_default: bool = False):
         super().__init__(
             parent=parent,
             icon_path="static/images/icons/settings.png",
@@ -108,6 +108,7 @@ class TFMenuButton(TFIconButton):
             on_click=self.on_click
         )
         self.parent = parent
+        self.skip_default = skip_default
         self.setObjectName("menu_button")
         self.menu = QMenu(self.parent)
 
@@ -123,6 +124,9 @@ class TFMenuButton(TFIconButton):
         self.menu.exec(self.mapToGlobal(self.rect().bottomLeft()))
 
     def init_default_actions(self):
+        if self.skip_default:
+            return
+
         window_controls = [
             ("Bring to Front", lambda: self.parent.bring_to_front.emit(self.parent)),
             ("Raise One Level", lambda: self.parent.raise_level.emit(self.parent)),

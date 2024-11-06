@@ -8,20 +8,12 @@ from utils.helper import resource_path
 from settings.general import THEME_COLOURS
 
 class TFMenuBar(QMenuBar):
-    def __init__(self, parent: QMainWindow):
+    def __init__(self, parent: QMainWindow, window_container=None):
         super().__init__(parent)
         self.parent = parent
         self.app = TFApplication.instance()
-        self.window_container = None
+        self.window_container = window_container
         self._menus = {}
-        
-        central_widget = self.parent.centralWidget()
-        if isinstance(central_widget, QWidget):
-            splitter = central_widget.findChild(QSplitter)
-            if splitter:
-                scroll_area = splitter.widget(0)
-                if isinstance(scroll_area, QScrollArea):
-                    self.window_container = scroll_area.widget()
         
         # Load saved preferences
         self.current_mode = 'dark' if self._get_system_state('dark_mode', False) else 'light'
@@ -35,6 +27,9 @@ class TFMenuBar(QMenuBar):
         self._apply_stylesheet()
 
         self.init_menus()
+
+    def set_window_container(self, container):
+        self.window_container = container
         
     def init_menus(self):
         self._create_tool_menus()
@@ -141,6 +136,7 @@ class TFMenuBar(QMenuBar):
             'background-color: #f0f0f0;': f'background-color: {colours["background-secondary"]};',
             'background-color: #e0e0e0;': f'background-color: {colours["background-secondary-hover"]};',
             'border: 1px solid #ccc;': f'border: 1px solid {colours["border-color-dark"]};',
+            'border-top: 1px solid #ccc;': f'border-top: 1px solid {colours["border-color-dark"]};',
             'border: 1px solid #ddd;': f'border: 1px solid {colours["border-color"]};',
             'color: black;': f'color: {colours["text-primary"]};',
             'color: gray;': f'color: {colours["text-secondary"]};',

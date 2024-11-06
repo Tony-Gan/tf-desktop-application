@@ -121,3 +121,15 @@ QComboBox#currency_selector::down-arrow {
     width: 14px;
     height: 14px;
 }
+
+/* Output Panel */
+QWidget#output_panel {
+    background-color: white;
+    border-top: 1px solid #ccc;
+}
+
+QTextEdit#output_text {
+    background-color: white;
+    color: black;
+    border: none;
+}
