@@ -37,6 +37,8 @@ class TFCurrencyConverter(TFDraggableWindow):
     )
 
     def __init__(self, parent=None):
+        self.reset_button = None
+        self.confirm_button = None
         self.selected_currencies: List[str] = []
         self.rates: Dict[str, float] = {}
         self.last_update: Optional[str] = None
@@ -216,10 +218,7 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.setup_ui()
         
     def setup_ui(self):
-        self.container = QWidget(self)
-        self.container.setGeometry(0, 30, self.metadata.window_size[0], self.metadata.window_size[1] - 30)
-
-        main_layout = QVBoxLayout(self.container)
+        main_layout = QVBoxLayout(self.content_container)
         main_layout.setSpacing(15)
         main_layout.setContentsMargins(10, 10, 10, 10)
 

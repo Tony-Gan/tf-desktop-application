@@ -4,8 +4,6 @@ from PyQt6.QtWidgets import QWidget
 
 from ui.tf_draggable_window import TFDraggableWindow
 from ui.tf_frames_impl.tf_calculator import TFCalculator
-from ui.tf_frames_impl.tf_scientific_calculator import TFScientificCalculator
-from ui.tf_frames_impl.tf_currency_converter import TFCurrencyConverter
 from ui.tf_application import TFApplication
 from tools.tf_tool_registry import TFToolRegistry
 from database.models import TFWindowState
@@ -168,8 +166,7 @@ class TFWindowContainer(QWidget):
                     window.move(state.x_position, state.y_position)
                     
                     if state.title != window.metadata.window_title:
-                        window.rename(state.title)
-                        window.title_label.setText(state.title)
+                        window.title = state.title
                     
                     self.windows.append(window)
                     window.show()
@@ -189,7 +186,7 @@ class TFWindowContainer(QWidget):
             if isinstance(w, type(window)):
                 count += 1
                 try:
-                    current_title = w.title_label.text()
+                    current_title = w.title
                     if current_title != base_title:
                         number = int(current_title.split(" ")[-1])
                         max_number = max(max_number, number)
@@ -198,10 +195,9 @@ class TFWindowContainer(QWidget):
 
         if count > 0:
             new_title = f"{base_title} {max_number + 1}"
-            window.rename(new_title)
-            window.title_label.setText(new_title)
+            window.title = new_title
         else:
-            window.title_label.setText(base_title)
+            window.title = base_title
 
         self.windows.append(window)
 

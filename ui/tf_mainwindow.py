@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QMainWindow, QScrollArea, QWidget, QVBoxLayout, QSpl
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 
+from database.models import TFSystemState
 from ui.tf_window_container import TFWindowContainer
 from ui.tf_menubar import TFMenuBar
 from ui.tf_application import TFApplication
@@ -43,7 +44,15 @@ class TFMainWindow(QMainWindow):
         """
         self.setWindowTitle('TF Desktop Application')
         self.setWindowIcon(QIcon("static/images/icons/app.png"))
-        self.setGeometry(100, 100, 1200, 960)
+
+        with self.app.database.get_session() as session:
+            system_state = session.query(TFSystemState).first()
+            if system_state is not None:
+                width = max(system_state.window_width, 600)
+                height = max(system_state.window_height, 400)
+                self.setGeometry(100, 100, width, height)
+            else:
+                self.setGeometry(100, 100, 1200, 960)
 
         central_widget = QWidget()
         main_layout = QVBoxLayout(central_widget)
@@ -93,3 +102,16 @@ class TFMainWindow(QMainWindow):
         self.app.removeTranslator(self.app.translator)
         
         event.accept()
+
+    def resizeEvent(self, event):
+        with self.app.database.get_session() as session:
+            system_state = session.query(TFSystemState).first()
+            if system_state is None:
+                system_state = TFSystemState()
+                session.add(system_state)
+
+            system_state.window_width = self.width()
+            system_state.window_height = self.height()
+            session.commit()
+
+        super().resizeEvent(event)

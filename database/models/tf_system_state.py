@@ -7,3 +7,5 @@ class TFSystemState(Base):
     id = Column(Integer, primary_key=True)
     dark_mode = Column(Boolean, default=False)
     language = Column(String, default='en')
+    window_width = Column(Integer, default=960)
+    window_height = Column(Integer, default=600)

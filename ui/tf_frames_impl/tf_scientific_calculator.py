@@ -26,13 +26,10 @@ class TFScientificCalculator(TFDraggableWindow):
         super().__init__(parent)
 
     def initialize_window(self):
-        self.container = QWidget(self)
-        self.container.setGeometry(10, 30, 430, 460)
-        
-        layout = QGridLayout(self.container)
+        layout = QGridLayout(self.content_container)
         layout.setSpacing(5)
         
-        self.display = QLineEdit(self.container)
+        self.display = QLineEdit(self.content_container)
         self.display.setObjectName("scientific_display")
         self.display.setAlignment(Qt.AlignmentFlag.AlignRight)
         display_font = QFont("Montserrat", 24, QFont.Weight.Bold)
@@ -40,7 +37,7 @@ class TFScientificCalculator(TFDraggableWindow):
         self.display.setFixedHeight(60)
         layout.addWidget(self.display, 0, 0, 1, 5)
         
-        self.history_display = QTextEdit(self.container)
+        self.history_display = QTextEdit(self.content_container)
         self.history_display.setObjectName("scientific_record")
         self.history_display.setReadOnly(True)
         history_font = QFont("Montserrat", 12)

@@ -1,12 +1,25 @@
 from time import time
-from PyQt6.QtWidgets import QFrame, QLabel
+from PyQt6.QtWidgets import QFrame, QLabel, QWidget
 from PyQt6.QtGui import QMouseEvent, QFont
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
 from tools.tf_tool_matadata import TFToolMetadata
 from ui.tf_application import TFApplication
 from ui.tf_widgets.tf_settings_widget import TFCloseButton, TFMenuButton
 
-from typing import Optional
+# Window appearance constants
+TITLE_FONT_FAMILY = "Open Sans"
+TITLE_FONT_SIZE = 11
+TITLE_X_OFFSET = 10
+TITLE_Y_OFFSET = 5
+
+# Content layout constants
+CONTENT_PADDING_LEFT = 10
+CONTENT_PADDING_TOP = 30
+CONTENT_PADDING_RIGHT = 10
+CONTENT_PADDING_BOTTOM = 10
+
+# Window snapping constant
+SNAP_THRESHOLD = 10
 
 class TFDraggableWindow(QFrame):
     """A draggable window frame that can be moved within its parent container.
@@ -79,30 +92,46 @@ class TFDraggableWindow(QFrame):
     raise_level = pyqtSignal(object)
     lower_level = pyqtSignal(object)
 
-    metadata: Optional[TFToolMetadata] = None
+    metadata: TFToolMetadata
 
     def __init__(self, parent):
         if self.metadata is None:
             raise ValueError(f"Tool class {self.__class__.__name__} must define metadata")
-        
+
         super().__init__(parent)
+
+        # Initialize member variables
+        self._dragging = False
+        self._offset = QPoint()
+        self.last_moved_time = 0
         self.app = TFApplication.instance()
 
+        # Setup window frame
         self.setObjectName("TFDraggableWindow")
         self.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Raised)
         self.setFixedSize(*self.metadata.window_size)
 
-        self.title_label = QLabel(self.metadata.window_title, self)
-        self.title_label.move(10, 5)
-        font = QFont("Open Sans", 11)
-        self.title_label.setFont(font)
+        # Create title label
+        self._title_label = QLabel(self.metadata.window_title, self)
+        self._title_label.move(TITLE_X_OFFSET, TITLE_Y_OFFSET)
+        font = QFont(TITLE_FONT_FAMILY, TITLE_FONT_SIZE)
+        self._title_label.setFont(font)
 
+        # Initialize buttons
         self._init_buttons()
 
-        self._dragging = False
-        self._offset = QPoint()
-        self.last_moved_time = 0
-        
+        # Create content container
+        self._content_container = QWidget(self)
+        container_width = (self.metadata.window_size[0] - CONTENT_PADDING_LEFT - CONTENT_PADDING_RIGHT)
+        container_height = (self.metadata.window_size[1] - CONTENT_PADDING_TOP - CONTENT_PADDING_BOTTOM)
+        self._content_container.setGeometry(
+            CONTENT_PADDING_LEFT,
+            CONTENT_PADDING_TOP,
+            container_width,
+            container_height
+        )
+
+        # Initialize window content
         self.initialize_window()
 
     def __init_subclass__(cls, **kwargs):
@@ -110,6 +139,30 @@ class TFDraggableWindow(QFrame):
         if cls.metadata is not None:
             from tools.tf_tool_registry import TFToolRegistry
             TFToolRegistry.register(cls)
+
+    @property
+    def content_container(self) -> QWidget:
+        return self._content_container
+
+    @property
+    def close_button(self) -> TFCloseButton:
+        return self._close_button
+
+    @property
+    def menu_button(self) -> TFMenuButton:
+        return self._menu_button
+
+    @property
+    def is_dragging(self) -> bool:
+        return self._dragging
+
+    @property
+    def title(self) -> str:
+        return self._title_label.text()
+
+    @title.setter
+    def title(self, value: str) -> None:
+        self._title_label.setText(value)
 
     def initialize_window(self):
         """
@@ -125,11 +178,8 @@ class TFDraggableWindow(QFrame):
 
     def _init_buttons(self):
         width = self.metadata.window_size[0]
-        self.close_button = TFCloseButton(parent=self, position=(width - 25, 5))
-        self.menu_button = TFMenuButton(parent=self, position=(width - 50, 5))
-
-    def rename(self, name: str) -> None:
-        self.display_title = name
+        self._close_button = TFCloseButton(parent=self, position=(width - 25, TITLE_Y_OFFSET))
+        self._menu_button = TFMenuButton(parent=self, position=(width - 50, TITLE_Y_OFFSET))
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """
@@ -167,21 +217,21 @@ class TFDraggableWindow(QFrame):
                 
                 new_x = max(min_x, new_pos.x())
                 new_y = max(min_y, new_pos.y())
-                
+
                 for window in container.windows:
                     if window != self:
-                        if abs(new_y - window.y()) < 10:
+                        if abs(new_y - window.y()) < SNAP_THRESHOLD:
                             new_y = window.y()
-                        elif abs((new_y + self.height()) - window.y()) < 10:
+                        elif abs((new_y + self.height()) - window.y()) < SNAP_THRESHOLD:
                             new_y = window.y() - self.height()
-                        elif abs(new_y - (window.y() + window.height())) < 10:
+                        elif abs(new_y - (window.y() + window.height())) < SNAP_THRESHOLD:
                             new_y = window.y() + window.height()
-                            
-                        if (new_y < window.y() + window.height() and 
-                            new_y + self.height() > window.y()):
-                            if abs(new_x - (window.x() + window.width())) < 10:
+
+                        if (new_y < window.y() + window.height() and
+                                new_y + self.height() > window.y()):
+                            if abs(new_x - (window.x() + window.width())) < SNAP_THRESHOLD:
                                 new_x = window.x() + window.width()
-                            elif abs((new_x + self.width()) - window.x()) < 10:
+                            elif abs((new_x + self.width()) - window.x()) < SNAP_THRESHOLD:
                                 new_x = window.x() - self.width()
                 
                 self.move(new_x, new_y)

@@ -7,6 +7,59 @@ from ui.tf_widgets.tf_buttons import TFConfirmButton, TFResetButton
 from ui.tf_widgets.tf_number_receiver import TFNumberReceiver
 from tools.tf_tool_matadata import TFToolMetadata
 
+CONVERSION_FACTORS = {
+    "Length": {
+        "Meter": 1.0,
+        "Kilometer": 1000.0,
+        "Centimeter": 0.01,
+        "Millimeter": 0.001,
+        "Mile": 1609.34,
+        "Yard": 0.9144,
+        "Foot": 0.3048,
+        "Inch": 0.0254
+    },
+    "Weight": {
+        "Kilogram": 1.0,
+        "Gram": 0.001,
+        "Milligram": 0.000001,
+        "Metric Ton": 1000.0,
+        "Pound": 0.453592,
+        "Ounce": 0.0283495,
+    },
+    "Area": {
+        "Square Meter": 1.0,
+        "Square Kilometer": 1000000.0,
+        "Square Centimeter": 0.0001,
+        "Hectare": 10000.0,
+        "Square Mile": 2589988.11,
+        "Square Yard": 0.836127,
+        "Square Foot": 0.092903,
+        "Acre": 4046.86
+    },
+    "Volume": {
+        "Cubic Meter": 1.0,
+        "Liter": 0.001,
+        "Milliliter": 0.000001,
+        "Cubic Foot": 0.0283168,
+        "Cubic Inch": 0.0000163871,
+        "Gallon (US)": 0.00378541,
+        "Quart (US)": 0.000946353,
+        "Pint (US)": 0.000473176
+    },
+    "Speed": {
+        "Meters per Second": 1.0,
+        "Kilometers per Hour": 0.277778,
+        "Miles per Hour": 0.44704,
+        "Knot": 0.514444,
+        "Foot per Second": 0.3048
+    },
+    "Temperature": {
+        "Celsius": "C",
+        "Fahrenheit": "F",
+        "Kelvin": "K"
+    }
+}
+
 class UnitTypeSelector(QComboBox):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -36,68 +89,11 @@ class TFUnitConverter(TFDraggableWindow):
     )
 
     def __init__(self, parent=None):
-        self.conversion_factors = {
-            "Length": {
-                "Meter": 1.0,
-                "Kilometer": 1000.0,
-                "Centimeter": 0.01,
-                "Millimeter": 0.001,
-                "Mile": 1609.34,
-                "Yard": 0.9144,
-                "Foot": 0.3048,
-                "Inch": 0.0254
-            },
-            "Weight": {
-                "Kilogram": 1.0,
-                "Gram": 0.001,
-                "Milligram": 0.000001,
-                "Metric Ton": 1000.0,
-                "Pound": 0.453592,
-                "Ounce": 0.0283495,
-            },
-            "Area": {
-                "Square Meter": 1.0,
-                "Square Kilometer": 1000000.0,
-                "Square Centimeter": 0.0001,
-                "Hectare": 10000.0,
-                "Square Mile": 2589988.11,
-                "Square Yard": 0.836127,
-                "Square Foot": 0.092903,
-                "Acre": 4046.86
-            },
-            "Volume": {
-                "Cubic Meter": 1.0,
-                "Liter": 0.001,
-                "Milliliter": 0.000001,
-                "Cubic Foot": 0.0283168,
-                "Cubic Inch": 0.0000163871,
-                "Gallon (US)": 0.00378541,
-                "Quart (US)": 0.000946353,
-                "Pint (US)": 0.000473176
-            },
-            "Speed": {
-                "Meters per Second": 1.0,
-                "Kilometers per Hour": 0.277778,
-                "Miles per Hour": 0.44704,
-                "Knot": 0.514444,
-                "Foot per Second": 0.3048
-            },
-            "Temperature": {
-                "Celsius": "C",
-                "Fahrenheit": "F",
-                "Kelvin": "K"
-            }
-        }
+        self.conversion_factors = CONVERSION_FACTORS
         super().__init__(parent)
 
     def initialize_window(self):
-        self.setup_ui()
-
-    def setup_ui(self):
-        self.container = QWidget(self)
-        self.container.setGeometry(0, 30, self.metadata.window_size[0], self.metadata.window_size[1] - 30)
-        
-        main_layout = QVBoxLayout(self.container)
+        main_layout = QVBoxLayout(self.content_container)
         main_layout.setSpacing(15)
         main_layout.setContentsMargins(10, 10, 10, 10)
 
@@ -151,22 +147,22 @@ class TFUnitConverter(TFDraggableWindow):
         frame = QFrame()
         frame.setObjectName("conversion_item")
         layout = QVBoxLayout(frame)
-        
+
         label = QLabel(label_text)
         label.setFont(QFont("Open Sans", 10))
         layout.addWidget(label)
-        
+
         unit_selector = UnitSelector()
         layout.addWidget(unit_selector)
-        
+
         number_input = TFNumberReceiver("0", Qt.AlignmentFlag.AlignRight)
         number_input.setObjectName("conversion_amount")
         number_input.setEnabled(False)
         number_input.textChanged.connect(input_callback)
         layout.addWidget(number_input)
-        
+
         return frame
-    
+
     def from_unit_changed(self):
         self.update_conversion("from")
 
@@ -248,8 +244,7 @@ class TFUnitConverter(TFDraggableWindow):
                     self.from_input.setText(f"{result:.6g}")
                     self.from_input.blockSignals(False)
         except ValueError:
-            if self.message_bar:
-                self.message_bar.show_message('Invalid input', 3000, 'yellow')
+            self.app.show_message('Invalid input', 3000, 'yellow')
 
     def convert_temperature(self, value: float, from_unit: str, to_unit: str) -> float:
         if from_unit == "Fahrenheit":

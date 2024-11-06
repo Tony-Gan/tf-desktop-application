@@ -24,13 +24,10 @@ class TFCalculator(TFDraggableWindow):
         super().__init__(parent)
 
     def initialize_window(self):
-        self.container = QWidget(self)
-        self.container.setGeometry(10, 30, 280, 460)
-        
-        layout = QGridLayout(self.container)
+        layout = QGridLayout(self.content_container)
         layout.setSpacing(10)
         
-        self.display = QLineEdit(self.container)
+        self.display = QLineEdit(self.content_container)
         self.display.setObjectName("calculator_display")
         self.display.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.display.setReadOnly(True)
@@ -41,7 +38,7 @@ class TFCalculator(TFDraggableWindow):
         self.display.setText("0")
         layout.addWidget(self.display, 0, 0, 1, 4)
         
-        self.history = QLineEdit(self.container)
+        self.history = QLineEdit(self.content_container)
         self.history.setObjectName("calculator_history")
         self.history.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.history.setReadOnly(True)
