@@ -2,9 +2,9 @@ from PyQt6.QtWidgets import QMainWindow, QScrollArea, QWidget, QVBoxLayout, QSiz
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 
-from database.models import TFSystemState
-from ui.tf_window_container import TFWindowContainer
-from ui.tf_menubar import TFMenuBar
+from core.database.models import TFSystemState
+from ui.views.tf_window_container import TFWindowContainer
+from ui.views.tf_menubar import TFMenuBar
 from ui.tf_application import TFApplication
 
 class TFMainWindow(QMainWindow):

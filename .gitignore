@@ -1,6 +1,6 @@
 # Ignore folders
 dist/
-data/
+resources/data/
 docs/
 *.db
 .idea/
@@ -31,3 +31,4 @@ utils/scripts/*
 ._*
 .Spotlight-V100
 .Trashes
+utils/scripts/print_tree.py

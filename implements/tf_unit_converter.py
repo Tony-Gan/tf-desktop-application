@@ -2,10 +2,10 @@ from PyQt6.QtWidgets import QComboBox, QWidget, QVBoxLayout, QLabel, QFrame
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 
-from ui.tf_draggable_window import TFDraggableWindow
-from ui.tf_widgets.tf_buttons import TFConfirmButton, TFResetButton
-from ui.tf_widgets.tf_number_receiver import TFNumberReceiver
-from tools.tf_tool_matadata import TFToolMetadata
+from core.windows.tf_draggable_window import TFDraggableWindow
+from ui.components.tf_buttons import TFConfirmButton, TFResetButton
+from ui.components.tf_number_receiver import TFNumberReceiver
+from utils.registry.tf_tool_matadata import TFToolMetadata
 
 CONVERSION_FACTORS = {
     "Length": {

@@ -1,12 +1,12 @@
 import math
 import re
 
-from PyQt6.QtWidgets import QLineEdit, QPushButton, QGridLayout, QWidget, QTextEdit
+from PyQt6.QtWidgets import QLineEdit, QPushButton, QGridLayout, QTextEdit
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
-from ui.tf_draggable_window import TFDraggableWindow
-from tools.tf_tool_matadata import TFToolMetadata
+from core.windows.tf_draggable_window import TFDraggableWindow
+from utils.registry.tf_tool_matadata import TFToolMetadata
 
 class TFScientificCalculator(TFDraggableWindow):
     metadata = TFToolMetadata(

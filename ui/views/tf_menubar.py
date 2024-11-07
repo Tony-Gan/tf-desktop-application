@@ -1,9 +1,9 @@
-from PyQt6.QtWidgets import QMenuBar, QMenu, QMainWindow, QScrollArea, QWidget, QSplitter
+from PyQt6.QtWidgets import QMenuBar, QMenu, QMainWindow, QWidget
 from PyQt6.QtGui import QAction, QIcon
 
 from ui.tf_application import TFApplication
-from tools.tf_tool_registry import TFToolRegistry
-from database.models import TFSystemState
+from utils.registry.tf_tool_registry import TFToolRegistry
+from core.database.models import TFSystemState
 from utils.helper import resource_path
 from settings.general import THEME_COLOURS
 
@@ -21,7 +21,7 @@ class TFMenuBar(QMenuBar):
         
         # Apply saved language
         qm_file = 'zh_CN.qm' if self.current_language == 'zh' else 'en_US.qm'
-        self.app.translator.load(resource_path(f"translations/{qm_file}"))
+        self.app.translator.load(resource_path(f"resources/translations/{qm_file}"))
         self.app.installTranslator(self.app.translator)
         
         self._apply_stylesheet()
@@ -126,7 +126,7 @@ class TFMenuBar(QMenuBar):
         self.toggle_theme_action.setChecked(self.current_mode == 'dark')
     
     def _apply_stylesheet(self):
-        with open(resource_path("styles/styles.qss"), "r", encoding='utf-8') as f:
+        with open(resource_path("resources/styles/styles.qss"), "r", encoding='utf-8') as f:
             base_stylesheet = f.read()
         
         colours = THEME_COLOURS[self.current_mode]

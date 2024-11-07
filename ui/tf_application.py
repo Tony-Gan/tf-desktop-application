@@ -1,9 +1,9 @@
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QTranslator
-from database.tf_database import TFDatabase
-from tools.tf_message_bar import TFMessageBar
-from tools.tf_logger import TFLogger
-from ui.tf_output_panel import TFOutputPanel
+from core.database.tf_database import TFDatabase
+from ui.components.tf_message_bar import TFMessageBar
+from utils.logging.tf_logger import TFLogger
+from ui.views.tf_output_panel import TFOutputPanel
 
 class TFApplication(QApplication):
     """

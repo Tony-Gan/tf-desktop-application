@@ -8,11 +8,11 @@ from PyQt6.QtWidgets import QCompleter, QLineEdit, QListView, QVBoxLayout, QWidg
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QFont, QPixmap, QIcon, QStandardItemModel, QStandardItem
 
-from ui.tf_draggable_window import TFDraggableWindow
-from ui.tf_widgets.tf_number_receiver import TFNumberReceiver
-from ui.tf_widgets.tf_buttons import TFPushButton, TFConfirmButton, TFResetButton
-from tools.tf_api_loader import TFAPILoader
-from tools.tf_tool_matadata import TFToolMetadata
+from core.windows.tf_draggable_window import TFDraggableWindow
+from ui.components.tf_number_receiver import TFNumberReceiver
+from ui.components.tf_buttons import TFPushButton, TFConfirmButton, TFResetButton
+from ui.components.tf_api_loader import TFAPILoader
+from utils.registry.tf_tool_matadata import TFToolMetadata
 
 try:
     from settings.secret import API_KEY
@@ -304,7 +304,7 @@ class TFCurrencyConverter(TFDraggableWindow):
         
     def setup_selector(self, selector: QComboBox):
         selector.clear()
-        default_icon_path = "static/images/countries/default.png"
+        default_icon_path = "resources/images/countries/default.png"
         default_icon = QIcon(QPixmap(default_icon_path).scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 
         selector.setEditable(True)
@@ -319,7 +319,7 @@ class TFCurrencyConverter(TFDraggableWindow):
             if code.lower() in self.currency_icons:
                 icon = self.currency_icons[code.lower()]
             else:
-                icon_path = f"static/images/countries/{code.lower()}.png"
+                icon_path = f"resources/images/countries/{code.lower()}.png"
                 if os.path.exists(icon_path):
                     icon = QIcon(QPixmap(icon_path).scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
                 else:
@@ -427,7 +427,7 @@ class TFCurrencyConverter(TFDraggableWindow):
         return current_time - saved_time > timedelta(hours=24)
     
     def load_saved_data(self):
-        path = os.path.abspath("data/currency_record.json")
+        path = os.path.abspath("resources/data/currency_record.json")
         try:
             with open(path, "r") as f:
                 data = json.load(f)
@@ -551,12 +551,12 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.selected_currencies = []
 
     def set_currency_icon(self, icon_label: QLabel, currency_code: str):
-        default_icon_path = "static/images/countries/default.png"
+        default_icon_path = "resources/images/countries/default.png"
         default_pixmap = QPixmap(default_icon_path).scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         if currency_code.lower() in self.currency_icons:
             pixmap = self.currency_icons[currency_code.lower()].pixmap(QSize(30, 30))
         else:
-            icon_path = f"static/images/countries/{currency_code.lower()}.png"
+            icon_path = f"resources/images/countries/{currency_code.lower()}.png"
             if os.path.exists(icon_path):
                 pixmap = QPixmap(icon_path).scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                 self.currency_icons[currency_code.lower()] = QIcon(pixmap)

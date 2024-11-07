@@ -1,7 +1,7 @@
 import os
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtCore import QUrl
-from ui.tf_draggable_window import TFDraggableWindow
+from core.windows.tf_draggable_window import TFDraggableWindow
 
 class TFWebView(TFDraggableWindow):
     """

@@ -2,9 +2,9 @@ from time import time
 from PyQt6.QtWidgets import QFrame, QLabel, QWidget
 from PyQt6.QtGui import QMouseEvent, QFont
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
-from tools.tf_tool_matadata import TFToolMetadata
+from utils.registry.tf_tool_matadata import TFToolMetadata
 from ui.tf_application import TFApplication
-from ui.tf_widgets.tf_settings_widget import TFCloseButton, TFMenuButton
+from ui.components.tf_settings_widget import TFCloseButton, TFMenuButton
 
 # Window appearance constants
 TITLE_FONT_FAMILY = "Open Sans"
@@ -137,7 +137,7 @@ class TFDraggableWindow(QFrame):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         if cls.metadata is not None:
-            from tools.tf_tool_registry import TFToolRegistry
+            from utils.registry.tf_tool_registry import TFToolRegistry
             TFToolRegistry.register(cls)
 
     @property

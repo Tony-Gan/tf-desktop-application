@@ -49,7 +49,7 @@ class TFToolRegistry:
         return cls._tools.copy()
     
     @classmethod
-    def auto_discover_tools(cls, tools_dir: str = 'ui/tf_frames_impl') -> None:
+    def auto_discover_tools(cls, tools_dir: str = 'implements') -> None:
         """
         Automatically discover and register tools from the specified directory.
 
@@ -69,7 +69,9 @@ class TFToolRegistry:
             >>> TFToolRegistry.auto_discover_tools('ui/custom_tools')
         """
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        full_path = os.path.join(base_path, tools_dir)
+        full_path = os.path.join(base_path, '..', tools_dir)
+
+        print(full_path)
         
         if not os.path.exists(full_path):
             return

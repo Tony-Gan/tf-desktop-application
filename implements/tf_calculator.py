@@ -1,9 +1,9 @@
-from PyQt6.QtWidgets import QLineEdit, QPushButton, QGridLayout, QWidget
+from PyQt6.QtWidgets import QLineEdit, QPushButton, QGridLayout
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
-from ui.tf_draggable_window import TFDraggableWindow
-from tools.tf_tool_matadata import TFToolMetadata
+from core.windows.tf_draggable_window import TFDraggableWindow
+from utils.registry.tf_tool_matadata import TFToolMetadata
 
 class TFCalculator(TFDraggableWindow):
     metadata = TFToolMetadata(

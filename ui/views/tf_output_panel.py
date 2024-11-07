@@ -1,8 +1,7 @@
 from PyQt6.QtWidgets import QTextEdit, QApplication
 from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtGui import QPainter, QColor
 
-from ui.tf_widgets.tf_settings_widget import TFCloseButton, TFMenuButton
+from ui.components.tf_settings_widget import TFCloseButton, TFMenuButton
 from settings.general import ICON_BUTTON_SIZE
 
 class TFOutputPanel(QTextEdit):

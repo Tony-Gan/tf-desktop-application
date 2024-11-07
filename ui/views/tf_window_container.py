@@ -3,10 +3,10 @@ from typing import List, Type
 from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import QWidget, QScrollArea
 
-from ui.tf_draggable_window import TFDraggableWindow
+from core.windows.tf_draggable_window import TFDraggableWindow
 from ui.tf_application import TFApplication
-from tools.tf_tool_registry import TFToolRegistry
-from database.models import TFWindowState
+from utils.registry.tf_tool_registry import TFToolRegistry
+from core.database.models import TFWindowState
 from settings.general import MAX_WIDTH, MAX_HEIGHT
 
 class TFWindowContainer(QWidget):
