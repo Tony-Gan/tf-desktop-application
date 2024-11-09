@@ -21,7 +21,7 @@ class TFMenuBar(QMenuBar):
         
         # Apply saved language
         qm_file = 'zh_CN.qm' if self.current_language == 'zh' else 'en_US.qm'
-        self.app.translator.load(resource_path(f"resources/translations/{qm_file}"))
+        self.app.translator.load(resource_path(resource_path(f"resources/translations/{qm_file}")))
         self.app.installTranslator(self.app.translator)
         
         self._apply_stylesheet()

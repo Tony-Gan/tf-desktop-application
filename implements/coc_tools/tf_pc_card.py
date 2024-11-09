@@ -1,12 +1,14 @@
 import os
 import json
+import copy
 from typing import Dict, Tuple
 from datetime import datetime, timezone
 
-from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QLabel, QFrame,
-                             QFileDialog, QWidget, QLineEdit, QScrollArea, QGridLayout)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QFont, QKeySequence, QShortcut
+from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QLabel, QFrame, QComboBox,
+                             QPushButton, QTextEdit, QFileDialog, QWidget, 
+                             QLineEdit, QScrollArea, QGridLayout, QDialog)
+from PyQt6.QtCore import Qt, QRegularExpression, QTimer
+from PyQt6.QtGui import QPixmap, QFont, QKeySequence, QShortcut, QRegularExpressionValidator
 
 from core.windows.tf_draggable_window import TFDraggableWindow
 from utils.registry.tf_tool_matadata import TFToolMetadata
@@ -14,7 +16,8 @@ from ui.components.tf_settings_widget import MenuSection
 from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_separator import TFSeparator
 from ui.components.tf_number_receiver import TFNumberReceiver
-from utils.helper import format_datetime
+from ui.components.tf_computing_dialog import TFComputingDialog
+from utils.helper import format_datetime, resource_path
 from utils.validator.tf_validator import TFValidator
 from utils.validator.tf_validation_rules import TFValidationRule
 
@@ -23,6 +26,67 @@ LABEL_FONT.setPointSize(10)
 
 EDIT_FONT = QFont("Inconsolatav")
 EDIT_FONT.setPointSize(10)
+
+GROUPED_SKILLS = {'art', 'science', 'survival', 'pilot'}
+SPECIAL_SKILLS = {'fighting', 'firearms'}
+
+DEFAULT_SKILLS = {
+    "accounting": 5,
+    "anthropology": 1,
+    "appraise": 5,
+    "archaeology": 1,
+    "art:all": 5,
+    "charm": 15,
+    "climb": 20,
+    "credit_rating": 0,
+    "cthulhu_mythos": 0,
+    "disguise": 5,
+    "dodge": 0,
+    "drive_auto": 20,
+    "electrical_repair": 10,
+    "electronics": 1,
+    "fast_talk": 5,
+    "fighting:brawl": 25,
+    "fighting:chainsaw": 10,
+    "fighting:flail": 10,
+    "fighting:garrote": 15,
+    "fighting:sword": 20,
+    "fighting:whip": 5,
+    "firearms:handgun": 20,
+    "firearms:heavy_weapons": 10,
+    "firearms:rifle": 25,
+    "firearms:shotgun": 25,
+    "firearms:smg": 15,
+    "first_aid": 30,
+    "history": 5,
+    "intimidate": 15,
+    "jump": 20,
+    "language": 0,
+    "language:all": 1,
+    "law": 5,
+    "library_use": 20,
+    "listen": 20,
+    "locksmith": 1,
+    "mechanical_repair": 10,
+    "medicine": 1,
+    "natural_world": 10,
+    "navigate": 10,
+    "occult": 5,
+    "operate_heavy_machinery": 1,
+    "persuade": 10,
+    "pilot:all": 1,
+    "psychoanalysis": 1,
+    "psychology": 10,
+    "ride": 5,
+    "science:all": 1,
+    "sleight_of_hand": 10,
+    "spot_hidden": 25,
+    "stealth": 20,
+    "survival:all": 10,
+    "swim": 20,
+    "throw": 20,
+    "track": 10
+}
 
 class TFPcCard(TFDraggableWindow):
     metadata = TFToolMetadata(
@@ -75,7 +139,7 @@ class TFPcCard(TFDraggableWindow):
         self.pc_info_panel.setFrameShape(QFrame.Shape.Box)
         upper_layout.addWidget(self.pc_info_panel)
 
-        self.lower_panel = LowerPanel()
+        self.lower_panel = LowerPanel(self)
         self.lower_panel.setObjectName("section_frame")
         self.lower_panel.setFrameShape(QFrame.Shape.Box)
         main_layout.addWidget(self.lower_panel)
@@ -121,7 +185,7 @@ class TFPcCard(TFDraggableWindow):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
             "Load Character File",
-            "resources/data/coc/pcs/",
+            resource_path("resources/data/coc/pcs/"),
             "JSON Files (*.json)"
         )
 
@@ -165,6 +229,36 @@ class TFPcCard(TFDraggableWindow):
             return
 
         if not is_editing and self.has_unsaved_changes:
+            skills_to_remove = []
+            for skill_name, value in self.pc_data['skills'].items():
+                base_skill = skill_name.split(':')[0] if ':' in skill_name else skill_name
+                if base_skill in GROUPED_SKILLS:
+                    default_value = DEFAULT_SKILLS.get(f"{base_skill}:all", 0)
+                else:
+                    default_value = DEFAULT_SKILLS.get(skill_name, 0)
+                    
+                if value == default_value:
+                    skills_to_remove.append(skill_name)
+
+            if skills_to_remove:
+                try:
+                    with open(self.current_file_path, 'r+', encoding='utf-8') as file:
+                        data = json.load(file)
+                        for skill_name in skills_to_remove:
+                            data['skills'].pop(skill_name, None)
+                            self.pc_data['skills'].pop(skill_name, None)
+                        
+                        file.seek(0)
+                        json.dump(data, file, indent=4, ensure_ascii=False)
+                        file.truncate()
+
+                    self.lower_panel.skills_grid.modified_skills = self.pc_data['skills']
+                    self.lower_panel.skills_grid.update_skills(self.pc_data['skills'])
+                    
+                except Exception as e:
+                    self.app.show_error("Save Error", f"Failed to update skills: {str(e)}")
+                    return
+
             if not self._save_current_data():
                 action.setChecked(True)
                 return
@@ -172,6 +266,8 @@ class TFPcCard(TFDraggableWindow):
         self._update_panel_edit_state(self.left_info_panel, is_editing)
         self._update_panel_edit_state(self.pc_info_panel, is_editing)
         self._update_panel_edit_state(self.lower_panel, is_editing)
+        self.lower_panel.notes_panel.set_edit_enabled(is_editing)
+        self.lower_panel.skills_grid.set_edit_mode(is_editing)
 
         if is_editing:
             self._connect_change_signals()
@@ -186,17 +282,29 @@ class TFPcCard(TFDraggableWindow):
         self.has_unsaved_changes = True
 
     def _connect_change_signals(self):
-        for panel in [self.left_info_panel, self.pc_info_panel, self.lower_panel]:
-            for line_edit in panel.findChildren(QLineEdit):
-                line_edit.textChanged.connect(self._on_text_changed)
+        self._manage_text_changed_signals(connect=True)
 
     def _disconnect_change_signals(self):
+        self._manage_text_changed_signals(connect=False)
+
+    def _manage_text_changed_signals(self, connect=True):
         for panel in [self.left_info_panel, self.pc_info_panel, self.lower_panel]:
             for line_edit in panel.findChildren(QLineEdit):
-                try:
-                    line_edit.textChanged.disconnect()
-                except TypeError:
-                    pass
+                if connect:
+                    line_edit.textChanged.connect(self._on_text_changed)
+                else:
+                    try:
+                        line_edit.textChanged.disconnect()
+                    except TypeError:
+                        pass
+
+        if connect:
+            self.lower_panel.notes_panel.notes_edit.textChanged.connect(self._on_text_changed)
+        else:
+            try:
+                self.lower_panel.notes_panel.notes_edit.textChanged.disconnect()
+            except TypeError:
+                pass
 
     def _update_panel_edit_state(self, panel, enabled):
         for line_edit in panel.findChildren(QLineEdit):
@@ -204,13 +312,7 @@ class TFPcCard(TFDraggableWindow):
 
     def _save_current_data(self):
         try:
-            updated_data = {
-                'metadata': self.pc_data['metadata'].copy(),
-                'personal_info': self.pc_data['personal_info'].copy(),
-                'basic_stats': self.pc_data['basic_stats'].copy(),
-                'status': self.pc_data['status'].copy(),
-                'skills': self.pc_data['skills'].copy()
-            }
+            updated_data = copy.deepcopy(self.pc_data)
 
             metadata_fields = {
                 'player_name': str,
@@ -291,16 +393,46 @@ class TFPcCard(TFDraggableWindow):
             for skill_entry in self.lower_panel.skills_grid.findChildren(TFValueEntry):
                 skill_name = skill_entry.label.text().lower()
                 skill_name = self._convert_display_to_storage_name(skill_name)
+                
+                if "_-_others" in skill_name:
+                    continue
+                    
                 value = skill_entry.get_value()
                 if value and value.strip():
                     try:
-                        updated_data['skills'][skill_name] = int(value)
+                        value = int(value)
+                        base_skill = skill_name.split(':')[0] if ':' in skill_name else skill_name
+                        if base_skill in GROUPED_SKILLS:
+                            default_value = DEFAULT_SKILLS.get(f"{base_skill}:all", 0)
+                        else:
+                            default_value = DEFAULT_SKILLS.get(skill_name, 0)
+                        
+                        if value != default_value:
+                            updated_data['skills'][skill_name] = value
+                        elif skill_name in updated_data['skills']:
+                            del updated_data['skills'][skill_name]
+                            
                     except ValueError as e:
                         self.app.show_error(
                             "Invalid Input",
                             f"Invalid value for skill {skill_name}: {str(e)}"
                         )
                         return False
+                    
+            for item_entry in self.lower_panel.items_panel.findChildren(TFValueEntry):
+                value = item_entry.get_value()
+                display_name = item_entry.label.text().lower()
+                item_name = '_'.join(display_name.split())
+                
+                for category in ['weapons', 'armours', 'others']:
+                    if category in updated_data['items']:
+                        if isinstance(updated_data['items'][category], dict):
+                            if item_name in updated_data['items'][category]:
+                                updated_data['items'][category][item_name]['notes'] = value
+                                break
+                    
+            notes_text = self.lower_panel.notes_panel.notes_edit.toPlainText()
+            updated_data['notes'] = notes_text
                     
             errors = self.validator.validate_dict(updated_data, is_new=False)
 
@@ -389,7 +521,7 @@ class TFPcCard(TFDraggableWindow):
         self.lower_panel.update_data(self.pc_data)
 
     def _setup_avator(self):
-        avatar_path = self.pc_data.get('metadata', {}).get('avatar_file')
+        avatar_path = resource_path(self.pc_data.get('metadata', {}).get('avatar_file'))
         if not avatar_path:
             self.app.show_message("No avatar path found in character data", 2000, 'yellow')
             return
@@ -671,6 +803,7 @@ class LeftInfoPanel(QFrame):
 class LowerPanel(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent = parent
         self.setup_ui()
         
     def setup_ui(self):
@@ -696,11 +829,14 @@ class LowerPanel(QFrame):
         self.status_bar = StatusBar()
         container_layout.addWidget(self.status_bar)
         
-        self.skills_grid = SkillsGrid()
+        self.skills_grid = SkillsGrid(self)
         container_layout.addWidget(self.skills_grid)
         
-        bottom_placeholder = QFrame()
-        container_layout.addWidget(bottom_placeholder)
+        self.items_panel = ItemsPanel(self)
+        container_layout.addWidget(self.items_panel)
+        
+        self.notes_panel = NotesPanel(self)
+        container_layout.addWidget(self.notes_panel)
         
         container_layout.addStretch()
         
@@ -710,6 +846,8 @@ class LowerPanel(QFrame):
     def update_data(self, pc_data):
         self.status_bar.update_data(pc_data.get('status', {}))
         self.skills_grid.update_skills(pc_data.get('skills', {}))
+        self.items_panel.update_items(pc_data.get('items', {}))
+        self.notes_panel.update_notes(pc_data.get('notes', ''))
 
 class StatusBar(QFrame):
     def __init__(self, parent=None):
@@ -817,12 +955,26 @@ class StatusBar(QFrame):
                 edit.setText(str(status_data.get(field, '')))
 
 class SkillsGrid(QFrame):
-    SKILL_ABBREVIATIONS = {}
+    SKILL_ABBREVIATIONS = {
+        'electrical_repair': 'Elec Repair',
+        'mechanical_repair': 'Mech Repair',
+        'operate_heavy_machinery': 'Op Heavy Mach',
+        'library_use': 'Library',
+        'credit_rating': 'Credit',
+        'natural_world': 'Nature',
+        'spot_hidden': 'Spot',
+        'sleight_of_hand': 'Sleight',
+        'drive_auto': 'Drive'
+    }
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent = parent
         self.setFrameShape(QFrame.Shape.NoFrame)
-        self.original_skill_names = {}
+        self.original_skill_names = {} 
+        self.show_all = False 
+        self.toggle_button = None
+        self.modified_skills = {}
         self.setup_ui()
     
     def setup_ui(self):
@@ -831,14 +983,114 @@ class SkillsGrid(QFrame):
         self.main_layout.setHorizontalSpacing(15)
         self.main_layout.setVerticalSpacing(4)
 
+    def _get_skill_base(self, skill_name):
+        return skill_name.split(':')[0] if ':' in skill_name else skill_name
+
+    def _is_grouped_skill(self, skill_name):
+        return self._get_skill_base(skill_name) in GROUPED_SKILLS
+
+    def _is_special_skill(self, skill_name):
+        return self._get_skill_base(skill_name) in SPECIAL_SKILLS
+    
+    def _organize_skills(self, skills_data):
+        organized = {}
+        used_groups = set()
+
+        for skill, value in skills_data.items():
+            base = self._get_skill_base(skill)
+            
+            if base == 'language':
+                if ':' not in skill:
+                    organized[skill] = value
+                else:
+                    organized[skill] = value
+                used_groups.add(base)
+                continue
+
+            if self._is_grouped_skill(skill):
+                organized[skill] = value
+                used_groups.add(base)
+            else:
+                organized[skill] = value
+
+        for group in used_groups:
+            if group in GROUPED_SKILLS or group == 'language':
+                others_key = f"{group}:others"
+                others_value = (1 if group == 'language' else 
+                            DEFAULT_SKILLS.get(f"{group}:all", 0))
+                organized[others_key] = others_value
+
+        return organized
+
+    def _get_skills_to_display(self, modified_skills):
+        if not self.show_all:
+            return self._organize_skills(modified_skills)
+
+        display_skills = {}
+        used_groups = set()
+        
+        for skill, value in modified_skills.items():
+            base = self._get_skill_base(skill)
+            if base in GROUPED_SKILLS or base == 'language':
+                display_skills[skill] = value
+                used_groups.add(base)
+            else:
+                display_skills[skill] = value
+
+        for group in used_groups:
+            if any(skill.startswith(f"{group}:") and not skill.endswith('all') 
+                  for skill in modified_skills.keys()):
+                others_key = f"{group}:others"
+                others_value = DEFAULT_SKILLS.get(f"{group}:all", 1)
+                display_skills[others_key] = others_value
+
+        for skill, value in DEFAULT_SKILLS.items():
+            if skill.endswith(':all'):
+                continue
+            
+            if skill not in display_skills:
+                display_skills[skill] = value
+
+        all_groups = GROUPED_SKILLS.copy()
+        all_groups.add('language')
+        
+        for group in all_groups:
+            if group not in used_groups:
+                all_skill = f"{group}:all"
+                display_skills[all_skill] = DEFAULT_SKILLS.get(all_skill, 1)
+
+        def sort_key(item):
+            skill_name = item[0]
+            base = skill_name.split(':')[0]
+            
+            is_grouped = base in GROUPED_SKILLS or base == 'language'
+            is_others = skill_name.endswith('others')
+            is_all = skill_name.endswith('all')
+            
+            return (
+                is_grouped,
+                is_all,
+                is_others,
+                skill_name 
+            )
+
+        return dict(sorted(display_skills.items(), key=sort_key))
+
     def _format_skill_name(self, original_skill_name):
-        if original_skill_name in self.SKILL_ABBREVIATIONS:
+        if ':all' in original_skill_name:
+            base = original_skill_name.split(':')[0].capitalize()
+            display_name = f"{base} - All"
+        elif original_skill_name in self.SKILL_ABBREVIATIONS:
             display_name = self.SKILL_ABBREVIATIONS[original_skill_name]
         else:
             if ':' in original_skill_name:
-                base_name = original_skill_name.split(':')[1]
-                words = base_name.split('_')
-                display_name = ' '.join(word.capitalize() for word in words)
+                if original_skill_name.endswith('others'):
+                    base = original_skill_name.split(':')[0].capitalize()
+                    display_name = f"{base} - Others"
+                else:
+                    base_name = original_skill_name.split(':')[1]
+                    words = base_name.split('_')
+                    display_name = ' '.join(word.capitalize() for word in words)
             elif '_' in original_skill_name:
                 parts = original_skill_name.split('_')
                 display_name = ' '.join(part.capitalize() for part in parts)
@@ -848,28 +1100,374 @@ class SkillsGrid(QFrame):
         self.original_skill_names[display_name.lower()] = original_skill_name
         return display_name
     
-    def update_skills(self, skills_data):
+    def set_edit_mode(self, enabled: bool):
+        if hasattr(self, 'add_skill_button'):
+            self.add_skill_button.setEnabled(enabled)
+        if hasattr(self, 'delete_skill_button'):
+            self.delete_skill_button.setEnabled(enabled)
+        for line_edit in self.findChildren(QLineEdit):
+            line_edit.setEnabled(enabled)
+    
+    def update_skills(self, skills_data, preserve_edit_state=False):
+        is_editing = False
+        if preserve_edit_state:
+            is_editing = self.parent.parent.toggle_edit_action.isChecked()
+            
+        self.modified_skills = skills_data.copy()
+        
         while self.main_layout.count():
             item = self.main_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-                
-        for index, (skill_name, skill_value) in enumerate(skills_data.items()):
+
+        display_skills = self._get_skills_to_display(skills_data)
+        
+        for index, (skill_name, skill_value) in enumerate(display_skills.items()):
             row = index // 4
             col = index % 4
 
             font = QFont("Inconsolata SemiCondensed")
             
+            display_name = self._format_skill_name(skill_name)
+            
+            is_special = skill_name.endswith(('all', 'others'))
+            
+            if is_special:
+                special_edit_callback = lambda s=display_name, v=skill_value: self._show_special_input_dialog(s, v)
+            else:
+                special_edit_callback = None
+
             skill_entry = TFValueEntry(
-                label_text=self._format_skill_name(skill_name),
+                label_text=display_name,
                 value_text=skill_value,
                 label_size=75,
                 custom_label_font=font,
                 number_only=True,
-                allow_decimal=False
+                allow_decimal=False,
+                special_edit=special_edit_callback if is_special else None
             )
             
+            skill_entry.value_changed.connect(lambda val, name=skill_name: self._on_skill_value_changed(name, val))
+            
+            if is_editing:
+                skill_entry.value_field.setEnabled(True)
+                
             self.main_layout.addWidget(skill_entry, row, col)
+
+        last_row = (len(display_skills) - 1) // 4
+        button_row = last_row + 1
+        
+        self.toggle_button = self._create_toggle_button()
+        self.add_skill_button = self._create_add_button()
+        self.delete_skill_button = self._create_delete_button()
+        
+        self.main_layout.addWidget(self.toggle_button, button_row, 0)
+        self.main_layout.addWidget(self.add_skill_button, button_row, 1)
+        self.main_layout.addWidget(self.delete_skill_button, button_row, 2)
+        
+        spacer = QWidget()
+        self.main_layout.addWidget(spacer, button_row, 3)
+        
+        if preserve_edit_state:
+            self.set_edit_mode(is_editing)
+
+    def _create_toggle_button(self):
+        button = QPushButton("Show All" if not self.show_all else "Show Modified")
+        button.setFixedWidth(100) 
+        button.setFont(QFont("Inconsolata SemiCondensed"))
+        button.clicked.connect(self._toggle_skills_display)
+        return button
+
+    def _create_add_button(self):
+        button = QPushButton("Add Skill")
+        button.setFixedWidth(100)
+        button.setFont(QFont("Inconsolata SemiCondensed"))
+        button.clicked.connect(self._handle_add_skill)
+        button.setEnabled(False)
+        return button
+    
+    def _create_delete_button(self):
+        button = QPushButton("Delete Skill")
+        button.setFixedWidth(100) 
+        button.setFont(QFont("Inconsolata SemiCondensed"))
+        button.clicked.connect(self._handle_delete_skill)
+        button.setEnabled(False)
+        return button
+
+    def _toggle_skills_display(self):
+        self.show_all = not self.show_all
+        if hasattr(self, 'modified_skills'):
+            self.update_skills(self.modified_skills, preserve_edit_state=True)
+    
+    def _handle_add_skill(self):
+        confirmed, result = SkillAddDialog.get_skill_input(self)
+        if not confirmed:
+            return
+            
+        skill_name, skill_value = result
+        
+        if skill_name in self.modified_skills:
+            for skill_entry in self.findChildren(TFValueEntry):
+                entry_name = self._convert_display_to_storage_name(skill_entry.label.text().lower())
+                if entry_name == skill_name:
+                    skill_entry.set_value(str(skill_value))
+                    self._highlight_widget(skill_entry)
+                    return
+                    
+        base_skill = skill_name.split(':')[0] if ':' in skill_name else skill_name
+        if base_skill in GROUPED_SKILLS:
+            default_value = DEFAULT_SKILLS.get(f"{base_skill}:all", 0)
+            if skill_value == default_value:
+                self.parent.parent.app.show_message(f"No need to create this skill. You can use {base_skill.capitalize()} - All instead.", 3000, 'yellow')
+                return
+        
+        self._update_single_skill(skill_name, skill_value)
+
+    def _handle_delete_skill(self):
+        print("Yo!")
+
+    def _highlight_widget(self, widget):
+        current_style = widget.styleSheet()
+        widget.setStyleSheet(current_style + "border: 2px solid #FFD700;")
+        
+        QTimer.singleShot(3000, lambda: widget.setStyleSheet(current_style))
+
+    def _on_skill_value_changed(self, skill_name, new_value):
+            try:
+                value = int(new_value) if new_value.strip() else 0
+                base_skill = skill_name.split(':')[0] if ':' in skill_name else skill_name
+                default_value = (DEFAULT_SKILLS.get(f"{base_skill}:all", 0)
+                            if self._is_grouped_skill(skill_name)
+                            else DEFAULT_SKILLS.get(skill_name, 0))
+                
+                if value != default_value:
+                    self.modified_skills[skill_name] = value
+                elif skill_name in self.modified_skills:
+                    if skill_name.endswith(':all'):
+                        del self.modified_skills[skill_name]
+                        self.update_skills(self.modified_skills, preserve_edit_state=True)
+                    else:
+                        self._update_single_skill(skill_name, value)
+                        
+            except ValueError:
+                pass
+
+    def _show_special_input_dialog(self, skill_name: str, current_value: int) -> None:
+        is_all = "all" in skill_name.lower()
+        skill_type = "All" if is_all else "Others"
+        base_name = skill_name.split(' - ')[0].lower()
+        
+        confirmed, result = SkillInputDialog.get_skill_input(
+            self,
+            skill_type,
+            base_name,
+            current_value,
+            self.modified_skills
+        )
+        
+        if not confirmed:
+            return
+            
+        new_skill_name, new_value = result
+        
+        self._update_single_skill(new_skill_name, new_value)
+
+    def _update_single_skill(self, skill_name: str, value: int):
+        try:
+            base_skill = skill_name.split(':')[0]
+            default_value = DEFAULT_SKILLS.get(f"{base_skill}:all", 0)
+            
+            if value == default_value:
+                remaining_skills = [s for s in self.modified_skills.keys() 
+                                  if s.startswith(f"{base_skill}:") and 
+                                  not s.endswith(('all', 'others')) and
+                                  s != skill_name]
+                
+                if not remaining_skills:
+                    self.parent.parent.app.show_message(
+                        f"Using default value. Converting to {base_skill.capitalize()} - All.",
+                        3000,
+                        'yellow'
+                    )
+                    self._convert_others_to_all(base_skill)
+                else:
+                    self.parent.parent.app.show_message(
+                        f"Using default value. Skill removed.",
+                        3000,
+                        'yellow'
+                    )
+                    with open(self.parent.parent.current_file_path, 'r+', encoding='utf-8') as file:
+                        data = json.load(file)
+                        if skill_name in data['skills']:
+                            data['skills'].pop(skill_name)
+                        if skill_name in self.modified_skills:
+                            self.modified_skills.pop(skill_name)
+                        file.seek(0)
+                        json.dump(data, file, indent=4, ensure_ascii=False)
+                        file.truncate()
+                    
+                    self.update_skills(self.modified_skills, preserve_edit_state=True)
+                    return
+            else:
+                with open(self.parent.parent.current_file_path, 'r+', encoding='utf-8') as file:
+                    data = json.load(file)
+                    data['skills'][skill_name] = value
+                    self.modified_skills[skill_name] = value
+                    file.seek(0)
+                    json.dump(data, file, indent=4, ensure_ascii=False)
+                    file.truncate()
+                
+                self.update_skills(self.modified_skills, preserve_edit_state=True)
+                
+                for skill_entry in self.findChildren(TFValueEntry):
+                    entry_name = self._convert_display_to_storage_name(skill_entry.label.text().lower())
+                    if entry_name == skill_name:
+                        self._highlight_widget(skill_entry)
+                        break
+                
+                self.parent.parent.app.show_message("Skill updated successfully", 2000, 'green')
+            
+        except Exception as e:
+            self.parent.parent.app.show_error("Update Error", f"Failed to update skill: {str(e)}")
+
+    def _convert_others_to_all(self, base_skill: str):
+        try:
+            with open(self.parent.parent.current_file_path, 'r+', encoding='utf-8') as file:
+                data = json.load(file)
+                
+                data['skills'] = {k: v for k, v in data['skills'].items() 
+                                if not k.startswith(f"{base_skill}:")}
+                self.modified_skills = {k: v for k, v in self.modified_skills.items() 
+                                      if not k.startswith(f"{base_skill}:")}
+                
+                all_skill = f"{base_skill}:all"
+                all_value = DEFAULT_SKILLS.get(all_skill, 1)
+                data['skills'][all_skill] = all_value
+                self.modified_skills[all_skill] = all_value
+                
+                file.seek(0)
+                json.dump(data, file, indent=4, ensure_ascii=False)
+                file.truncate()
+                
+            self.update_skills(self.modified_skills, preserve_edit_state=True)
+            
+        except Exception as e:
+            self.parent.parent.app.show_error("Update Error", f"Failed to convert to All: {str(e)}")
+
+    def _convert_display_to_storage_name(self, display_name):
+            original_name = self.original_skill_names.get(display_name.lower())
+            if original_name:
+                return original_name
+            
+            for storage_name, abbr in self.SKILL_ABBREVIATIONS.items():
+                if abbr.lower() == display_name.lower():
+                    return storage_name
+            
+            return display_name.lower().replace(' ', '_')
+
+class ItemsPanel(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.Shape.Box)
+        self.setup_ui()
+
+    def setup_ui(self):
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(5, 5, 5, 5)
+        self.layout.setSpacing(4)
+        
+        self.items_grid = QGridLayout()
+        self.items_grid.setHorizontalSpacing(10)
+        self.items_grid.setVerticalSpacing(4)
+        self.layout.addLayout(self.items_grid)
+
+    def update_items(self, items_data):
+        while self.items_grid.count():
+            item = self.items_grid.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        
+        row = 0
+        
+        weapons = items_data.get('weapons', {})
+        for weapon_id, weapon_data in weapons.items():
+            display_name = ' '.join(word.capitalize() for word in weapon_id.split('_'))
+            
+            font = QFont("Inconsolata SemiCondensed")
+            font.setWeight(QFont.Weight.Bold)
+            
+            item_entry = TFValueEntry(
+                label_text=display_name,
+                value_text=weapon_data.get('notes', ''),
+                alignment=Qt.AlignmentFlag.AlignLeft,
+                label_size=75,
+                value_size=450,
+                custom_label_font=font
+            )
+            
+            self.items_grid.addWidget(item_entry, row, 0)
+            row += 1
+        
+        armours = items_data.get('armours', {})
+        for armour_id, armour_data in armours.items():
+            display_name = ' '.join(word.capitalize() for word in armour_id.split('_'))
+            
+            item_entry = TFValueEntry(
+                label_text=display_name,
+                value_text=armour_data.get('notes', ''),
+                alignment=Qt.AlignmentFlag.AlignLeft,
+                label_size=75,
+                value_size=450,
+                custom_label_font=QFont("Inconsolata SemiCondensed")
+            )
+            
+            self.items_grid.addWidget(item_entry, row, 0)
+            row += 1
+        
+        others = items_data.get('others', {})
+        for item_id, item_data in others.items():
+            display_name = ' '.join(word.capitalize() for word in item_id.split('_'))
+            
+            item_entry = TFValueEntry(
+                label_text=display_name,
+                value_text=item_data.get('notes', ''),
+                alignment=Qt.AlignmentFlag.AlignLeft,
+                label_size=75,
+                value_size=450,
+                custom_label_font=QFont("Inconsolata SemiCondensed")
+            )
+            
+            self.items_grid.addWidget(item_entry, row, 0)
+            row += 1
+
+class NotesPanel(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.Shape.Box)
+        self.setup_ui()
+    
+    def setup_ui(self):
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(5, 5, 5, 5)
+        self.layout.setSpacing(4)
+        
+        title = QLabel("Notes")
+        title_font = QFont("Inconsolata", 10)
+        title_font.setWeight(QFont.Weight.Bold)
+        title.setFont(title_font)
+        self.layout.addWidget(title)
+        
+        self.notes_edit = QTextEdit()
+        self.notes_edit.setFont(QFont("Inconsolata", 10))
+        self.notes_edit.setFixedHeight(200)
+        self.notes_edit.setEnabled(False)
+        self.layout.addWidget(self.notes_edit)
+    
+    def update_notes(self, notes_text):
+        self.notes_edit.setText(notes_text)
+    
+    def set_edit_enabled(self, enabled):
+        self.notes_edit.setEnabled(enabled)
 
 class CharacterRules:
     @staticmethod
@@ -1042,3 +1640,188 @@ class CharacterRules:
         if build in build_db_map and db_str != build_db_map[build]:
             return False, f"Build {build} should have DB of {build_db_map[build]}"
         return True, ""
+
+class SkillInputDialog(TFComputingDialog):
+    def __init__(self, skill_type: str, base_skill: str, current_value: int, 
+                current_skills: dict, parent=None):
+        self.skill_type = skill_type
+        self.base_skill = base_skill
+        self.current_value = current_value
+        self.current_skills = current_skills
+        super().__init__("Skill Input", parent)
+        self.setup_content()
+        
+    def setup_content(self):
+        layout = QVBoxLayout(self.content_frame)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+        
+        skill_label = QLabel(self.base_skill.capitalize())
+        skill_label.setFont(QFont("Inconsolata", 11, QFont.Weight.Bold))
+        layout.addWidget(skill_label)
+        
+        input_frame = self._create_input_section()
+        layout.addWidget(input_frame)
+        
+        self.setFixedSize(300, 150)
+        
+    def _create_input_section(self) -> QFrame:
+        frame = QFrame()
+        frame.setFrameShape(QFrame.Shape.NoFrame)
+        
+        layout = QVBoxLayout(frame)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+        
+        subtype_layout = QHBoxLayout()
+        subtype_label = QLabel("Subtype:")
+        subtype_label.setFont(QFont("Inconsolata", 10))
+        subtype_label.setFixedWidth(60)
+        self.subtype_input = QLineEdit()
+        self.subtype_input.setFont(QFont("Inconsolata", 10))
+        subtype_layout.addWidget(subtype_label)
+        subtype_layout.addWidget(self.subtype_input)
+        layout.addLayout(subtype_layout)
+        
+        value_layout = QHBoxLayout()
+        value_label = QLabel("Value:")
+        value_label.setFont(QFont("Inconsolata", 10))
+        value_label.setFixedWidth(60)
+        self.value_input = TFNumberReceiver(
+            text="",
+            alignment=Qt.AlignmentFlag.AlignLeft,
+            font=QFont("Inconsolata", 10),
+            allow_decimal=False,
+            allow_negative=False
+        )
+        value_layout.addWidget(value_label)
+        value_layout.addWidget(self.value_input)
+        layout.addLayout(value_layout)
+        
+        return frame
+
+    def compute_result(self) -> tuple[bool, str]:
+        subtype = self.subtype_input.text().strip().lower()
+        value = self.value_input.text().strip()
+        
+        if not subtype:
+            return False, "Please enter the skill subtype."
+            
+        if not value:
+            return False, "Please enter the skill value."
+            
+        try:
+            value_int = int(value)
+            if value_int < 1 or value_int > 99:
+                return False, "Skill value must be between 1 and 99."
+        except ValueError:
+            return False, "Please enter a valid number."
+            
+        skill_name = f"{self.base_skill}:{subtype}"
+            
+        return True, (skill_name, value_int)
+
+    @classmethod
+    def get_skill_input(cls, parent, skill_type: str, base_skill: str, 
+                       current_value: int, current_skills: dict) -> tuple[bool, tuple[str, int]]:
+        dialog = cls(skill_type, base_skill, current_value, current_skills, parent)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            return True, dialog.get_result()
+        return False, ("", 0)
+
+class SkillAddDialog(TFComputingDialog):
+    def __init__(self, parent=None):
+        self.all_grouped_skills = GROUPED_SKILLS | {'language'} | SPECIAL_SKILLS
+        super().__init__("Add Skill", parent)
+        self.parent = parent
+        self.setup_content()
+        
+    def setup_content(self):
+        layout = QVBoxLayout(self.content_frame)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(15)
+        
+        category_label = QLabel("Skill Category:")
+        category_label.setFont(QFont("Inconsolata", 10, QFont.Weight.Bold))
+        layout.addWidget(category_label)
+        
+        self.parent_combo = QComboBox()
+        self.parent_combo.setFont(QFont("Inconsolata", 10))
+        self.parent_combo.setFixedWidth(200)
+        self.parent_combo.addItem("None")
+        
+        for skill in sorted(self.all_grouped_skills):
+            if skill == 'firearms':
+                display_name = 'Firearms'
+            else:
+                display_name = skill.capitalize()
+            self.parent_combo.addItem(display_name)
+            
+        layout.addWidget(self.parent_combo)
+        
+        layout.addWidget(TFSeparator.horizontal())
+        
+        self.name_entry = TFValueEntry(
+            label_text="Skill Name:",
+            value_text="",
+            alignment=Qt.AlignmentFlag.AlignLeft,
+            label_size=100,
+            value_size=180,
+            custom_label_font=QFont("Inconsolata", 10, QFont.Weight.Bold),
+            custom_edit_font=QFont("Inconsolata", 10)
+        )
+        self.name_entry.value_field.setEnabled(True)
+        self.name_entry.value_field.setValidator(
+            QRegularExpressionValidator(QRegularExpression("[a-zA-Z ]+"))
+        )
+        layout.addWidget(self.name_entry)
+        
+        self.value_entry = TFValueEntry(
+            label_text="Skill Value:",
+            value_text="",
+            label_size=100,
+            value_size=180,
+            custom_label_font=QFont("Inconsolata", 10, QFont.Weight.Bold),
+            custom_edit_font=QFont("Inconsolata", 10),
+            number_only=True,
+            allow_decimal=False
+        )
+        self.value_entry.value_field.setEnabled(True)
+        layout.addWidget(self.value_entry)
+        
+        layout.addStretch()
+        
+        self.setFixedSize(350, 250)
+
+    def compute_result(self) -> tuple[bool, str]:
+        parent_skill = self.parent_combo.currentText().lower()
+        skill_name = self.name_entry.get_value().strip()
+        value = self.value_entry.get_value().strip()
+        
+        if not skill_name:
+            return False, "Please enter the skill name."
+            
+        if not value:
+            return False, "Please enter the skill value."
+
+        try:
+            value_int = int(value)
+            if value_int < 1 or value_int > 99:
+                return False, "Skill value must be between 1 and 99."
+        except ValueError:
+            return False, "Please enter a valid number."
+        
+        if parent_skill == "none":
+            final_name = skill_name.lower().replace(" ", "_")
+        else:
+            final_name = f"{parent_skill}:{skill_name.lower().replace(' ', '_')}"
+            
+        return True, (final_name, value_int)
+
+    @classmethod
+    def get_skill_input(cls, parent) -> tuple[bool, tuple[str, int]]:
+        dialog = cls(parent)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            return True, dialog.get_result()
+        return False, ("", 0)
+    

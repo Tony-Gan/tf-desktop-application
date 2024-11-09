@@ -60,23 +60,23 @@ def main():
 
 def load_font():
     font_paths = [
-        "resources/fonts/Nunito-Bold.ttf",
-        "resources/fonts/Nunito-Italic.ttf",
-        "resources/fonts/Nunito-Light.ttf",
-        "resources/fonts/Nunito-Regular.ttf",
-        "resources/fonts/OpenSans-Bold.ttf",
-        "resources/fonts/OpenSans-Italic.ttf",
-        "resources/fonts/OpenSans-Light.ttf",
-        "resources/fonts/OpenSans-Regular.ttf",
-        "resources/fonts/Montserrat-Bold.ttf",
-        "resources/fonts/Montserrat-Italic.ttf",
-        "resources/fonts/Montserrat-Light.ttf",
-        "resources/fonts/Montserrat-Regular.ttf",
-        "resources/fonts/Inconsolata-Bold.ttf",
-        "resources/fonts/Inconsolata-Light.ttf",
-        "resources/fonts/Inconsolata-Regular.ttf",
-        "resources/fonts/Inconsolata-SemiBold.ttf",
-        "resources/fonts/Inconsolata_SemiCondensed-Regular.ttf"
+        resource_path("resources/fonts/Nunito-Bold.ttf"),
+        resource_path("resources/fonts/Nunito-Italic.ttf"),
+        resource_path("resources/fonts/Nunito-Light.ttf"),
+        resource_path("resources/fonts/Nunito-Regular.ttf"),
+        resource_path("resources/fonts/OpenSans-Bold.ttf"),
+        resource_path("resources/fonts/OpenSans-Italic.ttf"),
+        resource_path("resources/fonts/OpenSans-Light.ttf"),
+        resource_path("resources/fonts/OpenSans-Regular.ttf"),
+        resource_path("resources/fonts/Montserrat-Bold.ttf"),
+        resource_path("resources/fonts/Montserrat-Italic.ttf"),
+        resource_path("resources/fonts/Montserrat-Light.ttf"),
+        resource_path("resources/fonts/Montserrat-Regular.ttf"),
+        resource_path("resources/fonts/Inconsolata-Bold.ttf"),
+        resource_path("resources/fonts/Inconsolata-Light.ttf"),
+        resource_path("resources/fonts/Inconsolata-Regular.ttf"),
+        resource_path("resources/fonts/Inconsolata-SemiBold.ttf"),
+        resource_path("resources/fonts/Inconsolata_SemiCondensed-Regular.ttf")
     ]
 
     loaded_fonts = []

@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QPushButton, QMenu
 from PyQt6.QtGui import QIcon, QAction
 
 from settings.general import ICON_BUTTON_SIZE
+from utils.helper import resource_path
 
 class TFIconButton(QPushButton):
     """
@@ -54,7 +55,7 @@ class TFCloseButton(TFIconButton):
     ):
         super().__init__(
             parent=parent,
-            icon_path="resources/images/icons/close.png",
+            icon_path=resource_path("resources/images/icons/close.png"),
             position=position,
             on_click=self.on_click
         )
@@ -102,7 +103,7 @@ class TFMenuButton(TFIconButton):
     def __init__(self, parent, position: Tuple[int, int] = None, skip_default: bool = False):
         super().__init__(
             parent=parent,
-            icon_path="resources/images/icons/settings.png",
+            icon_path=resource_path("resources/images/icons/settings.png"),
             position=position,
             on_click=self.on_click
         )

@@ -4,6 +4,7 @@ resources/data/
 docs/
 *.db
 .idea/
+build/
 
 # Logs
 *.log

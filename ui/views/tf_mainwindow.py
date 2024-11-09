@@ -6,6 +6,7 @@ from core.database.models import TFSystemState
 from ui.views.tf_window_container import TFWindowContainer
 from ui.views.tf_menubar import TFMenuBar
 from ui.tf_application import TFApplication
+from utils.helper import resource_path
 
 class TFMainWindow(QMainWindow):
     def __init__(self):
@@ -50,7 +51,7 @@ class TFMainWindow(QMainWindow):
 
     def _setup_window_properties(self):
         self.setWindowTitle('TF Desktop Application')
-        self.setWindowIcon(QIcon("resources/images/icons/app.png"))
+        self.setWindowIcon(QIcon(resource_path("resources/images/icons/app.png")))
         with self.app.database.get_session() as session:
             system_state = session.query(TFSystemState).first()
             if system_state is not None:
