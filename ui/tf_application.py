@@ -151,12 +151,12 @@ class TFApplication(QApplication):
         self._logger = logger
 
     @property
-    def message_box(self) -> TFLogger:
+    def message_box(self) -> TFMessageBox:
         """
-        Get the application's logger.
+        Get the application's message box.
 
         Returns:
-            TFLogger: The logger instance.
+            TFMessageBox: The message box instance.
         """
         return self._logger
     
@@ -166,7 +166,7 @@ class TFApplication(QApplication):
         Set the application's logger.
 
         Args:
-            logger (TFLogger): Logger to use.
+            messaage_box (TFMessageBox): TFMessageBox to use.
         """
         self._message_box = messaage_box
 
@@ -392,4 +392,5 @@ class TFApplication(QApplication):
             >>> app.show_message("Hello!")
         """
         return QApplication.instance()
+        
     

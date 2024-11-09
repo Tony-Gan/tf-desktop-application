@@ -99,6 +99,8 @@ class TFDraggableWindow(QFrame):
         # Initialize member variables
         self._dragging = False
         self._offset = QPoint()
+        self._is_focused = False
+        self.setProperty("focused", False)
         self.last_moved_time = 0
         self.app = TFApplication.instance()
 
@@ -161,6 +163,18 @@ class TFDraggableWindow(QFrame):
     def title(self, value: str) -> None:
         self._title_label.setText(value)
 
+    @property
+    def focused(self) -> bool:
+        return self._focused
+
+    @focused.setter
+    def focused(self, value: bool):
+        self._focused = value
+        self.setProperty("focused", value)
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
+
     def initialize_window(self):
         """
         Initialize window content and layout.
@@ -187,6 +201,9 @@ class TFDraggableWindow(QFrame):
         Args:
             event (QMouseEvent): Mouse event object.
         """
+        if event.button() in (Qt.MouseButton.LeftButton, Qt.MouseButton.RightButton):
+            self.parent().set_focused_window(self)
+            
         if event.button() == Qt.MouseButton.LeftButton:
             self._dragging = True
             self._offset = event.position().toPoint()

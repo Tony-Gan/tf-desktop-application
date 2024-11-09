@@ -162,3 +162,7 @@ QWidget#transparent_viewport {
 QWidget#transparent_container {
     background-color: transparent;
 }
+
+QFrame#TFDraggableWindow[focused="true"] {
+    border: 2px solid gray;
+}

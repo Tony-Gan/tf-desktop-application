@@ -118,12 +118,17 @@ class TFMenuButton(TFIconButton):
         self.rebuild_menu()
 
     def on_click(self):
+        if hasattr(self.parent, 'parent') and hasattr(self.parent.parent(), 'set_focused_window'):
+            self.parent.parent().set_focused_window(self.parent)
+        elif hasattr(self.parent, 'set_focused'):
+            self.parent.set_focused(True)
+
         self.rebuild_menu()
         self.menu.exec(self.mapToGlobal(self.rect().bottomLeft()))
 
     def add_action(self, text: str, callback: Callable, section: MenuSection = MenuSection.CUSTOM, 
                 index: int = -1, checkable: bool = False, checked: bool = False,
-                icon_path: str = None):
+                icon_path: str = None) -> QAction:
         """
         Add a new action to the menu.
 
@@ -152,6 +157,7 @@ class TFMenuButton(TFIconButton):
             self.actions[section].insert(index, action)
             
         self.rebuild_menu()
+        return action
 
     def remove_action(self, text: str, section: Optional[MenuSection] = None):
         """

@@ -1,4 +1,4 @@
-from typing import List, Type
+from typing import List, Type, Optional
 
 from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import QWidget, QScrollArea
@@ -41,6 +41,7 @@ class TFWindowContainer(QWidget):
         self.parent = parent
         self.app = TFApplication.instance()
         self.windows: List[TFDraggableWindow] = []
+        self.focused_window: Optional[TFDraggableWindow] = None
         
         # Set initial size to ensure scrolling works properly
         self.setMinimumSize(MAX_WIDTH, MAX_HEIGHT)
@@ -180,6 +181,8 @@ class TFWindowContainer(QWidget):
 
     def _remove_specific_window(self, window: TFDraggableWindow) -> None:
         if window in self.windows:
+            if self.focused_window is window:
+                self.focused_window = None
             self.windows.remove(window)
             window.deleteLater()
             self.resize_container()
@@ -214,6 +217,15 @@ class TFWindowContainer(QWidget):
                (win.y() < y + size[1] and y < win.y() + win.height()):
                 return True
         return False
+    
+    def set_focused_window(self, window: TFDraggableWindow):
+        if self.focused_window is window:
+            return
+        if self.focused_window is not None:
+            self.focused_window.focused = False
+        self.focused_window = window
+        if self.focused_window is not None:
+            self.focused_window.focused = True
     
     def sizeHint(self) -> QSize:
         return self.minimumSizeHint()

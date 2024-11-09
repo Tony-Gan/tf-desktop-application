@@ -59,22 +59,36 @@ def main():
     sys.exit(app.exec())
 
 def load_font():
-    QFontDatabase.addApplicationFont("resources/fonts/Nunito-Bold.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/Nunito-Italic.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/Nunito-Light.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/Nunito-Regular.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/OpenSans-Bold.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/OpenSans-Italic.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/OpenSans-Light.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/OpenSans-Regular.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/Montserrat-Bold.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/Montserrat-Italic.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/Montserrat-Light.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/Montserrat-Regular.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/Inconsolata-Bold.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/Inconsolata-Light.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/Inconsolata-Regular.ttf")
-    QFontDatabase.addApplicationFont("resources/fonts/Inconsolata-SemiBold.ttf")
+    font_paths = [
+        "resources/fonts/Nunito-Bold.ttf",
+        "resources/fonts/Nunito-Italic.ttf",
+        "resources/fonts/Nunito-Light.ttf",
+        "resources/fonts/Nunito-Regular.ttf",
+        "resources/fonts/OpenSans-Bold.ttf",
+        "resources/fonts/OpenSans-Italic.ttf",
+        "resources/fonts/OpenSans-Light.ttf",
+        "resources/fonts/OpenSans-Regular.ttf",
+        "resources/fonts/Montserrat-Bold.ttf",
+        "resources/fonts/Montserrat-Italic.ttf",
+        "resources/fonts/Montserrat-Light.ttf",
+        "resources/fonts/Montserrat-Regular.ttf",
+        "resources/fonts/Inconsolata-Bold.ttf",
+        "resources/fonts/Inconsolata-Light.ttf",
+        "resources/fonts/Inconsolata-Regular.ttf",
+        "resources/fonts/Inconsolata-SemiBold.ttf",
+        "resources/fonts/Inconsolata_SemiCondensed-Regular.ttf"
+    ]
+
+    loaded_fonts = []
+
+    for font_path in font_paths:
+        font_id = QFontDatabase.addApplicationFont(font_path)
+        if font_id == -1:
+            print(f"Failed to load font: {font_path}")
+        else:
+            font_families = QFontDatabase.applicationFontFamilies(font_id)
+            loaded_fonts.extend(font_families)
+
 
 def load_styles():
     with open(resource_path("resources/styles/styles.qss"), "r", encoding='utf-8') as f:
