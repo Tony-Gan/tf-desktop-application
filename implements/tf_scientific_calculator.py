@@ -223,3 +223,9 @@ class TFScientificCalculator(TFDraggableWindow):
             new_text = current[:cursor_pos-1] + current[cursor_pos:]
             self.display.setText(new_text)
             self.display.setCursorPosition(cursor_pos-1)
+
+    def closeEvent(self, event) -> None:
+        self.clear()
+        self.closed.emit(self)
+        event.accept()
+        self.deleteLater()

@@ -87,10 +87,6 @@ class TFDraggableWindow(QFrame):
     moved = pyqtSignal()
     mouse_released = pyqtSignal()
     closed = pyqtSignal(object)
-    bring_to_front = pyqtSignal(object)
-    send_to_back = pyqtSignal(object)
-    raise_level = pyqtSignal(object)
-    lower_level = pyqtSignal(object)
 
     metadata: TFToolMetadata
 
@@ -114,6 +110,7 @@ class TFDraggableWindow(QFrame):
         # Create title label
         self._title_label = QLabel(self.metadata.window_title, self)
         self._title_label.move(TITLE_X_OFFSET, TITLE_Y_OFFSET)
+        self._title_label.setFixedWidth(self.width())
         font = QFont(TITLE_FONT_FAMILY, TITLE_FONT_SIZE)
         self._title_label.setFont(font)
 

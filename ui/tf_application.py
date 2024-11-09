@@ -1,9 +1,13 @@
+from typing import List
+
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QTranslator
+
 from core.database.tf_database import TFDatabase
 from ui.components.tf_message_bar import TFMessageBar
 from utils.logging.tf_logger import TFLogger
 from ui.views.tf_output_panel import TFOutputPanel
+from ui.components.tf_message_box import TFMessageBox
 
 class TFApplication(QApplication):
     """
@@ -43,6 +47,7 @@ class TFApplication(QApplication):
         self._message_bar = None
         self._output_panel = None
         self._logger = None
+        self._message_box = None
 
     @property
     def database(self) -> TFDatabase:
@@ -144,6 +149,26 @@ class TFApplication(QApplication):
             logger (TFLogger): Logger to use.
         """
         self._logger = logger
+
+    @property
+    def message_box(self) -> TFLogger:
+        """
+        Get the application's logger.
+
+        Returns:
+            TFLogger: The logger instance.
+        """
+        return self._logger
+    
+    @message_box.setter
+    def message_box(self, messaage_box: TFMessageBox):
+        """
+        Set the application's logger.
+
+        Args:
+            logger (TFLogger): Logger to use.
+        """
+        self._message_box = messaage_box
 
     def show_message(self, message: str, display_time: int=2000, colour: str='green'):
         """
@@ -279,6 +304,80 @@ class TFApplication(QApplication):
             
             self.show_message(message, colour='red', display_time=5000)
             self.display_output(f"CRITICAL ERROR: {message}")
+
+    def show_question(
+        self,
+        title: str,
+        message: str,
+        buttons: List[str] = None,
+        default_button: str = None,
+        parent = None
+    ) -> str:
+        """
+        Show a question dialog box.
+        
+        Args:
+            title (str): Dialog title
+            message (str): Message to display
+            buttons (List[str], optional): List of button texts.
+                Defaults to ["Yes", "No", "Cancel"].
+            default_button (str, optional): Text of the default button
+            parent: Parent widget. If None, uses active window
+            
+        Returns:
+            str: Text of the clicked button
+            
+        Example:
+            >>> app = TFApplication.instance()
+            >>> response = app.show_question(
+            ...     "Save Changes?",
+            ...     "Do you want to save your changes?",
+            ...     buttons=["Save", "Don't Save", "Cancel"],
+            ...     default_button="Save"
+            ... )
+            >>> if response == "Save":
+            ...     # save changes
+            ...     pass
+        """
+        if parent is None:
+            parent = self.activeWindow()
+        return self._message_box.question(parent, title, message, buttons, default_button)
+    
+    def show_warning(
+        self,
+        title: str,
+        message: str,
+        buttons: List[str] = None,
+        parent = None
+    ) -> str:
+        """Show a warning dialog box."""
+        if parent is None:
+            parent = self.activeWindow()
+        return self._message_box.warning(parent, title, message, buttons)
+    
+    def show_information(
+        self,
+        title: str,
+        message: str,
+        buttons: List[str] = None,
+        parent = None
+    ) -> str:
+        """Show an information dialog box."""
+        if parent is None:
+            parent = self.activeWindow()
+        return self._message_box.information(parent, title, message, buttons)
+    
+    def show_error(
+        self,
+        title: str,
+        message: str,
+        buttons: List[str] = None,
+        parent = None
+    ) -> str:
+        """Show an error dialog box."""
+        if parent is None:
+            parent = self.activeWindow()
+        return self._message_box.error(parent, title, message, buttons)
         
     @staticmethod
     def instance() -> 'TFApplication':
@@ -293,3 +392,4 @@ class TFApplication(QApplication):
             >>> app.show_message("Hello!")
         """
         return QApplication.instance()
+    

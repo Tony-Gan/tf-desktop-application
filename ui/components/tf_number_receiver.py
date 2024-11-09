@@ -31,10 +31,14 @@ class TFNumberReceiver(QLineEdit):
                  text="0", 
                  alignment: Qt.AlignmentFlag=Qt.AlignmentFlag.AlignLeft, 
                  font: QFont=QFont("Montserrat", 12),
+                 allow_decimal=True,
+                 allow_negative=False,
                  parent=None):
         super().__init__(text, parent)
         self.setAlignment(alignment)
         self.setFont(font)
+        self.allow_decimal = allow_decimal
+        self.allow_negative = allow_negative
 
     def keyPressEvent(self, event: QKeyEvent | None):
         """
@@ -53,10 +57,19 @@ class TFNumberReceiver(QLineEdit):
             self.setText(event.text())
             return
         
-        if event.text().isdigit() or event.text() == "." or event.key() in (Qt.Key.Key_Backspace, Qt.Key.Key_Delete):
-            if event.text() == "." and "." in self.text():
-                event.ignore()
-                return
+        if event.text() == "-" and self.allow_negative:
+            if self.text() == "" or self.cursorPosition() == 0:
+                super().keyPressEvent(event)
+            return
+        
+        if event.text() == "." and self.allow_decimal:
+            if "." not in self.text():
+                super().keyPressEvent(event)
+            return
+        
+        if (event.text().isdigit() or 
+            event.key() in (Qt.Key.Key_Backspace, Qt.Key.Key_Delete, 
+                          Qt.Key.Key_Left, Qt.Key.Key_Right)):
             super().keyPressEvent(event)
         else:
             event.ignore()

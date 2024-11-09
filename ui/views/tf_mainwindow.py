@@ -50,7 +50,7 @@ class TFMainWindow(QMainWindow):
 
     def _setup_window_properties(self):
         self.setWindowTitle('TF Desktop Application')
-        self.setWindowIcon(QIcon("static/images/icons/app.png"))
+        self.setWindowIcon(QIcon("resources/images/icons/app.png"))
         with self.app.database.get_session() as session:
             system_state = session.query(TFSystemState).first()
             if system_state is not None:
@@ -74,5 +74,12 @@ class TFMainWindow(QMainWindow):
     def closeEvent(self, event):
         if hasattr(self, 'window_container'):
             self.window_container.save_all_window_states()
+
+        with self.app.database.get_session() as session:
+            state = session.query(TFSystemState).first()
+            state.window_width = self.width()
+            state.window_height = self.height()
+            session.commit()
+            
         self.app.removeTranslator(self.app.translator)
         event.accept()

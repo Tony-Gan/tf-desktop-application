@@ -260,4 +260,9 @@ class TFUnitConverter(TFDraggableWindow):
             return celsius + 273.15
         else:
             return celsius
+
+    def closeEvent(self, event) -> None:
+        self.closed.emit(self)
+        event.accept()
+        self.deleteLater()
         

@@ -403,7 +403,7 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.app.show_message(error_message, 3000, 'red')
 
     def should_update_data(self):
-        path = os.path.abspath("data/currency_record.json")
+        path = os.path.abspath("resource/data/currency_record/currency_record.json")
         if not os.path.exists(path):
             return True
 
@@ -427,7 +427,7 @@ class TFCurrencyConverter(TFDraggableWindow):
         return current_time - saved_time > timedelta(hours=24)
     
     def load_saved_data(self):
-        path = os.path.abspath("resources/data/currency_record.json")
+        path = os.path.abspath("resources/data/currency_record/currency_record.json")
         try:
             with open(path, "r") as f:
                 data = json.load(f)
@@ -440,7 +440,7 @@ class TFCurrencyConverter(TFDraggableWindow):
         self.update_ui_with_rates()
 
     def save_exchange_data(self, data):
-        path = os.path.abspath("data/currency_record.json")
+        path = os.path.abspath("resources/data/currency_record/currency_record.json")
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
         data["current_time"] = datetime.now().isoformat()
@@ -580,3 +580,8 @@ class TFCurrencyConverter(TFDraggableWindow):
             amount_input.setText("0")
             amount_input.setReadOnly(False)
             amount_input.blockSignals(False)
+
+    def closeEvent(self, event) -> None:
+        self.closed.emit(self)
+        event.accept()
+        self.deleteLater()

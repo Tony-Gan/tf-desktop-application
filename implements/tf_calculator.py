@@ -155,3 +155,9 @@ class TFCalculator(TFDraggableWindow):
             self.display.setText(str(-value))
         except:
             pass
+
+    def closeEvent(self, event) -> None:
+        self.clear()
+        self.closed.emit(self)
+        event.accept()
+        self.deleteLater()

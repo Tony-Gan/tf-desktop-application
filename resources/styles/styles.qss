@@ -133,3 +133,32 @@ QTextEdit#output_text {
     color: black;
     border: none;
 }
+
+QFrame#section_frame {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+QLabel#image_container {
+    background-color: white;
+    border: 1px solid #ccc;
+}
+
+QWidget#upper_container {
+    background-color: transparent;
+    border: none;
+}
+
+QScrollArea#transparent_scroll {
+    background-color: transparent;
+    border: none;
+}
+
+QWidget#transparent_viewport {
+    background-color: transparent;
+}
+
+QWidget#transparent_container {
+    background-color: transparent;
+}

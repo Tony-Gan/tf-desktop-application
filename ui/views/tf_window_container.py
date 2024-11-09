@@ -89,12 +89,7 @@ class TFWindowContainer(QWidget):
         window = window_class(parent=self)
         window.closed.connect(self._remove_specific_window)
         window_size = window.metadata.window_size
-
-        window.bring_to_front.connect(lambda w: w.raise_())
-        window.send_to_back.connect(lambda w: w.lower())
-        window.raise_level.connect(lambda w: w.raise_())
-        window.lower_level.connect(lambda w: w.lower())
-
+        
         x, y = 0, 0
         while self._is_position_occupied(x, y, window_size):
             x += window_size[0]
@@ -174,11 +169,6 @@ class TFWindowContainer(QWidget):
                     window = window_class(parent=self)
                     window.closed.connect(self._remove_specific_window)
                     window.moved.connect(self.resize_container)
-                    
-                    window.bring_to_front.connect(lambda w: w.raise_())
-                    window.send_to_back.connect(lambda w: w.lower())
-                    window.raise_level.connect(lambda w: w.raise_())
-                    window.lower_level.connect(lambda w: w.lower())
                     
                     window.move(state.x_position, state.y_position)
                     

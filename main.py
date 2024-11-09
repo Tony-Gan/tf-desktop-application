@@ -8,6 +8,7 @@ from ui.tf_application import TFApplication
 from ui.views.tf_mainwindow import TFMainWindow
 from ui.views.tf_output_panel import TFOutputPanel
 from ui.components.tf_message_bar import TFMessageBar
+from ui.components.tf_message_box import TFMessageBox
 from utils.logging.tf_logger import TFLogger
 from utils.registry.tf_tool_registry import TFToolRegistry
 from utils.helper import resource_path
@@ -42,7 +43,10 @@ def main():
     TFToolRegistry.auto_discover_tools()
 
     output_panel = TFOutputPanel()
-    app.output_panel = output_panel
+    app.output_panel = TFOutputPanel()
+
+    message_box = TFMessageBox()
+    app.message_box = message_box
 
     window = TFMainWindow()
     output_panel.setParent(window)
@@ -67,6 +71,10 @@ def load_font():
     QFontDatabase.addApplicationFont("resources/fonts/Montserrat-Italic.ttf")
     QFontDatabase.addApplicationFont("resources/fonts/Montserrat-Light.ttf")
     QFontDatabase.addApplicationFont("resources/fonts/Montserrat-Regular.ttf")
+    QFontDatabase.addApplicationFont("resources/fonts/Inconsolata-Bold.ttf")
+    QFontDatabase.addApplicationFont("resources/fonts/Inconsolata-Light.ttf")
+    QFontDatabase.addApplicationFont("resources/fonts/Inconsolata-Regular.ttf")
+    QFontDatabase.addApplicationFont("resources/fonts/Inconsolata-SemiBold.ttf")
 
 def load_styles():
     with open(resource_path("resources/styles/styles.qss"), "r", encoding='utf-8') as f:

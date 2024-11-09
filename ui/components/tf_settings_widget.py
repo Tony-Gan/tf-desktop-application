@@ -54,7 +54,7 @@ class TFCloseButton(TFIconButton):
     ):
         super().__init__(
             parent=parent,
-            icon_path="static/images/icons/close.png",
+            icon_path="resources/images/icons/close.png",
             position=position,
             on_click=self.on_click
         )
@@ -62,8 +62,7 @@ class TFCloseButton(TFIconButton):
         self.setObjectName("close_button")
 
     def on_click(self):
-        self.parent.closed.emit(self.parent)
-        self.parent.hide()
+        self.parent.close()
 
 class MenuSection(Enum):
     """
@@ -103,7 +102,7 @@ class TFMenuButton(TFIconButton):
     def __init__(self, parent, position: Tuple[int, int] = None, skip_default: bool = False):
         super().__init__(
             parent=parent,
-            icon_path="static/images/icons/settings.png",
+            icon_path="resources/images/icons/settings.png",
             position=position,
             on_click=self.on_click
         )
@@ -116,35 +115,15 @@ class TFMenuButton(TFIconButton):
             section: [] for section in MenuSection
         }
         
-        self.init_default_actions()
         self.rebuild_menu()
 
     def on_click(self):
         self.rebuild_menu()
         self.menu.exec(self.mapToGlobal(self.rect().bottomLeft()))
 
-    def init_default_actions(self):
-        if self.skip_default:
-            return
-
-        window_controls = [
-            ("Bring to Front", lambda: self.parent.bring_to_front.emit(self.parent)),
-            ("Raise One Level", lambda: self.parent.raise_level.emit(self.parent)),
-            ("Lower One Level", lambda: self.parent.lower_level.emit(self.parent)),
-            ("Send to Back", lambda: self.parent.send_to_back.emit(self.parent))
-        ]
-        
-        window_management = [
-            ("Close Window", self.on_closed_click)
-        ]
-
-        for text, callback in window_controls:
-            self.add_action(text, callback, MenuSection.WINDOW_CONTROL)
-
-        for text, callback in window_management:
-            self.add_action(text, callback, MenuSection.WINDOW_MANAGEMENT)
-
-    def add_action(self, text: str, callback: Callable, section: MenuSection = MenuSection.CUSTOM, index: int = -1):
+    def add_action(self, text: str, callback: Callable, section: MenuSection = MenuSection.CUSTOM, 
+                index: int = -1, checkable: bool = False, checked: bool = False,
+                icon_path: str = None):
         """
         Add a new action to the menu.
 
@@ -153,9 +132,19 @@ class TFMenuButton(TFIconButton):
             callback (Callable): Function to call when action triggered.
             section (MenuSection, optional): Menu section. Defaults to CUSTOM.
             index (int, optional): Position in section. Defaults to -1 (append).
+            checkable (bool, optional): Whether the action can be toggled. Defaults to False.
+            checked (bool, optional): Initial checked state if checkable. Defaults to False.
+            icon_path (str, optional): Path to the icon image. Defaults to None.
         """
         action = QAction(text, self.parent)
         action.triggered.connect(callback)
+        
+        if checkable:
+            action.setCheckable(True)
+            action.setChecked(checked)
+        
+        if icon_path:
+            action.setIcon(QIcon(icon_path))
         
         if index == -1 or index >= len(self.actions[section]):
             self.actions[section].append(action)

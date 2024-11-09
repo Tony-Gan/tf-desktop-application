@@ -70,8 +70,6 @@ class TFToolRegistry:
         """
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         full_path = os.path.join(base_path, '..', tools_dir)
-
-        print(full_path)
         
         if not os.path.exists(full_path):
             return
