@@ -7,6 +7,7 @@ from ui.components.tf_message_box import TFMessageBox
 from ui.components.tf_separator import TFSeparator
 from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_number_receiver import TFNumberReceiver
+from utils.validator.tf_validator import TFValidator
 
 class TFComputingDialog(QDialog):
     DEFAULT_FONT_FAMILY = "Inconsolata"
@@ -18,6 +19,7 @@ class TFComputingDialog(QDialog):
         self.setWindowTitle(title)
         self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
         self._result = None
+        self.validator = TFValidator()
         self.setup_ui()
         
     def setup_ui(self):
@@ -128,31 +130,36 @@ class TFComputingDialog(QDialog):
         """Set fixed size for the dialog."""
         self.setFixedSize(width, height)
 
-    # Validation methods
-    def validate_not_empty(self, value: str, field_name: str) -> tuple[bool, str]:
-        """Validate that a value is not empty."""
-        if not value.strip():
-            return False, f"Please enter {field_name}."
-        return True, value.strip()
+    def setup_validation_rules(self) -> None:
+        raise NotImplementedError("Subclasses must implement setup_validation_rules()")
 
-    def validate_number_range(self, value: str, min_val: int, max_val: int, 
-                            field_name: str) -> tuple[bool, int]:
-        """Validate that a number is within the specified range."""
-        try:
-            num_value = int(value)
-            if min_val <= num_value <= max_val:
-                return True, num_value
-            return False, f"{field_name} must be between {min_val} and {max_val}."
-        except ValueError:
-            return False, f"Please enter a valid number for {field_name}."
+    def get_field_values(self) -> dict:
+        raise NotImplementedError("Subclasses must implement get_field_values()")
+
+    def process_validated_data(self, data: dict) -> any:
+        raise NotImplementedError("Subclasses must implement process_validated_data()")
 
     def setup_content(self) -> None:
         """Setup the content specific to this dialog."""
         raise NotImplementedError("Subclasses must implement setup_content()")
 
     def compute_result(self) -> tuple[bool, any]:
-        """Compute and validate the dialog result."""
-        raise NotImplementedError("Subclasses must implement compute_result()")
+        data = self.get_field_values()
+        errors = []
+        
+        for field, value in data.items():
+            is_valid, message = self.validator.validate_field(field, value)
+            if not is_valid:
+                errors.append(message)
+                
+        if errors:
+            return False, "\n".join(errors)
+            
+        try:
+            result = self.process_validated_data(data)
+            return True, result
+        except Exception as e:
+            return False, str(e)
 
     def _on_ok_clicked(self):
         """Handle OK button click."""

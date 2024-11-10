@@ -16,6 +16,7 @@ from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_separator import TFSeparator
 from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_computing_dialog import TFComputingDialog
+from ui.components.tf_base_button import TFBaseButton
 from utils.helper import format_datetime, resource_path
 from utils.validator.tf_validator import TFValidator
 from utils.validator.tf_validation_rules import TFValidationRule
@@ -1292,27 +1293,30 @@ class SkillsGrid(QFrame):
             self.set_edit_mode(is_editing)
 
     def _create_toggle_button(self):
-        button = QPushButton("Show All" if not self.show_all else "Show Modified")
-        button.setFixedWidth(100) 
-        button.setFont(QFont("Inconsolata SemiCondensed"))
-        button.clicked.connect(self._toggle_skills_display)
-        return button
+        return TFBaseButton(
+            "Show All" if not self.show_all else "Show Modified",
+            parent=self,
+            on_clicked=self._toggle_skills_display,
+            tooltip="Toggle between showing all skills or only modified ones"
+        )
 
     def _create_add_button(self):
-        button = QPushButton("Add Skill")
-        button.setFixedWidth(100)
-        button.setFont(QFont("Inconsolata SemiCondensed"))
-        button.clicked.connect(self._handle_add_skill)
-        button.setEnabled(False)
-        return button
-    
+        return TFBaseButton(
+            "Add Skill",
+            parent=self,
+            enabled=False,
+            on_clicked=self._handle_add_skill,
+            tooltip="Add a new skill to the character"
+        )
+
     def _create_delete_button(self):
-        button = QPushButton("Delete Skill")
-        button.setFixedWidth(100) 
-        button.setFont(QFont("Inconsolata SemiCondensed"))
-        button.clicked.connect(self._handle_delete_skill)
-        button.setEnabled(False)
-        return button
+        return TFBaseButton(
+            "Delete Skill",
+            parent=self,
+            enabled=False,
+            on_clicked=self._handle_delete_skill,
+            tooltip="Delete existing skills"
+        )
 
     def _toggle_skills_display(self):
         self.show_all = not self.show_all
@@ -1552,22 +1556,24 @@ class ItemsPanel(QFrame):
         self.items_grid.setVerticalSpacing(4)
         layout.addLayout(self.items_grid)
         
-        layout.addWidget(TFSeparator.horizontal())
-        
         button_layout = QHBoxLayout()
         button_layout.setContentsMargins(5, 5, 5, 5)
         
-        self.add_item_button = QPushButton("Add Item")
-        self.add_item_button.setFixedWidth(100)
-        self.add_item_button.setFont(QFont("Inconsolata SemiCondensed"))
-        self.add_item_button.clicked.connect(self._handle_add_item)
-        self.add_item_button.setEnabled(False)
+        self.add_item_button = TFBaseButton(
+            "Add Item",
+            parent=self,
+            enabled=False,
+            on_clicked=self._handle_add_item,
+            tooltip="Add a new item to the inventory"
+        )
         
-        self.delete_item_button = QPushButton("Delete Item")
-        self.delete_item_button.setFixedWidth(100)
-        self.delete_item_button.setFont(QFont("Inconsolata SemiCondensed"))
-        self.delete_item_button.clicked.connect(self._handle_delete_item)
-        self.delete_item_button.setEnabled(False)
+        self.delete_item_button = TFBaseButton(
+            "Delete Item",
+            parent=self,
+            enabled=False,
+            on_clicked=self._handle_delete_item,
+            tooltip="Delete items from the inventory"
+        )
         
         button_layout.addWidget(self.add_item_button)
         button_layout.addSpacing(30)
@@ -1920,6 +1926,7 @@ class SkillInputDialog(TFComputingDialog):
         self.current_value = kwargs.get('current_value')
         self.current_skills = kwargs.get('current_skills')
         super().__init__("Skill Input", parent)
+        self.setup_validation_rules()
         self.setup_content()
         
     def setup_content(self):
@@ -1954,19 +1961,39 @@ class SkillInputDialog(TFComputingDialog):
         layout.addWidget(input_frame)
         self.set_dialog_size(300, 150)
 
-    def compute_result(self) -> tuple[bool, tuple[str, int]]:
-        success, subtype = self.validate_not_empty(
-            self.subtype_input.text(), "skill subtype")
-        if not success:
-            return False, subtype
-            
-        success, value = self.validate_number_range(
-            self.value_input.text(), 1, 99, "skill value")
-        if not success:
-            return False, value
-            
-        skill_name = f"{self.base_skill}:{subtype.lower()}"
-        return True, (skill_name, value)
+    def setup_validation_rules(self):
+        self.validator.add_rules({
+            'subtype': TFValidationRule(
+                type_=str,
+                required=True,
+                pattern=r'^[a-zA-Z ]+$',
+                error_messages={
+                    'required': 'Skill subtype is required',
+                    'pattern': 'Skill subtype can only contain letters and spaces'
+                }
+            ),
+            'value': TFValidationRule(
+                type_=int,
+                required=True,
+                min_val=1,
+                max_val=99,
+                error_messages={
+                    'required': 'Skill value is required',
+                    'min': 'Skill value must be at least 1',
+                    'max': 'Skill value cannot exceed 99'
+                }
+            )
+        })
+
+    def get_field_values(self):
+        return {
+            'subtype': self.subtype_input.text().strip(),
+            'value': self.value_input.text().strip()
+        }
+
+    def process_validated_data(self, data):
+        skill_name = f"{self.base_skill}:{data['subtype'].lower().replace(' ', '_')}"
+        return skill_name, int(data['value'])
 
     @classmethod
     def get_skill_input(cls, parent, skill_type: str, base_skill: str, 
@@ -1983,6 +2010,7 @@ class SkillAddDialog(TFComputingDialog):
     def __init__(self, parent=None, **kwargs):
         self.all_grouped_skills = GROUPED_SKILLS | {'language'} | SPECIAL_SKILLS
         super().__init__("Add Skill", parent)
+        self.setup_validation_rules()
         self.setup_content()
         
     def setup_content(self):
@@ -2026,25 +2054,52 @@ class SkillAddDialog(TFComputingDialog):
         layout.addStretch()
         self.set_dialog_size(350, 250)
 
-    def compute_result(self) -> tuple[bool, tuple[str, int]]:
-        parent_skill = self.parent_combo.currentText().lower()
-        
-        success, skill_name = self.validate_not_empty(
-            self.name_entry.get_value(), "skill name")
-        if not success:
-            return False, skill_name
-            
-        success, value = self.validate_number_range(
-            self.value_entry.get_value(), 1, 99, "skill value")
-        if not success:
-            return False, value
-        
+    def setup_validation_rules(self):
+        self.validator.add_rules({
+            'skill_name': TFValidationRule(
+                type_=str,
+                required=True,
+                pattern=r'^[a-zA-Z ]+$',
+                error_messages={
+                    'required': 'Please enter a skill name',
+                    'pattern': 'Skill name can only contain letters and spaces'
+                }
+            ),
+            'skill_value': TFValidationRule(
+                type_=int,
+                required=True,
+                min_val=1,
+                max_val=99,
+                error_messages={
+                    'required': 'Please enter a skill value',
+                    'min': 'Skill value must be at least 1',
+                    'max': 'Skill value cannot exceed 99'
+                }
+            ),
+            'parent_skill': TFValidationRule(
+                type_=str,
+                required=True,
+                error_messages={
+                    'required': 'Please select a skill category'
+                }
+            )
+        })
+
+    def get_field_values(self):
+        return {
+            'skill_name': self.name_entry.get_value().strip(),
+            'skill_value': self.value_entry.get_value().strip(),
+            'parent_skill': self.parent_combo.currentText()
+        }
+
+    def process_validated_data(self, data):
+        parent_skill = data['parent_skill'].lower()
         if parent_skill == "none":
-            final_name = skill_name.lower().replace(" ", "_")
+            final_name = data['skill_name'].lower().replace(" ", "_")
         else:
-            final_name = f"{parent_skill}:{skill_name.lower().replace(' ', '_')}"
-            
-        return True, (final_name, value)
+            final_name = f"{parent_skill}:{data['skill_name'].lower().replace(' ', '_')}"
+        
+        return final_name, int(data['skill_value'])
 
     @classmethod
     def get_skill_input(cls, parent) -> tuple[bool, tuple[str, int]]:
@@ -2053,6 +2108,7 @@ class SkillAddDialog(TFComputingDialog):
 class ItemAddDialog(TFComputingDialog):
     def __init__(self, parent=None, **kwargs):
         super().__init__("Add Item", parent)
+        self.setup_validation_rules()
         self.setup_content()
         
     def setup_content(self):
@@ -2077,6 +2133,88 @@ class ItemAddDialog(TFComputingDialog):
         
         self.main_layout.addStretch()
         self.set_dialog_size(400, 350)
+
+    def setup_validation_rules(self):
+        self.validator.add_rules({
+            'item_name': TFValidationRule(
+                type_=str,
+                required=True,
+                pattern=r'^[a-zA-Z ]+$',
+                error_messages={
+                    'required': 'Please enter an item name',
+                    'pattern': 'Item name can only contain letters and spaces'
+                }
+            ),
+            'item_type': TFValidationRule(
+                type_=str,
+                required=True,
+                choices=['Weapon', 'Armour', 'Other'],
+                error_messages={
+                    'required': 'Please select an item type',
+                    'choices': 'Invalid item type selection'
+                }
+            ),
+            'weapon_type': TFValidationRule(
+                type_=str,
+                required=False,
+                choices=list(WEAPON_TYPES.keys()) + ['None'],
+                error_messages={
+                    'choices': 'Invalid weapon type selection'
+                }
+            ),
+            'armor_points': TFValidationRule(
+                type_=int,
+                required=False,
+                min_val=1,
+                max_val=999,
+                error_messages={
+                    'min': 'Armor points must be at least 1',
+                    'max': 'Armor points cannot exceed 999'
+                }
+            )
+        })
+
+    def get_field_values(self):
+        item_type = self.type_combo.currentText()
+        values = {
+            'item_type': item_type,
+            'item_name': self.findChild(TFValueEntry, "name_input").get_value().strip()
+        }
+
+        if item_type == 'Weapon':
+            values['weapon_type'] = self.weapon_type_combo.currentText()
+        elif item_type == 'Armour':
+            points_input = self.findChild(TFValueEntry, "points_input")
+            if points_input and points_input.get_value().strip():
+                values['armor_points'] = points_input.get_value().strip()
+
+        return values
+
+    def process_validated_data(self, data):
+        if data['item_type'] == "Weapon":
+            if data['weapon_type'] == "None":
+                raise ValueError("Please select a weapon type")
+                
+            damage, range_, skill = WEAPON_TYPES[data['weapon_type']]
+            return ('weapons', {
+                'name': data['item_name'],
+                'type': data['weapon_type'],
+                'skill': skill,
+                'damage': damage,
+                'range': range_
+            })
+        elif data['item_type'] == "Armour":
+            if 'armor_points' not in data:
+                raise ValueError("Please enter armor points")
+                
+            return ('armours', {
+                'name': data['item_name'],
+                'points': int(data['armor_points'])
+            })
+        else:
+            return ('others', {
+                'name': data['item_name']
+            })
         
     def _setup_weapon_ui(self):
         self._clear_content()
@@ -2196,53 +2334,34 @@ class ItemAddDialog(TFComputingDialog):
             self.range_label.setText("Range: -")
             
     def compute_result(self) -> tuple[bool, tuple[str, dict]]:
-        item_type = self.type_combo.currentText().lower()
+        data = self.get_field_values()
         
-        if item_type == "none":
-            return False, "Please select an item type."
+        for field in ['item_type', 'item_name']:
+            is_valid, message = self.validator.validate_field(field, data[field])
+            if not is_valid:
+                return False, message
 
-        name_input = self.findChild(TFValueEntry, "name_input")
-        if not name_input:
-            return False, "Name input field not found."
-            
-        success, name_text = self.validate_not_empty(
-            name_input.get_value(), "item name")
-        if not success:
-            return False, name_text
-            
-        if item_type == "weapon":
-            weapon_type = self.weapon_type_combo.currentText()
-            if weapon_type == "None":
-                return False, "Please select a weapon type."
+        if data['item_type'] == 'Weapon':
+            is_valid, message = self.validator.validate_field('weapon_type', data['weapon_type'])
+            if not is_valid:
+                return False, message
+            if data['weapon_type'] == 'None':
+                return False, "Please select a weapon type"
                 
-            damage, range_, skill = WEAPON_TYPES[weapon_type]
-            return True, ('weapons', {
-                'name': name_text,
-                'type': weapon_type,
-                'skill': skill,
-                'damage': damage,
-                'range': range_
-            })
-            
-        elif item_type == "armour":
-            points_input = self.findChild(TFValueEntry, "points_input")
-            if not points_input:
-                return False, "Points input field not found."
-                
-            success, points = self.validate_number_range(
-                points_input.get_value(), 1, 999, "armor points")
-            if not success:
-                return False, points
-                
-            return True, ('armours', {
-                'name': name_text,
-                'points': points
-            })
-            
-        else:
-            return True, ('others', {
-                'name': name_text
-            })
+        elif data['item_type'] == 'Armour':
+            if 'armor_points' not in data or not data['armor_points']:
+                return False, "Please enter armor points"
+            is_valid, message = self.validator.validate_field('armor_points', data['armor_points'])
+            if not is_valid:
+                return False, message
+
+        try:
+            result = self.process_validated_data(data)
+            return True, result
+        except ValueError as e:
+            return False, str(e)
+        except Exception as e:
+            return False, f"Error processing data: {str(e)}"
 
     @classmethod
     def get_item_input(cls, parent) -> tuple[bool, tuple[str, dict]]:
@@ -2254,27 +2373,8 @@ class SkillDeleteDialog(TFComputingDialog):
         self.grouped_skills = self._group_skills(self.skills)
         self.checkboxes = {}
         super().__init__("Delete Skills", parent)
+        self.setup_validation_rules()
         self.setup_content()
-        
-    def _group_skills(self, skills: dict) -> dict:
-        groups = {}
-        ungrouped = {}
-        
-        for skill, value in skills.items():
-            if ':' in skill:
-                base_skill = skill.split(':')[0]
-                if base_skill in GROUPED_SKILLS or base_skill in SPECIAL_SKILLS or base_skill == 'language':
-                    if base_skill not in groups:
-                        groups[base_skill] = {}
-                    groups[base_skill][skill] = value
-            else:
-                ungrouped[skill] = value
-        
-        sorted_groups = dict(sorted(groups.items()))
-        if ungrouped:
-            sorted_groups['Others'] = dict(sorted(ungrouped.items()))
-            
-        return sorted_groups
         
     def setup_content(self):
         layout = QVBoxLayout(self.content_frame)
@@ -2308,6 +2408,29 @@ class SkillDeleteDialog(TFComputingDialog):
         layout.addWidget(scroll_area)
         
         self.set_dialog_size(400, 500)
+
+    def setup_validation_rules(self):
+        self.validator.add_rules({
+            'selected_skills': TFValidationRule(
+                type_=list,
+                required=True,
+                error_messages={
+                    'required': 'Please select at least one skill to delete'
+                }
+            )
+        })
+
+    def get_field_values(self):
+        selected_skills = [
+            skill_name for skill_name, checkbox in self.checkboxes.items()
+            if checkbox.isChecked()
+        ]
+        return {
+            'selected_skills': selected_skills if selected_skills else None
+        }
+
+    def process_validated_data(self, data):
+        return data['selected_skills']
         
     def _format_skill_name(self, skill_name: str) -> str:
         if ':' in skill_name:
@@ -2320,16 +2443,25 @@ class SkillDeleteDialog(TFComputingDialog):
                 return SkillsGrid.SKILL_ABBREVIATIONS[skill_name]
             return ' '.join(word.capitalize() for word in skill_name.split('_'))
         
-    def compute_result(self) -> tuple[bool, list]:
-        selected_skills = [
-            skill_name for skill_name, checkbox in self.checkboxes.items()
-            if checkbox.isChecked()
-        ]
-                
-        if not selected_skills:
-            return False, "Please select at least one skill to delete."
+    def _group_skills(self, skills: dict) -> dict:
+        groups = {}
+        ungrouped = {}
+        
+        for skill, value in skills.items():
+            if ':' in skill:
+                base_skill = skill.split(':')[0]
+                if base_skill in GROUPED_SKILLS or base_skill in SPECIAL_SKILLS or base_skill == 'language':
+                    if base_skill not in groups:
+                        groups[base_skill] = {}
+                    groups[base_skill][skill] = value
+            else:
+                ungrouped[skill] = value
+        
+        sorted_groups = dict(sorted(groups.items()))
+        if ungrouped:
+            sorted_groups['Others'] = dict(sorted(ungrouped.items()))
             
-        return True, selected_skills
+        return sorted_groups
     
     @classmethod
     def get_skill_input(cls, parent, skills: dict) -> tuple[bool, list]:
@@ -2340,6 +2472,7 @@ class ItemDeleteDialog(TFComputingDialog):
         self.items = kwargs.get('items', {})
         self.checkboxes = {}
         super().__init__("Delete Items", parent)
+        self.setup_validation_rules()
         self.setup_content()
         
     def setup_content(self):
@@ -2368,24 +2501,36 @@ class ItemDeleteDialog(TFComputingDialog):
         
         self.set_dialog_size(400, 500)
 
+    def setup_validation_rules(self):
+        self.validator.add_rules({
+            'selected_items': TFValidationRule(
+                type_=list,
+                required=True,
+                error_messages={
+                    'required': 'Please select at least one item to delete'
+                }
+            )
+        })
+
+    def get_field_values(self):
+        selected_items = [
+            item for item, checkbox in self.checkboxes.items()
+            if checkbox.isChecked()
+        ]
+        return {
+            'selected_items': selected_items if selected_items else None
+            # Convert empty list to None to trigger required validation
+        }
+
+    def process_validated_data(self, data):
+        return data['selected_items']
+
     def _add_item_checkboxes(self, item_type: str, item_ids: list, layout: QVBoxLayout):
         for item_id in item_ids:
             display_name = ' '.join(word.capitalize() for word in item_id.split('_'))
             checkbox = self.create_checkbox(display_name)
             self.checkboxes[(item_type, item_id)] = checkbox
             layout.addWidget(checkbox)
-        
-    def compute_result(self) -> tuple[bool, list]:
-        selected_items = [
-            (item_type, item_id) 
-            for (item_type, item_id), checkbox in self.checkboxes.items()
-            if checkbox.isChecked()
-        ]
-                
-        if not selected_items:
-            return False, "Please select at least one item to delete."
-            
-        return True, selected_items
         
     @classmethod
     def get_item_input(cls, parent, items: dict) -> tuple[bool, list]:

@@ -223,7 +223,7 @@ class TFDraggableWindow(QFrame):
         )
 
     def get_tooltip_hover_text(self) -> str:
-        return "You forget to override this method."
+        return "You forgot to override this method"
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """

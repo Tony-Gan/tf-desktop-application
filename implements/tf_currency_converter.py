@@ -10,7 +10,7 @@ from PyQt6.QtGui import QFont, QPixmap, QIcon, QStandardItemModel, QStandardItem
 
 from core.windows.tf_draggable_window import TFDraggableWindow
 from ui.components.tf_number_receiver import TFNumberReceiver
-from ui.components.tf_buttons import TFPushButton, TFConfirmButton, TFResetButton
+from ui.components.tf_base_button import TFBaseButton, TFConfirmButton, TFResetButton
 from ui.components.tf_api_loader import TFAPILoader
 from utils.registry.tf_tool_matadata import TFToolMetadata
 from utils.helper import resource_path
@@ -248,13 +248,34 @@ class TFCurrencyConverter(TFDraggableWindow):
         button_layout = QHBoxLayout(button_container)
         button_layout.setSpacing(10)
 
-        self.confirm_button = TFConfirmButton(self, self.confirm_selection)
+        self.confirm_button = TFConfirmButton(
+            parent=self,
+            on_clicked=self.confirm_selection,
+            font_family="Inconsolata",
+            width=80,
+            height=35
+        )
         button_layout.addWidget(self.confirm_button)
 
-        self.reset_button = TFResetButton(self, self.reset_converter)
+        self.reset_button = TFResetButton(
+            parent=self,
+            on_clicked=self.reset_converter,
+            font_family="Inconsolata",
+            width=80,
+            height=35
+        )
         button_layout.addWidget(self.reset_button)
 
-        self.zero_button = TFPushButton("Zero", self, self.zero_amounts, "zero_button")
+        self.zero_button = TFBaseButton(
+            "Zero",
+            parent=self,
+            object_name="zero_button",
+            on_clicked=self.zero_amounts,
+            tooltip="Set all amounts to zero",
+            font_family="Inconsolata",
+            width=80,
+            height=35
+        )
         button_layout.addWidget(self.zero_button)
 
         main_layout.addWidget(button_container)
