@@ -66,8 +66,6 @@ class TFComputingDialog(QDialog):
         self.content_frame.setObjectName("content_frame")
         self.main_layout.addWidget(self.content_frame)
         
-        self.main_layout.addWidget(TFSeparator.horizontal())
-        
         button_layout = QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 0, 0)
         
