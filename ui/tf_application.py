@@ -350,7 +350,19 @@ class TFApplication(QApplication):
         buttons: List[str] = None,
         parent = None
     ) -> str:
-        """Show a warning dialog box."""
+        """
+        Show a warning dialog box.
+
+        Args:
+            title (str): Dialog title.
+            message (str): Message to display.
+            buttons (List[str], optional): List of button texts.
+                Defaults to ["OK"].
+            parent: Parent widget. If None, uses active window.
+
+        Returns:
+            str: Text of the clicked button.
+        """
         if parent is None:
             parent = self.activeWindow()
         return self._message_box.warning(parent, title, message, buttons)
@@ -362,7 +374,19 @@ class TFApplication(QApplication):
         buttons: List[str] = None,
         parent = None
     ) -> str:
-        """Show an information dialog box."""
+        """
+        Show an information dialog box.
+
+        Args:
+            title (str): Dialog title.
+            message (str): Message to display.
+            buttons (List[str], optional): List of button texts.
+                Defaults to ["OK"].
+            parent: Parent widget. If None, uses active window.
+
+        Returns:
+            str: Text of the clicked button.
+        """
         if parent is None:
             parent = self.activeWindow()
         return self._message_box.information(parent, title, message, buttons)
@@ -374,7 +398,19 @@ class TFApplication(QApplication):
         buttons: List[str] = None,
         parent = None
     ) -> str:
-        """Show an error dialog box."""
+        """
+        Show an error dialog box.
+
+        Args:
+            title (str): Dialog title.
+            message (str): Message to display.
+            buttons (List[str], optional): List of button texts.
+                Defaults to ["OK"].
+            parent: Parent widget. If None, uses active window.
+
+        Returns:
+            str: Text of the clicked button.
+        """
         if parent is None:
             parent = self.activeWindow()
         return self._message_box.error(parent, title, message, buttons)

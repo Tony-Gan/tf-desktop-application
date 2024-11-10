@@ -4,7 +4,35 @@ from typing import Any, Dict, List, Optional, Type, Union, Tuple
 
 @dataclass
 class TFValidationRule:
-    """Validation rule class"""
+    """
+    A rule specification class for defining field validation requirements.
+
+    This class encapsulates all validation rules for a single field, including type checking,
+    range validation, pattern matching, and custom validation rules. It provides a flexible
+    way to define validation requirements with customizable error messages.
+
+    Args:
+        type_ (Type): Expected data type for the field. Defaults to str.
+        required (bool): Whether the field is required. Defaults to False.
+        min_val (Union[int, float], optional): Minimum value (for numbers) or length (for strings).
+        max_val (Union[int, float], optional): Maximum value (for numbers) or length (for strings).
+        pattern (str, optional): Regular expression pattern for string validation.
+        choices (List[Any], optional): List of allowed values for the field.
+        custom (str, optional): Name of custom validator function to apply.
+        error_messages (Dict[str, str], optional): Custom error messages for different validation types.
+
+    Attributes:
+        error_messages (Dict[str, str]): Combined default and custom error messages.
+
+    Example:
+        >>> rule = TFValidationRule(
+        ...     type_=int,
+        ...     required=True,
+        ...     min_val=0,
+        ...     max_val=100,
+        ...     error_messages={'min': 'Must be at least {min}'}
+        ... )
+    """
     type_: Type = str
     required: bool = False
     min_val: Optional[Union[int, float]] = None
@@ -28,7 +56,8 @@ class TFValidationRule:
         self.error_messages = {**default_messages, **(self.error_messages or {})}
 
     def validate(self, value: Any, is_new: bool = False) -> Tuple[bool, str]:
-        """Validate value against the rule
+        """
+        Validate value against the rule
         
         Args:
             value: Value to validate
@@ -37,25 +66,20 @@ class TFValidationRule:
         Returns:
             (is_valid, error_message): Validation result and error message
         """
-        # Check required only if it's a new value
         if is_new and self.required and not value:
             return False, self.error_messages['required']
         
-        # If not required and empty, it's valid
         if not value and not self.required:
             return True, ""
         
-        # Skip other validations if value is empty
         if not value:
             return True, ""
         
-        # Type check
         try:
             value = self.type_(value)
         except (ValueError, TypeError):
             return False, self.error_messages['type'].format(type=self.type_.__name__)
         
-        # String specific rules
         if isinstance(value, str):
             if self.min_val is not None and len(value) < self.min_val:
                 return False, self.error_messages['min_length'].format(min=self.min_val)
@@ -64,14 +88,12 @@ class TFValidationRule:
             if self.pattern and not re.match(self.pattern, value):
                 return False, self.error_messages['pattern']
         
-        # Number specific rules
         if isinstance(value, (int, float)):
             if self.min_val is not None and value < self.min_val:
                 return False, self.error_messages['min'].format(min=self.min_val)
             if self.max_val is not None and value > self.max_val:
                 return False, self.error_messages['max'].format(max=self.max_val)
         
-        # Choices check
         if self.choices is not None and value not in self.choices:
             choices_str = ', '.join(str(c) for c in self.choices)
             return False, self.error_messages['choices'].format(choices=choices_str)

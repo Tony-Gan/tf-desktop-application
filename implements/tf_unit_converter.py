@@ -3,7 +3,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 
 from core.windows.tf_draggable_window import TFDraggableWindow
-from ui.components.tf_buttons import TFConfirmButton, TFResetButton
+from ui.components.tf_base_button import TFConfirmButton, TFResetButton
 from ui.components.tf_number_receiver import TFNumberReceiver
 from utils.registry.tf_tool_matadata import TFToolMetadata
 
@@ -116,12 +116,18 @@ class TFUnitConverter(TFDraggableWindow):
         button_layout = QVBoxLayout(button_container)
         button_layout.setSpacing(10)
 
-        self.confirm_button = TFConfirmButton()
-        self.confirm_button.clicked.connect(self.confirm_selection)
+        self.confirm_button = TFConfirmButton(
+            parent=self,
+            on_clicked=self.confirm_selection,
+            tooltip="Confirm unit type selection"
+        )
         button_layout.addWidget(self.confirm_button)
 
-        self.reset_button = TFResetButton()
-        self.reset_button.clicked.connect(self.reset_converter)
+        self.reset_button = TFResetButton(
+            parent=self,
+            on_clicked=self.reset_converter,
+            tooltip="Reset all fields"
+        )
         button_layout.addWidget(self.reset_button)
 
         main_layout.addWidget(button_container)
