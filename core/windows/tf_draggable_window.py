@@ -4,7 +4,8 @@ from PyQt6.QtGui import QMouseEvent, QFont
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
 from utils.registry.tf_tool_matadata import TFToolMetadata
 from ui.tf_application import TFApplication
-from ui.components.tf_settings_widget import TFCloseButton, TFMenuButton
+from ui.components.tf_settings_widget import TFCloseButton, TFMenuButton, TFIconButton
+from utils.helper import resource_path
 
 # Window appearance constants
 TITLE_FONT_FAMILY = "Open Sans"
@@ -189,8 +190,40 @@ class TFDraggableWindow(QFrame):
 
     def _init_buttons(self):
         width = self.metadata.window_size[0]
-        self._close_button = TFCloseButton(parent=self, position=(width - 25, TITLE_Y_OFFSET))
-        self._menu_button = TFMenuButton(parent=self, position=(width - 50, TITLE_Y_OFFSET))
+        hover_style = """
+            QPushButton {
+                background-color: transparent;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+                border-radius: 3px;
+            }
+        """
+        self._close_button = TFCloseButton(
+            parent=self,
+            position=(width - 25, TITLE_Y_OFFSET),
+            tooltip="Close window",
+            hover_style=hover_style
+        )
+        
+        self._menu_button = TFMenuButton(
+            parent=self,
+            position=(width - 50, TITLE_Y_OFFSET),
+            tooltip="Open menu",
+            hover_style=hover_style
+        )
+        
+        self._tooltip_button = TFIconButton(
+            parent=self,
+            icon_path=resource_path('resources/images/icons/tooltips.png'),
+            position=(width - 75, TITLE_Y_OFFSET),
+            tooltip=self.get_tooltip_hover_text(),
+            hover_style=hover_style
+        )
+
+    def get_tooltip_hover_text(self) -> str:
+        return "You forget to override this method."
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """

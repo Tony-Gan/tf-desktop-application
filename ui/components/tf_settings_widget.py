@@ -1,63 +1,126 @@
 from enum import Enum
 from typing import Optional, Callable, Tuple, List, Dict
 
-from PyQt6.QtWidgets import QPushButton, QMenu
-from PyQt6.QtGui import QIcon, QAction
+from PyQt6.QtWidgets import QPushButton, QMenu, QToolTip
+from PyQt6.QtGui import QIcon, QAction, QEnterEvent, QMouseEvent
+from PyQt6.QtCore import Qt, QPoint
 
 from settings.general import ICON_BUTTON_SIZE
 from utils.helper import resource_path
 
 class TFIconButton(QPushButton):
     """
-    A base class for icon-based buttons with fixed size and position.
+    An enhanced icon-based button with hover effects and tooltip support.
 
     Args:
-        parent (QWidget): Parent widget.
-        icon_path (str): Path to the icon image.
-        position (Tuple[int, int]): Button position (x, y).
-        on_click (Optional[Callable]): Callback function for click event.
-        size (Optional[Tuple[int, int]], optional): Button size (width, height). 
-            Defaults to ICON_BUTTON_SIZE (20, 20).
+        parent (QWidget): Parent widget
+        icon_path (str): Path to the icon image
+        position (Tuple[int, int]): Button position (x, y)
+        on_click (Optional[Callable]): Callback function for click event
+        size (Optional[Tuple[int, int]]): Button size (width, height), defaults to ICON_BUTTON_SIZE
+        tooltip (Optional[str]): Initial tooltip text
+        hover_style (Optional[str]): Custom hover style, if None uses default style
+        cursor (Qt.CursorShape): Cursor shape on hover, defaults to PointingHandCursor
+    
+    Attributes:
+        _tooltip (str): Current tooltip text
+        default_hover_style (str): Default hover effect style
     """
+    default_hover_style = """
+        QPushButton {
+            background-color: transparent;
+            border: none;
+        }
+        QPushButton:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+    """
+
     def __init__(
         self,
         parent,
         icon_path: str,
         position: Tuple[int, int],
-        on_click: Optional[Callable],
+        on_click: Optional[Callable] = None,
         size: Optional[Tuple[int, int]] = None,
+        tooltip: Optional[str] = None,
+        hover_style: Optional[str] = None,
+        cursor: Qt.CursorShape = Qt.CursorShape.PointingHandCursor
     ):
         super().__init__(parent)
-
+        
+        # Setup basic button properties
         self.setFixedSize(*(size or ICON_BUTTON_SIZE))
         self.move(*position)
         self.setIcon(QIcon(icon_path))
-        self.clicked.connect(on_click)
+        self.setCursor(cursor)
+        
+        # Apply hover style
+        self.setStyleSheet(hover_style or self.default_hover_style)
+        
+        # Setup click handler
+        if on_click is not None:
+            self.clicked.connect(on_click)
+            
+        # Initialize tooltip
+        self._tooltip = tooltip
+
+    @property
+    def tooltip(self) -> Optional[str]:
+        """Get current tooltip text"""
+        return self._tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: Optional[str]) -> None:
+        """Set new tooltip text"""
+        self._tooltip = value
+
+    def enterEvent(self, event: QEnterEvent) -> None:
+        """Handle mouse enter events - show tooltip if available"""
+        super().enterEvent(event)
+        if self._tooltip:
+            # Calculate tooltip position relative to button
+            pos = self.mapToGlobal(QPoint(0, self.height()))
+            QToolTip.showText(pos, self._tooltip)
+
+    def leaveEvent(self, event) -> None:
+        """Handle mouse leave events - hide tooltip"""
+        super().leaveEvent(event)
+        if self._tooltip:
+            QToolTip.hideText()
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        """Handle mouse move events - update tooltip position if needed"""
+        super().mouseMoveEvent(event)
+        if self._tooltip and QToolTip.isVisible():
+            pos = self.mapToGlobal(QPoint(0, self.height()))
+            QToolTip.showText(pos, self._tooltip)
 
 class TFCloseButton(TFIconButton):
     """
     A specialized button for closing windows or panels.
 
     Args:
-        parent (QWidget): Parent widget to be closed.
-        position (Tuple[int, int], optional): Button position (x, y).
-
-    Example:
-        >>> close_btn = TFCloseButton(
-        ...     parent=window,
-        ...     position=(380, 5)
-        ... )
+        parent (QWidget): Parent widget to be closed
+        position (Tuple[int, int]): Button position (x, y)
+        tooltip (Optional[str]): Custom tooltip text, defaults to "Close"
+        hover_style (Optional[str]): Custom hover style
     """
     def __init__(
         self,
         parent,
-        position: Tuple[int, int] = None
+        position: Tuple[int, int],
+        tooltip: str = "Close",
+        hover_style: Optional[str] = None
     ):
         super().__init__(
             parent=parent,
             icon_path=resource_path("resources/images/icons/close.png"),
             position=position,
-            on_click=self.on_click
+            on_click=self.on_click,
+            tooltip=tooltip,
+            hover_style=hover_style
         )
         self.parent = parent
         self.setObjectName("close_button")
@@ -66,46 +129,37 @@ class TFCloseButton(TFIconButton):
         self.parent.close()
 
 class MenuSection(Enum):
-    """
-    Enumeration of menu sections for organizing actions.
-
-    Attributes:
-        WINDOW_CONTROL: Section for window positioning controls.
-        CUSTOM: Section for custom user-added actions.
-        WINDOW_MANAGEMENT: Section for window management actions like close.
-    """
+    """Enumeration of menu sections for organizing actions."""
     WINDOW_CONTROL = 1
     CUSTOM = 2
     WINDOW_MANAGEMENT = 3
 
 class TFMenuButton(TFIconButton):
     """
-    A button that displays a configurable menu when clicked.
-
-    Provides a hierarchical menu system with sections for window control,
-    custom actions, and window management.
+    An enhanced menu button with sections and hover effects.
 
     Args:
-        parent (QWidget): Parent widget.
-        position (Tuple[int, int], optional): Button position (x, y).
-
-    Example:
-        >>> menu_btn = TFMenuButton(parent=window, position=(355, 5))
-        >>> menu_btn.add_action(
-        ...     text="Custom Action",
-        ...     callback=lambda: print("Custom action"),
-        ...     section=MenuSection.CUSTOM
-        ... )
-
-    Attributes:
-        actions (Dict[MenuSection, List[QAction]]): Actions organized by menu section.
+        parent (QWidget): Parent widget
+        position (Tuple[int, int]): Button position (x, y)
+        skip_default (bool): Whether to skip default menu items
+        tooltip (Optional[str]): Custom tooltip text, defaults to "Menu"
+        hover_style (Optional[str]): Custom hover style
     """
-    def __init__(self, parent, position: Tuple[int, int] = None, skip_default: bool = False):
+    def __init__(
+        self, 
+        parent, 
+        position: Tuple[int, int],
+        skip_default: bool = False,
+        tooltip: str = "Menu",
+        hover_style: Optional[str] = None
+    ):
         super().__init__(
             parent=parent,
             icon_path=resource_path("resources/images/icons/settings.png"),
             position=position,
-            on_click=self.on_click
+            on_click=self.on_click,
+            tooltip=tooltip,
+            hover_style=hover_style
         )
         self.parent = parent
         self.skip_default = skip_default

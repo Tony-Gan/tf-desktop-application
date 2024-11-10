@@ -4,10 +4,9 @@ import copy
 from typing import Dict, Tuple
 from datetime import datetime, timezone
 
-from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QLabel, QFrame, QComboBox,
-                             QPushButton, QTextEdit, QFileDialog, QWidget, 
-                             QLineEdit, QScrollArea, QGridLayout, QDialog)
-from PyQt6.QtCore import Qt, QRegularExpression, QTimer
+from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QLabel, QFrame, QComboBox, QPushButton,
+                             QTextEdit, QFileDialog, QWidget, QLineEdit, QScrollArea, QGridLayout)
+from PyQt6.QtCore import Qt, QRegularExpression, QTimer, pyqtSignal, QEvent
 from PyQt6.QtGui import QPixmap, QFont, QKeySequence, QShortcut, QRegularExpressionValidator
 
 from core.windows.tf_draggable_window import TFDraggableWindow
@@ -88,6 +87,12 @@ DEFAULT_SKILLS = {
     "track": 10
 }
 
+WEAPON_TYPES = {
+    "Knife, Small": ("fighting:brawl", "1d4+db", 0),
+    "Knife, Medium": ("fighting:brawl", "1d4+2+db", 0),
+    "Knife, Large": ("fighting:brawl", "1d8+db", 0)
+}
+
 class TFPcCard(TFDraggableWindow):
     metadata = TFToolMetadata(
         name="pc_card",
@@ -113,6 +118,9 @@ class TFPcCard(TFDraggableWindow):
         self._setup_menu()
         self._setup_shortcuts()
 
+    def get_tooltip_hover_text(self):
+        return "Playable Character Card - COC7th\n  - Ctrl + O: Open file\n  - Ctrl + F: Start editing\n  - Ctrl + S: Save editing"
+
     def initialize_window(self):
         main_layout = QVBoxLayout(self.content_container)
         main_layout.setContentsMargins(5, 5, 5, 5)
@@ -128,7 +136,7 @@ class TFPcCard(TFDraggableWindow):
         upper_layout.setContentsMargins(0, 0, 0, 0)
         upper_layout.setSpacing(10)
 
-        self.left_info_panel = LeftInfoPanel()
+        self.left_info_panel = LeftInfoPanel(self)
         self.left_info_panel.setObjectName("section_frame")
         self.left_info_panel.setFrameShape(QFrame.Shape.Box)
         self.left_info_panel.setFixedWidth(300)
@@ -148,12 +156,14 @@ class TFPcCard(TFDraggableWindow):
         self.load_action = self.menu_button.add_action(
             "Load Character", 
             self._load_character_file, 
-            MenuSection.CUSTOM
+            MenuSection.CUSTOM,
+            icon_path=resource_path("resources/images/icons/load.png")
         )
         self.toggle_edit_action = self.menu_button.add_action(
             "Toggle Editing",
             self._toggle_editing,
             MenuSection.CUSTOM,
+            icon_path=resource_path("resources/images/icons/edit.png"),
             checkable=True
         )
 
@@ -268,6 +278,7 @@ class TFPcCard(TFDraggableWindow):
         self._update_panel_edit_state(self.lower_panel, is_editing)
         self.lower_panel.notes_panel.set_edit_enabled(is_editing)
         self.lower_panel.skills_grid.set_edit_mode(is_editing)
+        self.lower_panel.items_panel.set_edit_mode(is_editing)
 
         if is_editing:
             self._connect_change_signals()
@@ -309,6 +320,9 @@ class TFPcCard(TFDraggableWindow):
     def _update_panel_edit_state(self, panel, enabled):
         for line_edit in panel.findChildren(QLineEdit):
             line_edit.setEnabled(enabled)
+
+        if isinstance(panel, LeftInfoPanel):
+            panel.avatar_section.set_edit_mode(enabled)
 
     def _save_current_data(self):
         try:
@@ -525,21 +539,16 @@ class TFPcCard(TFDraggableWindow):
         if not avatar_path:
             self.app.show_message("No avatar path found in character data", 2000, 'yellow')
             return
-            
-        image_container = self.findChild(QLabel, "image_container")
-        image_label = image_container.findChild(QLabel, "pc_image")
-            
+                
         try:
-            image_container = self.findChild(QLabel, "image_container")
-            image_label = image_container.findChild(QLabel, "pc_image")
-            
+            image_label = self.left_info_panel.avatar_section.image_label
             pixmap = QPixmap(avatar_path)
             if pixmap.isNull():
                 self.app.show_message("Avatar image cannot be loaded", 2000, 'yellow')
                 return
-                
+                    
             image_label.setPixmap(pixmap)
-            
+                
         except FileNotFoundError:
             self.app.show_message("Avatar file not found in specified path", 2000, 'red')
 
@@ -722,6 +731,7 @@ class PCInfoPanel(QFrame):
 class LeftInfoPanel(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent = parent
         self.setup_ui()
 
     def setup_ui(self):
@@ -729,7 +739,9 @@ class LeftInfoPanel(QFrame):
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(15)
 
-        main_layout.addWidget(self._create_avatar_section())
+        self.avatar_section = AvatarSection(self)
+        main_layout.addWidget(self.avatar_section)
+        
         main_layout.addWidget(TFSeparator.horizontal())
         main_layout.addWidget(self._create_personal_info_section())
 
@@ -799,6 +811,114 @@ class LeftInfoPanel(QFrame):
             edit = self.findChild(QLineEdit, f"edit_{field}")
             if edit:
                 edit.setText(str(personal_info.get(field, '')))
+        
+        avatar_path = resource_path(pc_data.get('metadata', {}).get('avatar_file', ''))
+        if avatar_path:
+            image_label = self.avatar_section.image_label
+            pixmap = QPixmap(avatar_path)
+            if not pixmap.isNull():
+                image_label.setPixmap(pixmap)
+
+class AvatarSection(QFrame):
+    avatar_changed = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.is_edit_mode = False
+        self.setup_ui()
+
+    def setup_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(5, 5, 5, 5)
+        
+        self.setFixedHeight(150)
+        
+        self.container = QLabel()
+        self.container.setFixedSize(130, 130)
+        self.container.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.container.installEventFilter(self)
+        
+        self.image_label = QLabel(self.container)
+        self.image_label.setObjectName("pc_image")
+        self.image_label.setFixedSize(130, 130)
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_label.setScaledContents(True)
+        
+        self.hover_overlay = QLabel(self.container)
+        self.hover_overlay.setFixedSize(130, 130)
+        self.hover_overlay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.hover_overlay.setStyleSheet("""
+            QLabel {
+                background-color: rgba(0, 0, 0, 0.7);
+                color: white;
+                font-size: 12px;
+            }
+        """)
+        self.hover_overlay.setText("Change Avatar")
+        self.hover_overlay.hide()
+        
+        layout.addWidget(self.container, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def set_edit_mode(self, enabled: bool):
+        self.is_edit_mode = enabled
+        if not enabled:
+            self.hover_overlay.hide()
+
+    def eventFilter(self, obj, event):
+        if obj == self.container:
+            if event.type() == QEvent.Type.Enter and self.is_edit_mode:
+                self.hover_overlay.show()
+            elif event.type() == QEvent.Type.Leave:
+                self.hover_overlay.hide()
+            elif event.type() == QEvent.Type.MouseButtonPress and self.is_edit_mode:
+                self._handle_avatar_change()
+        return super().eventFilter(obj, event)
+
+    def _handle_avatar_change(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Avatar Image",
+            "",
+            "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)"
+        )
+        
+        if not file_path:
+            return
+            
+        try:
+            current_data = self.parent.parent.pc_data
+            current_avatar = current_data.get('metadata', {}).get('avatar_file', '')
+            data_folder = os.path.dirname(resource_path(current_avatar))
+            
+            char_name = current_data.get('personal_info', {}).get('name', 'unknown')
+            char_name = char_name.lower().replace(' ', '_')
+            file_extension = os.path.splitext(file_path)[1]
+            new_filename = f"avatar_{char_name}{file_extension}"
+            
+            os.makedirs(data_folder, exist_ok=True)
+            
+            new_avatar_path = os.path.join(data_folder, new_filename)
+            with open(file_path, 'rb') as src, open(new_avatar_path, 'wb') as dst:
+                dst.write(src.read())
+            
+            relative_path = os.path.relpath(new_avatar_path, os.path.dirname(resource_path('')))
+            current_data['metadata']['avatar_file'] = relative_path.replace('\\', '/')
+            
+            with open(self.parent.parent.current_file_path, 'r+', encoding='utf-8') as f:
+                data = json.load(f)
+                data['metadata']['avatar_file'] = relative_path.replace('\\', '/')
+                f.seek(0)
+                json.dump(data, f, indent=4, ensure_ascii=False)
+                f.truncate()
+            
+            self.image_label.setPixmap(QPixmap(new_avatar_path))
+            self.avatar_changed.emit()
+            
+            self.parent.parent.app.show_message("Avatar updated successfully", 2000, 'green')
+            
+        except Exception as e:
+            self.parent.parent.app.show_error("Avatar Update Error", f"Failed to update avatar: {str(e)}")
 
 class LowerPanel(QFrame):
     def __init__(self, parent=None):
@@ -1224,7 +1344,66 @@ class SkillsGrid(QFrame):
         self._update_single_skill(skill_name, skill_value)
 
     def _handle_delete_skill(self):
-        print("Yo!")
+        confirmed, result = SkillDeleteDialog.get_skill_input(self, self.modified_skills)
+        if not confirmed or not result:
+            return
+        
+        skills_to_delete = result
+            
+        try:
+            groups_to_convert = {}
+            conversion_messages = []
+            
+            for skill in skills_to_delete:
+                if ':' in skill:
+                    group = skill.split(':')[0]
+                    if group in GROUPED_SKILLS or group == 'language':
+                        remaining_skills = [s for s in self.modified_skills.keys() 
+                                            if s.startswith(f"{group}:") and 
+                                            s not in skills_to_delete and
+                                            not s.endswith(('all', 'others'))]
+                        if not remaining_skills:
+                            groups_to_convert[group] = DEFAULT_SKILLS.get(f"{group}:all", 0)
+                            conversion_messages.append(f"Converting {group.capitalize()} to All")
+            
+            with open(self.parent.parent.current_file_path, 'r+', encoding='utf-8') as file:
+                data = json.load(file)
+                
+                for skill in skills_to_delete:
+                    if skill in data['skills']:
+                        data['skills'].pop(skill)
+                    if skill in self.modified_skills:
+                        self.modified_skills.pop(skill)
+                
+                for group, default_value in groups_to_convert.items():
+                    skills_to_remove = [s for s in data['skills'].keys() 
+                                    if s.startswith(f"{group}:")]
+                    for s in skills_to_remove:
+                        data['skills'].pop(s)
+                        if s in self.modified_skills:
+                            self.modified_skills.pop(s)
+                
+                file.seek(0)
+                json.dump(data, file, indent=4, ensure_ascii=False)
+                file.truncate()
+            
+            self.update_skills(self.modified_skills, preserve_edit_state=True)
+            
+            if conversion_messages:
+                self.parent.parent.app.show_message(
+                    ". ".join(conversion_messages),
+                    3000,
+                    'yellow'
+                )
+            else:
+                self.parent.parent.app.show_message(
+                    "Skills deleted successfully",
+                    2000,
+                    'green'
+                )
+                
+        except Exception as e:
+            self.parent.parent.app.show_error("Delete Error", f"Failed to delete skills: {str(e)}")
 
     def _highlight_widget(self, widget):
         current_style = widget.styleSheet()
@@ -1233,24 +1412,15 @@ class SkillsGrid(QFrame):
         QTimer.singleShot(3000, lambda: widget.setStyleSheet(current_style))
 
     def _on_skill_value_changed(self, skill_name, new_value):
-            try:
-                value = int(new_value) if new_value.strip() else 0
-                base_skill = skill_name.split(':')[0] if ':' in skill_name else skill_name
-                default_value = (DEFAULT_SKILLS.get(f"{base_skill}:all", 0)
-                            if self._is_grouped_skill(skill_name)
-                            else DEFAULT_SKILLS.get(skill_name, 0))
-                
-                if value != default_value:
-                    self.modified_skills[skill_name] = value
-                elif skill_name in self.modified_skills:
-                    if skill_name.endswith(':all'):
-                        del self.modified_skills[skill_name]
-                        self.update_skills(self.modified_skills, preserve_edit_state=True)
-                    else:
-                        self._update_single_skill(skill_name, value)
-                        
-            except ValueError:
-                pass
+        try:
+            value = int(new_value) if new_value.strip() else 0
+            if value != 0:
+                self.modified_skills[skill_name] = value
+            elif skill_name in self.modified_skills:
+                del self.modified_skills[skill_name]
+                    
+        except ValueError:
+            pass
 
     def _show_special_input_dialog(self, skill_name: str, current_value: int) -> None:
         is_all = "all" in skill_name.lower()
@@ -1368,18 +1538,43 @@ class SkillsGrid(QFrame):
 class ItemsPanel(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent = parent
         self.setFrameShape(QFrame.Shape.Box)
         self.setup_ui()
 
     def setup_ui(self):
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(5, 5, 5, 5)
-        self.layout.setSpacing(4)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(4)
         
         self.items_grid = QGridLayout()
         self.items_grid.setHorizontalSpacing(10)
         self.items_grid.setVerticalSpacing(4)
-        self.layout.addLayout(self.items_grid)
+        layout.addLayout(self.items_grid)
+        
+        layout.addWidget(TFSeparator.horizontal())
+        
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(5, 5, 5, 5)
+        
+        self.add_item_button = QPushButton("Add Item")
+        self.add_item_button.setFixedWidth(100)
+        self.add_item_button.setFont(QFont("Inconsolata SemiCondensed"))
+        self.add_item_button.clicked.connect(self._handle_add_item)
+        self.add_item_button.setEnabled(False)
+        
+        self.delete_item_button = QPushButton("Delete Item")
+        self.delete_item_button.setFixedWidth(100)
+        self.delete_item_button.setFont(QFont("Inconsolata SemiCondensed"))
+        self.delete_item_button.clicked.connect(self._handle_delete_item)
+        self.delete_item_button.setEnabled(False)
+        
+        button_layout.addWidget(self.add_item_button)
+        button_layout.addSpacing(30)
+        button_layout.addWidget(self.delete_item_button)
+        button_layout.addStretch()
+        
+        layout.addLayout(button_layout)
 
     def update_items(self, items_data):
         while self.items_grid.count():
@@ -1439,6 +1634,83 @@ class ItemsPanel(QFrame):
             
             self.items_grid.addWidget(item_entry, row, 0)
             row += 1
+
+    def _handle_add_item(self):
+        confirmed, result = ItemAddDialog.get_item_input(self)
+        if not confirmed:
+            return
+            
+        item_type, item_data = result
+        
+        try:
+            with open(self.parent.parent.current_file_path, 'r+', encoding='utf-8') as file:
+                data = json.load(file)
+                
+                if item_type == 'weapons':
+                    item_id = item_data['name'].lower().replace(' ', '_')
+                    data['items']['weapons'][item_id] = {
+                        'type': item_data['type'],
+                        'skill': 'fighting:brawl',
+                        'damage': item_data['damage'],
+                        'range': item_data['range'],
+                        'notes': ''
+                    }
+                elif item_type == 'armours':
+                    item_id = item_data['name'].lower().replace(' ', '_')
+                    data['items']['armours'][item_id] = {
+                        'points': item_data['points'],
+                        'notes': ''
+                    }
+                else:
+                    item_id = item_data['name'].lower().replace(' ', '_')
+                    data['items']['others'][item_id] = {
+                        'notes': ''
+                    }
+                
+                file.seek(0)
+                json.dump(data, file, indent=4, ensure_ascii=False)
+                file.truncate()
+            
+            self.update_items(data['items'])
+            self.parent.parent.app.show_message("Item added successfully", 2000, 'green')
+            
+        except Exception as e:
+            self.parent.parent.app.show_error("Add Error", f"Failed to add item: {str(e)}")
+
+    def _handle_delete_item(self):
+        confirmed, result = ItemDeleteDialog.get_item_input(self, self.parent.parent.pc_data['items'])
+        if not confirmed or not result:
+            return
+            
+        items_to_delete = result
+            
+        try:
+            with open(self.parent.parent.current_file_path, 'r+', encoding='utf-8') as file:
+                data = json.load(file)
+                
+                for item_type, item_id in items_to_delete:
+                    if item_id in data['items'][item_type]:
+                        data['items'][item_type].pop(item_id)
+                
+                file.seek(0)
+                json.dump(data, file, indent=4, ensure_ascii=False)
+                file.truncate()
+            
+            self.update_items(data['items'])
+            self.parent.parent.app.show_message(
+                "Items deleted successfully",
+                2000,
+                'green'
+            )
+                
+        except Exception as e:
+            self.parent.parent.app.show_error("Delete Error", f"Failed to delete items: {str(e)}")
+
+    def set_edit_mode(self, enabled: bool):
+        self.add_item_button.setEnabled(enabled)
+        self.delete_item_button.setEnabled(enabled)
+        for line_edit in self.findChildren(QLineEdit):
+            line_edit.setEnabled(enabled)
 
 class NotesPanel(QFrame):
     def __init__(self, parent=None):
@@ -1642,12 +1914,11 @@ class CharacterRules:
         return True, ""
 
 class SkillInputDialog(TFComputingDialog):
-    def __init__(self, skill_type: str, base_skill: str, current_value: int, 
-                current_skills: dict, parent=None):
-        self.skill_type = skill_type
-        self.base_skill = base_skill
-        self.current_value = current_value
-        self.current_skills = current_skills
+    def __init__(self, parent=None, **kwargs):
+        self.skill_type = kwargs.get('skill_type')
+        self.base_skill = kwargs.get('base_skill')
+        self.current_value = kwargs.get('current_value')
+        self.current_skills = kwargs.get('current_skills')
         super().__init__("Skill Input", parent)
         self.setup_content()
         
@@ -1656,84 +1927,62 @@ class SkillInputDialog(TFComputingDialog):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(10)
         
-        skill_label = QLabel(self.base_skill.capitalize())
-        skill_label.setFont(QFont("Inconsolata", 11, QFont.Weight.Bold))
+        skill_label = self.create_label(self.base_skill.capitalize(), bold=True)
+        skill_label.setFont(self.create_font(size=self.TITLE_FONT_SIZE, bold=True))
         layout.addWidget(skill_label)
         
-        input_frame = self._create_input_section()
-        layout.addWidget(input_frame)
-        
-        self.setFixedSize(300, 150)
-        
-    def _create_input_section(self) -> QFrame:
-        frame = QFrame()
-        frame.setFrameShape(QFrame.Shape.NoFrame)
-        
-        layout = QVBoxLayout(frame)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
+        input_frame = QFrame()
+        input_frame.setFrameShape(QFrame.Shape.NoFrame)
+        input_layout = QVBoxLayout(input_frame)
+        input_layout.setContentsMargins(0, 0, 0, 0)
+        input_layout.setSpacing(10)
         
         subtype_layout = QHBoxLayout()
-        subtype_label = QLabel("Subtype:")
-        subtype_label.setFont(QFont("Inconsolata", 10))
-        subtype_label.setFixedWidth(60)
-        self.subtype_input = QLineEdit()
-        self.subtype_input.setFont(QFont("Inconsolata", 10))
+        subtype_label = self.create_label("Subtype:", fixed_width=60)
+        self.subtype_input = self.create_text_input()
         subtype_layout.addWidget(subtype_label)
         subtype_layout.addWidget(self.subtype_input)
-        layout.addLayout(subtype_layout)
+        input_layout.addLayout(subtype_layout)
         
         value_layout = QHBoxLayout()
-        value_label = QLabel("Value:")
-        value_label.setFont(QFont("Inconsolata", 10))
-        value_label.setFixedWidth(60)
-        self.value_input = TFNumberReceiver(
-            text="",
-            alignment=Qt.AlignmentFlag.AlignLeft,
-            font=QFont("Inconsolata", 10),
-            allow_decimal=False,
-            allow_negative=False
-        )
+        value_label = self.create_label("Value:", fixed_width=60)
+        self.value_input = self.create_number_receiver()
         value_layout.addWidget(value_label)
         value_layout.addWidget(self.value_input)
-        layout.addLayout(value_layout)
+        input_layout.addLayout(value_layout)
         
-        return frame
+        layout.addWidget(input_frame)
+        self.set_dialog_size(300, 150)
 
-    def compute_result(self) -> tuple[bool, str]:
-        subtype = self.subtype_input.text().strip().lower()
-        value = self.value_input.text().strip()
-        
-        if not subtype:
-            return False, "Please enter the skill subtype."
+    def compute_result(self) -> tuple[bool, tuple[str, int]]:
+        success, subtype = self.validate_not_empty(
+            self.subtype_input.text(), "skill subtype")
+        if not success:
+            return False, subtype
             
-        if not value:
-            return False, "Please enter the skill value."
+        success, value = self.validate_number_range(
+            self.value_input.text(), 1, 99, "skill value")
+        if not success:
+            return False, value
             
-        try:
-            value_int = int(value)
-            if value_int < 1 or value_int > 99:
-                return False, "Skill value must be between 1 and 99."
-        except ValueError:
-            return False, "Please enter a valid number."
-            
-        skill_name = f"{self.base_skill}:{subtype}"
-            
-        return True, (skill_name, value_int)
+        skill_name = f"{self.base_skill}:{subtype.lower()}"
+        return True, (skill_name, value)
 
     @classmethod
     def get_skill_input(cls, parent, skill_type: str, base_skill: str, 
                        current_value: int, current_skills: dict) -> tuple[bool, tuple[str, int]]:
-        dialog = cls(skill_type, base_skill, current_value, current_skills, parent)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            return True, dialog.get_result()
-        return False, ("", 0)
+        return cls.get_input(
+            parent=parent,
+            skill_type=skill_type,
+            base_skill=base_skill,
+            current_value=current_value,
+            current_skills=current_skills
+        )
 
 class SkillAddDialog(TFComputingDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, **kwargs):
         self.all_grouped_skills = GROUPED_SKILLS | {'language'} | SPECIAL_SKILLS
         super().__init__("Add Skill", parent)
-        self.parent = parent
         self.setup_content()
         
     def setup_content(self):
@@ -1741,87 +1990,403 @@ class SkillAddDialog(TFComputingDialog):
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(15)
         
-        category_label = QLabel("Skill Category:")
-        category_label.setFont(QFont("Inconsolata", 10, QFont.Weight.Bold))
+        category_label = self.create_label("Skill Category:", bold=True)
         layout.addWidget(category_label)
         
         self.parent_combo = QComboBox()
-        self.parent_combo.setFont(QFont("Inconsolata", 10))
+        self.parent_combo.setFont(self.create_font())
         self.parent_combo.setFixedWidth(200)
         self.parent_combo.addItem("None")
         
         for skill in sorted(self.all_grouped_skills):
-            if skill == 'firearms':
-                display_name = 'Firearms'
-            else:
-                display_name = skill.capitalize()
+            display_name = 'Firearms' if skill == 'firearms' else skill.capitalize()
             self.parent_combo.addItem(display_name)
             
         layout.addWidget(self.parent_combo)
         
-        layout.addWidget(TFSeparator.horizontal())
-        
-        self.name_entry = TFValueEntry(
+        self.name_entry = self.create_value_entry(
             label_text="Skill Name:",
-            value_text="",
-            alignment=Qt.AlignmentFlag.AlignLeft,
             label_size=100,
-            value_size=180,
-            custom_label_font=QFont("Inconsolata", 10, QFont.Weight.Bold),
-            custom_edit_font=QFont("Inconsolata", 10)
+            value_size=180
         )
-        self.name_entry.value_field.setEnabled(True)
         self.name_entry.value_field.setValidator(
             QRegularExpressionValidator(QRegularExpression("[a-zA-Z ]+"))
         )
         layout.addWidget(self.name_entry)
         
-        self.value_entry = TFValueEntry(
+        self.value_entry = self.create_value_entry(
             label_text="Skill Value:",
-            value_text="",
             label_size=100,
             value_size=180,
-            custom_label_font=QFont("Inconsolata", 10, QFont.Weight.Bold),
-            custom_edit_font=QFont("Inconsolata", 10),
             number_only=True,
             allow_decimal=False
         )
-        self.value_entry.value_field.setEnabled(True)
         layout.addWidget(self.value_entry)
         
         layout.addStretch()
-        
-        self.setFixedSize(350, 250)
+        self.set_dialog_size(350, 250)
 
-    def compute_result(self) -> tuple[bool, str]:
+    def compute_result(self) -> tuple[bool, tuple[str, int]]:
         parent_skill = self.parent_combo.currentText().lower()
-        skill_name = self.name_entry.get_value().strip()
-        value = self.value_entry.get_value().strip()
         
-        if not skill_name:
-            return False, "Please enter the skill name."
+        success, skill_name = self.validate_not_empty(
+            self.name_entry.get_value(), "skill name")
+        if not success:
+            return False, skill_name
             
-        if not value:
-            return False, "Please enter the skill value."
-
-        try:
-            value_int = int(value)
-            if value_int < 1 or value_int > 99:
-                return False, "Skill value must be between 1 and 99."
-        except ValueError:
-            return False, "Please enter a valid number."
+        success, value = self.validate_number_range(
+            self.value_entry.get_value(), 1, 99, "skill value")
+        if not success:
+            return False, value
         
         if parent_skill == "none":
             final_name = skill_name.lower().replace(" ", "_")
         else:
             final_name = f"{parent_skill}:{skill_name.lower().replace(' ', '_')}"
             
-        return True, (final_name, value_int)
+        return True, (final_name, value)
 
     @classmethod
     def get_skill_input(cls, parent) -> tuple[bool, tuple[str, int]]:
-        dialog = cls(parent)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            return True, dialog.get_result()
-        return False, ("", 0)
+        return cls.get_input(parent=parent)
     
+class ItemAddDialog(TFComputingDialog):
+    def __init__(self, parent=None, **kwargs):
+        super().__init__("Add Item", parent)
+        self.setup_content()
+        
+    def setup_content(self):
+        self.main_layout = QVBoxLayout(self.content_frame)
+        self.main_layout.setContentsMargins(10, 10, 10, 10)
+        self.main_layout.setSpacing(20)
+        
+        self.main_layout.addWidget(self.create_label("Item Type:", bold=True))
+        
+        self.type_combo = QComboBox()
+        self.type_combo.setFont(self.create_font())
+        self.type_combo.addItem("None")
+        self.type_combo.addItems(["Weapon", "Armour", "Other"])
+        self.type_combo.currentTextChanged.connect(self._on_type_changed)
+        self.main_layout.addWidget(self.type_combo)
+        
+        self.content_widget = QWidget()
+        self.content_layout = QVBoxLayout(self.content_widget)
+        self.main_layout.addWidget(self.content_widget)
+        
+        self._setup_weapon_ui()
+        
+        self.main_layout.addStretch()
+        self.set_dialog_size(400, 350)
+        
+    def _setup_weapon_ui(self):
+        self._clear_content()
+        
+        self.content_layout.setContentsMargins(0, 0, 0, 0)
+        self.content_layout.setSpacing(10)
+        
+        name_entry = self.create_value_entry(
+            label_text="Name:",
+            label_size=120,
+            value_size=200
+        )
+        name_entry.setObjectName("name_input")
+        self.content_layout.addWidget(name_entry)
+        
+        type_layout = QHBoxLayout()
+        type_layout.setContentsMargins(0, 0, 0, 0)
+        
+        type_label = self.create_label("Weapon Type:", bold=True, fixed_width=120)
+        type_layout.addWidget(type_label)
+        
+        self.weapon_type_combo = QComboBox()
+        self.weapon_type_combo.setFont(self.create_font())
+        self.weapon_type_combo.addItem("None")
+        self.weapon_type_combo.addItems(sorted(WEAPON_TYPES.keys()))
+        self.weapon_type_combo.currentTextChanged.connect(self._update_weapon_info)
+        self.weapon_type_combo.setFixedWidth(200)
+        type_layout.addWidget(self.weapon_type_combo)
+        
+        type_layout.addStretch()
+        self.content_layout.addLayout(type_layout)
+        
+        info_container = QWidget()
+        info_container.setFixedHeight(100)
+        info_layout = QVBoxLayout(info_container)
+        info_layout.setContentsMargins(0, 0, 0, 0)
+        info_layout.setSpacing(0)
+        
+        self.skill_label = self.create_label("Skill: -")
+        self.damage_label = self.create_label("Damage: -")
+        self.range_label = self.create_label("Range: -")
+        
+        info_layout.addWidget(self.skill_label)
+        info_layout.addWidget(self.damage_label)
+        info_layout.addWidget(self.range_label)
+        
+        self.content_layout.addWidget(info_container)
+        
+    def _setup_armour_ui(self):
+        self._clear_content()
+        
+        name_entry = self.create_value_entry(
+            label_text="Name:",
+            label_size=120,
+            value_size=200
+        )
+        name_entry.setObjectName("name_input")
+        self.content_layout.addWidget(name_entry)
+        
+        points_entry = self.create_value_entry(
+            label_text="Armor Points:",
+            label_size=120,
+            value_size=200,
+            number_only=True,
+            allow_decimal=False
+        )
+        points_entry.setObjectName("points_input")
+        self.content_layout.addWidget(points_entry)
+        
+    def _setup_other_ui(self):
+        self._clear_content()
+        
+        name_entry = self.create_value_entry(
+            label_text="Name:",
+            label_size=120,
+            value_size=200
+        )
+        name_entry.setObjectName("name_input")
+        self.content_layout.addWidget(name_entry)
+        
+    def _clear_content(self):
+        while self.content_layout.count():
+            item = self.content_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                while item.layout().count():
+                    child = item.layout().takeAt(0)
+                    if child.widget():
+                        child.widget().deleteLater()
+                item.layout().setParent(None)
+        
+        self.content_widget.deleteLater()
+        self.content_widget = QWidget()
+        self.content_layout = QVBoxLayout(self.content_widget)
+        self.main_layout.insertWidget(2, self.content_widget)
+                
+    def _on_type_changed(self, type_text):
+        if type_text == "Weapon":
+            self._setup_weapon_ui()
+        elif type_text == "Armour":
+            self._setup_armour_ui()
+        else:
+            self._setup_other_ui()
+            
+    def _update_weapon_info(self, weapon_type):
+        if self.weapon_type_combo and weapon_type != "None" and weapon_type in WEAPON_TYPES:
+            skill, damage, range_ = WEAPON_TYPES[weapon_type]
+            skill_display = skill.replace(':', ' - ').title()
+            
+            self.skill_label.setText(f"Skill: {skill_display}")
+            self.damage_label.setText(f"Damage: {damage}")
+            self.range_label.setText(f"Range: {range_}")
+        else:
+            self.skill_label.setText("Skill: -")
+            self.damage_label.setText("Damage: -")
+            self.range_label.setText("Range: -")
+            
+    def compute_result(self) -> tuple[bool, tuple[str, dict]]:
+        item_type = self.type_combo.currentText().lower()
+        
+        if item_type == "none":
+            return False, "Please select an item type."
+
+        name_input = self.findChild(TFValueEntry, "name_input")
+        if not name_input:
+            return False, "Name input field not found."
+            
+        success, name_text = self.validate_not_empty(
+            name_input.get_value(), "item name")
+        if not success:
+            return False, name_text
+            
+        if item_type == "weapon":
+            weapon_type = self.weapon_type_combo.currentText()
+            if weapon_type == "None":
+                return False, "Please select a weapon type."
+                
+            damage, range_, skill = WEAPON_TYPES[weapon_type]
+            return True, ('weapons', {
+                'name': name_text,
+                'type': weapon_type,
+                'skill': skill,
+                'damage': damage,
+                'range': range_
+            })
+            
+        elif item_type == "armour":
+            points_input = self.findChild(TFValueEntry, "points_input")
+            if not points_input:
+                return False, "Points input field not found."
+                
+            success, points = self.validate_number_range(
+                points_input.get_value(), 1, 999, "armor points")
+            if not success:
+                return False, points
+                
+            return True, ('armours', {
+                'name': name_text,
+                'points': points
+            })
+            
+        else:
+            return True, ('others', {
+                'name': name_text
+            })
+
+    @classmethod
+    def get_item_input(cls, parent) -> tuple[bool, tuple[str, dict]]:
+        return cls.get_input(parent=parent)
+
+class SkillDeleteDialog(TFComputingDialog):
+    def __init__(self, parent=None, **kwargs):
+        self.skills = kwargs.get('skills', {})
+        self.grouped_skills = self._group_skills(self.skills)
+        self.checkboxes = {}
+        super().__init__("Delete Skills", parent)
+        self.setup_content()
+        
+    def _group_skills(self, skills: dict) -> dict:
+        groups = {}
+        ungrouped = {}
+        
+        for skill, value in skills.items():
+            if ':' in skill:
+                base_skill = skill.split(':')[0]
+                if base_skill in GROUPED_SKILLS or base_skill in SPECIAL_SKILLS or base_skill == 'language':
+                    if base_skill not in groups:
+                        groups[base_skill] = {}
+                    groups[base_skill][skill] = value
+            else:
+                ungrouped[skill] = value
+        
+        sorted_groups = dict(sorted(groups.items()))
+        if ungrouped:
+            sorted_groups['Others'] = dict(sorted(ungrouped.items()))
+            
+        return sorted_groups
+        
+    def setup_content(self):
+        layout = QVBoxLayout(self.content_frame)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
+        
+        scroll_area, container, container_layout = self.create_scroll_area()
+        
+        for group_name, skills in self.grouped_skills.items():
+            group_label = self.create_label(group_name.capitalize(), bold=True)
+            container_layout.addWidget(group_label)
+            
+            for skill_name, current_value in skills.items():
+                base_skill = skill_name.split(':')[0] if ':' in skill_name else skill_name
+                if base_skill in GROUPED_SKILLS:
+                    default_value = DEFAULT_SKILLS.get(f"{base_skill}:all", 0)
+                else:
+                    default_value = DEFAULT_SKILLS.get(skill_name, 0)
+                
+                display_name = self._format_skill_name(skill_name)
+                checkbox_text = f"{display_name} ({current_value}) - Default: {default_value}"
+                
+                checkbox = self.create_checkbox(checkbox_text)
+                self.checkboxes[skill_name] = checkbox
+                container_layout.addWidget(checkbox)
+            
+            if group_name != list(self.grouped_skills.keys())[-1]:
+                container_layout.addSpacing(10)
+        
+        container_layout.addStretch()
+        layout.addWidget(scroll_area)
+        
+        self.set_dialog_size(400, 500)
+        
+    def _format_skill_name(self, skill_name: str) -> str:
+        if ':' in skill_name:
+            base, subtype = skill_name.split(':')
+            if base in SkillsGrid.SKILL_ABBREVIATIONS:
+                base = SkillsGrid.SKILL_ABBREVIATIONS[base]
+            return f"{base.capitalize()}: {subtype.capitalize()}"
+        else:
+            if skill_name in SkillsGrid.SKILL_ABBREVIATIONS:
+                return SkillsGrid.SKILL_ABBREVIATIONS[skill_name]
+            return ' '.join(word.capitalize() for word in skill_name.split('_'))
+        
+    def compute_result(self) -> tuple[bool, list]:
+        selected_skills = [
+            skill_name for skill_name, checkbox in self.checkboxes.items()
+            if checkbox.isChecked()
+        ]
+                
+        if not selected_skills:
+            return False, "Please select at least one skill to delete."
+            
+        return True, selected_skills
+    
+    @classmethod
+    def get_skill_input(cls, parent, skills: dict) -> tuple[bool, list]:
+        return cls.get_input(parent=parent, skills=skills)
+
+class ItemDeleteDialog(TFComputingDialog):
+    def __init__(self, parent=None, **kwargs):
+        self.items = kwargs.get('items', {})
+        self.checkboxes = {}
+        super().__init__("Delete Items", parent)
+        self.setup_content()
+        
+    def setup_content(self):
+        layout = QVBoxLayout(self.content_frame)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
+        
+        scroll_area, container, container_layout = self.create_scroll_area()
+        
+        if self.items.get('weapons'):
+            container_layout.addWidget(self.create_label("Weapons", bold=True))
+            self._add_item_checkboxes('weapons', self.items['weapons'].keys(), container_layout)
+            container_layout.addSpacing(10)
+            
+        if self.items.get('armours'):
+            container_layout.addWidget(self.create_label("Armours", bold=True))
+            self._add_item_checkboxes('armours', self.items['armours'].keys(), container_layout)
+            container_layout.addSpacing(10)
+            
+        if self.items.get('others'):
+            container_layout.addWidget(self.create_label("Others", bold=True))
+            self._add_item_checkboxes('others', self.items['others'].keys(), container_layout)
+        
+        container_layout.addStretch()
+        layout.addWidget(scroll_area)
+        
+        self.set_dialog_size(400, 500)
+
+    def _add_item_checkboxes(self, item_type: str, item_ids: list, layout: QVBoxLayout):
+        for item_id in item_ids:
+            display_name = ' '.join(word.capitalize() for word in item_id.split('_'))
+            checkbox = self.create_checkbox(display_name)
+            self.checkboxes[(item_type, item_id)] = checkbox
+            layout.addWidget(checkbox)
+        
+    def compute_result(self) -> tuple[bool, list]:
+        selected_items = [
+            (item_type, item_id) 
+            for (item_type, item_id), checkbox in self.checkboxes.items()
+            if checkbox.isChecked()
+        ]
+                
+        if not selected_items:
+            return False, "Please select at least one item to delete."
+            
+        return True, selected_items
+        
+    @classmethod
+    def get_item_input(cls, parent, items: dict) -> tuple[bool, list]:
+        return cls.get_input(parent=parent, items=items)

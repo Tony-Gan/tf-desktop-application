@@ -74,9 +74,20 @@ class TFToolRegistry:
         if not os.path.exists(full_path):
             return
             
-        module_path = tools_dir.replace('/', '.')
+        base_module_path = tools_dir.replace('/', '.')
         
-        for filename in os.listdir(full_path):
-            if filename.endswith('.py') and not filename.startswith('__'):
-                module_name = f"{module_path}.{filename[:-3]}"
-                import_module(module_name)
+        for root, _, files in os.walk(full_path):
+            rel_path = os.path.relpath(root, full_path)
+            
+            if rel_path == '.':
+                current_module_path = base_module_path
+            else:
+                current_module_path = f"{base_module_path}.{rel_path.replace(os.sep, '.')}"
+            
+            for filename in files:
+                if filename.endswith('.py') and not filename.startswith('__'):
+                    module_name = f"{current_module_path}.{filename[:-3]}"
+                    try:
+                        import_module(module_name)
+                    except ImportError as e:
+                        print(f"Failed to import {module_name}: {str(e)}")
