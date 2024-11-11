@@ -134,7 +134,7 @@ QTextEdit#output_text {
     border: none;
 }
 
-QFrame#section_frame {
+QFrame#section_frame, QFrame#progress_container {
     background-color: white;
     border: 1px solid #ccc;
     border-radius: 5px;
