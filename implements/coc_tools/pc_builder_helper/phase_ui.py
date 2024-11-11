@@ -19,19 +19,15 @@ class BasePhaseUI(QFrame):
         self._setup_ui()
         
     def _setup_base_ui(self):
-        """Setup the base UI structure"""
-        # Main layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.setSpacing(10)
         
-        # Content area - without layout
         self.content_area = QFrame()
         main_layout.addWidget(self.content_area, 9)
         
-        # Button container
         self.button_container = QFrame()
-        button_layout = QHBoxLayout()  # Create layout first
+        button_layout = QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 0, 0)
         button_layout.setSpacing(10)
         
@@ -50,12 +46,10 @@ class BasePhaseUI(QFrame):
         button_layout.addStretch()
         button_layout.addWidget(self.next_button)
         
-        self.button_container.setLayout(button_layout)  # Set layout after configuration
+        self.button_container.setLayout(button_layout)
         main_layout.addWidget(self.button_container, 1)
 
     def _setup_content_area(self):
-        """Setup the content area with a clean layout"""
-        # Clear old layout if exists
         if self.content_area.layout():
             while self.content_area.layout().count():
                 item = self.content_area.layout().takeAt(0)
@@ -63,13 +57,12 @@ class BasePhaseUI(QFrame):
                     item.widget().deleteLater()
             QWidget().setLayout(self.content_area.layout())
         
-        # Create new layout
         content_layout = QVBoxLayout()
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(10)
         self.content_area.setLayout(content_layout)
         
-        return content_layout  # Return layout for child classes to use
+        return content_layout
     
     def _setup_phase_buttons(self, button_layout: QHBoxLayout):
         pass
