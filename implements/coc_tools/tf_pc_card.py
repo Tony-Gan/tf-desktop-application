@@ -2018,24 +2018,24 @@ class SkillAddDialog(TFComputingDialog):
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(15)
         
-        category_label = self.create_label("Skill Category:", bold=True)
-        layout.addWidget(category_label)
-        
-        self.parent_combo = QComboBox()
-        self.parent_combo.setFont(self.create_font())
-        self.parent_combo.setFixedWidth(200)
-        self.parent_combo.addItem("None")
-        
+        options = ["None"]
         for skill in sorted(self.all_grouped_skills):
             display_name = 'Firearms' if skill == 'firearms' else skill.capitalize()
-            self.parent_combo.addItem(display_name)
+            options.append(display_name)
             
+        self.parent_combo = self.create_option_entry(
+            "Skill Category:",
+            options=options,
+            current_value="None",
+            label_size=120,
+            value_size=150,
+        )
         layout.addWidget(self.parent_combo)
         
         self.name_entry = self.create_value_entry(
             label_text="Skill Name:",
-            label_size=100,
-            value_size=180
+            label_size=120,
+            value_size=150
         )
         self.name_entry.value_field.setValidator(
             QRegularExpressionValidator(QRegularExpression("[a-zA-Z ]+"))
@@ -2044,8 +2044,8 @@ class SkillAddDialog(TFComputingDialog):
         
         self.value_entry = self.create_value_entry(
             label_text="Skill Value:",
-            label_size=100,
-            value_size=180,
+            label_size=120,
+            value_size=150,
             number_only=True,
             allow_decimal=False
         )
@@ -2089,7 +2089,7 @@ class SkillAddDialog(TFComputingDialog):
         return {
             'skill_name': self.name_entry.get_value().strip(),
             'skill_value': self.value_entry.get_value().strip(),
-            'parent_skill': self.parent_combo.currentText()
+            'parent_skill': self.parent_combo.get_value()
         }
 
     def process_validated_data(self, data):
@@ -2116,13 +2116,14 @@ class ItemAddDialog(TFComputingDialog):
         self.main_layout.setContentsMargins(10, 10, 10, 10)
         self.main_layout.setSpacing(20)
         
-        self.main_layout.addWidget(self.create_label("Item Type:", bold=True))
-        
-        self.type_combo = QComboBox()
-        self.type_combo.setFont(self.create_font())
-        self.type_combo.addItem("None")
-        self.type_combo.addItems(["Weapon", "Armour", "Other"])
-        self.type_combo.currentTextChanged.connect(self._on_type_changed)
+        self.type_combo = self.create_option_entry(
+            "Item Type:",
+            options=["None", "Weapon", "Armour", "Other"],
+            current_value="None",
+            label_size=120,
+            value_size=150
+        )
+        self.type_combo.value_changed.connect(self._on_type_changed)
         self.main_layout.addWidget(self.type_combo)
         
         self.content_widget = QWidget()
@@ -2175,14 +2176,14 @@ class ItemAddDialog(TFComputingDialog):
         })
 
     def get_field_values(self):
-        item_type = self.type_combo.currentText()
+        item_type = self.type_combo.get_value()
         values = {
             'item_type': item_type,
             'item_name': self.findChild(TFValueEntry, "name_input").get_value().strip()
         }
 
         if item_type == 'Weapon':
-            values['weapon_type'] = self.weapon_type_combo.currentText()
+            values['weapon_type'] = self.weapon_type_combo.get_value()
         elif item_type == 'Armour':
             points_input = self.findChild(TFValueEntry, "points_input")
             if points_input and points_input.get_value().strip():
@@ -2230,22 +2231,15 @@ class ItemAddDialog(TFComputingDialog):
         name_entry.setObjectName("name_input")
         self.content_layout.addWidget(name_entry)
         
-        type_layout = QHBoxLayout()
-        type_layout.setContentsMargins(0, 0, 0, 0)
-        
-        type_label = self.create_label("Weapon Type:", bold=True, fixed_width=120)
-        type_layout.addWidget(type_label)
-        
-        self.weapon_type_combo = QComboBox()
-        self.weapon_type_combo.setFont(self.create_font())
-        self.weapon_type_combo.addItem("None")
-        self.weapon_type_combo.addItems(sorted(WEAPON_TYPES.keys()))
-        self.weapon_type_combo.currentTextChanged.connect(self._update_weapon_info)
-        self.weapon_type_combo.setFixedWidth(200)
-        type_layout.addWidget(self.weapon_type_combo)
-        
-        type_layout.addStretch()
-        self.content_layout.addLayout(type_layout)
+        self.weapon_type_combo = self.create_option_entry(
+            "Weapon Type:",
+            options=["None"] + sorted(WEAPON_TYPES.keys()),
+            current_value="None",
+            label_size=120,
+            value_size=150
+        )
+        self.weapon_type_combo.value_changed.connect(self._update_weapon_info)
+        self.content_layout.addWidget(self.weapon_type_combo)
         
         info_container = QWidget()
         info_container.setFixedHeight(100)
@@ -2397,7 +2391,7 @@ class SkillDeleteDialog(TFComputingDialog):
                 display_name = self._format_skill_name(skill_name)
                 checkbox_text = f"{display_name} ({current_value}) - Default: {default_value}"
                 
-                checkbox = self.create_checkbox(checkbox_text)
+                checkbox = self.create_check_with_label(checkbox_text)
                 self.checkboxes[skill_name] = checkbox
                 container_layout.addWidget(checkbox)
             
@@ -2423,7 +2417,7 @@ class SkillDeleteDialog(TFComputingDialog):
     def get_field_values(self):
         selected_skills = [
             skill_name for skill_name, checkbox in self.checkboxes.items()
-            if checkbox.isChecked()
+            if checkbox.get_value()
         ]
         return {
             'selected_skills': selected_skills if selected_skills else None
@@ -2515,11 +2509,10 @@ class ItemDeleteDialog(TFComputingDialog):
     def get_field_values(self):
         selected_items = [
             item for item, checkbox in self.checkboxes.items()
-            if checkbox.isChecked()
+            if checkbox.get_value()
         ]
         return {
             'selected_items': selected_items if selected_items else None
-            # Convert empty list to None to trigger required validation
         }
 
     def process_validated_data(self, data):
@@ -2528,7 +2521,7 @@ class ItemDeleteDialog(TFComputingDialog):
     def _add_item_checkboxes(self, item_type: str, item_ids: list, layout: QVBoxLayout):
         for item_id in item_ids:
             display_name = ' '.join(word.capitalize() for word in item_id.split('_'))
-            checkbox = self.create_checkbox(display_name)
+            checkbox = self.create_check_with_label(display_name)
             self.checkboxes[(item_type, item_id)] = checkbox
             layout.addWidget(checkbox)
         

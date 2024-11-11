@@ -115,6 +115,7 @@ class TFNextButton(TFBaseButton):
         height: int = 30,
         font_family: str = "Inconsolata SemiCondensed",
         font_size: int = 10,
+        enabled:bool = False,
         on_clicked=None, 
         tooltip="Next step"
     ):
@@ -125,6 +126,7 @@ class TFNextButton(TFBaseButton):
             height=height,
             font_family=font_family,
             font_size=font_size,
+            enabled=enabled,
             object_name="next_button",
             tooltip=tooltip,
             on_clicked=on_clicked
@@ -153,6 +155,7 @@ class TFPreviousButton(TFBaseButton):
         height: int = 30,
         font_family: str = "Inconsolata SemiCondensed",
         font_size: int = 10,
+        enabled:bool = False,
         on_clicked=None, 
         tooltip="Previous step"
     ):
@@ -163,6 +166,7 @@ class TFPreviousButton(TFBaseButton):
             height=height,
             font_family=font_family,
             font_size=font_size,
+            enabled=enabled,
             object_name="previous_button",
             tooltip=tooltip,
             on_clicked=on_clicked
@@ -191,6 +195,7 @@ class TFBackButton(TFBaseButton):
         height: int = 30,
         font_family: str = "Inconsolata SemiCondensed",
         font_size: int = 10,
+        enabled:bool = False,
         on_clicked=None, 
         tooltip="Go back"
     ):
@@ -201,6 +206,7 @@ class TFBackButton(TFBaseButton):
             height=height,
             font_family=font_family,
             font_size=font_size,
+            enabled=enabled,
             object_name="back_button",
             tooltip=tooltip,
             on_clicked=on_clicked
@@ -229,6 +235,7 @@ class TFConfirmButton(TFBaseButton):
         height: int = 30,
         font_family: str = "Inconsolata SemiCondensed",
         font_size: int = 10,
+        enabled:bool = False,
         on_clicked=None, 
         tooltip="Confirm action"
     ):
@@ -239,6 +246,7 @@ class TFConfirmButton(TFBaseButton):
             height=height,
             font_family=font_family,
             font_size=font_size,
+            enabled=enabled,
             object_name="confirm_button",
             tooltip=tooltip,
             on_clicked=on_clicked
@@ -267,6 +275,7 @@ class TFResetButton(TFBaseButton):
         height: int = 30,
         font_family: str = "Inconsolata SemiCondensed",
         font_size: int = 10,
+        enabled:bool = False,
         on_clicked=None, 
         tooltip="Reset to default"
     ):
@@ -277,6 +286,7 @@ class TFResetButton(TFBaseButton):
             height=height,
             font_family=font_family,
             font_size=font_size,
+            enabled=enabled,
             object_name="reset_button",
             tooltip=tooltip,
             on_clicked=on_clicked
@@ -305,6 +315,7 @@ class TFCancelButton(TFBaseButton):
         height: int = 30,
         font_family: str = "Inconsolata SemiCondensed",
         font_size: int = 10,
+        enabled:bool = False,
         on_clicked=None, 
         tooltip="Cancel action"
     ):
@@ -315,6 +326,7 @@ class TFCancelButton(TFBaseButton):
             height=height,
             font_family=font_family,
             font_size=font_size,
+            enabled=enabled,
             object_name="cancel_button",
             tooltip=tooltip,
             on_clicked=on_clicked
@@ -343,6 +355,7 @@ class TFSubmitButton(TFBaseButton):
         height: int = 30,
         font_family: str = "Inconsolata SemiCondensed",
         font_size: int = 10,
+        enabled:bool = False,
         on_clicked=None, 
         tooltip="Submit form"
     ):
@@ -353,6 +366,7 @@ class TFSubmitButton(TFBaseButton):
             height=height,
             font_family=font_family,
             font_size=font_size,
+            enabled=enabled,
             object_name="submit_button",
             tooltip=tooltip,
             on_clicked=on_clicked

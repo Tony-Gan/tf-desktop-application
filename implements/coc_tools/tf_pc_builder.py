@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame, QWidget
+from PyQt6.QtCore import pyqtSignal
 
 from core.windows.tf_draggable_window import TFDraggableWindow
 from utils.registry.tf_tool_matadata import TFToolMetadata
@@ -9,7 +10,8 @@ from implements.coc_tools.pc_builder_helper.rule_setting_dialog import RuleSetti
 from implements.coc_tools.pc_builder_helper.pc_builder_phase import  PCBuilderPhase
 from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
 from implements.coc_tools.pc_builder_helper.progress_container import ProgressContainer
-from implements.coc_tools.pc_builder_helper.phase_ui import Phase1UI, Phase2UI, Phase3UI, Phase4UI, Phase5UI
+from implements.coc_tools.pc_builder_helper.phase1_ui import Phase1UI
+from implements.coc_tools.pc_builder_helper.phase_ui import Phase2UI, Phase3UI, Phase4UI, Phase5UI
 
 
 class TFPcBuilder(TFDraggableWindow):
@@ -22,6 +24,8 @@ class TFPcBuilder(TFDraggableWindow):
         description="PC builder",
         max_instances=1
     )
+
+    config_updated = pyqtSignal()
 
     def __init__(self, parent=None):
         self.validator = TFValidator()
@@ -203,6 +207,7 @@ class TFPcBuilder(TFDraggableWindow):
 
         if confirmed:
             self.config.update_from_dict(result)
+            self.config_updated.emit()
 
     def _reset_progress(self):
         self.pc_data.clear()

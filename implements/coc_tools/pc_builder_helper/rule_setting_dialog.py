@@ -16,24 +16,15 @@ class RuleSettingsDialog(TFComputingDialog):
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(10)
 
-        mode_layout = QHBoxLayout()
-        mode_layout.setContentsMargins(2, 0, 2, 0)
-        mode_label = self.create_label("Generation Mode:", bold=True)
-        mode_label.setFixedWidth(190)
-
-        self.mode_combo = QComboBox()
-        self.mode_combo.addItems(["Points", "Destiny"])
-        self.mode_combo.setCurrentText(
-            "Destiny" if self.current_settings.get('generation_mode') == "destiny"
-            else "Points"
+        self.mode_combo = self.create_option_entry(
+            "Generation Mode:",
+            options=["Points", "Destiny"],
+            current_value="Destiny" if self.current_settings.get('generation_mode') == "destiny" else "Points",
+            label_size=200,
+            value_size=100
         )
-        self.mode_combo.currentTextChanged.connect(self._on_mode_changed)
-        self.mode_combo.setFixedWidth(100)
-
-        mode_layout.addWidget(mode_label)
-        mode_layout.addWidget(self.mode_combo)
-        mode_layout.addStretch()
-        layout.addLayout(mode_layout)
+        self.mode_combo.value_changed.connect(self._on_mode_changed)
+        layout.addWidget(self.mode_combo)
 
         self.points_dice_container = QWidget()
         points_dice_layout = QVBoxLayout(self.points_dice_container)
@@ -68,6 +59,12 @@ class RuleSettingsDialog(TFComputingDialog):
         points_dice_layout.addWidget(self.lower_limit_entry)
         self.lower_limit_entry.set_value(str(self.current_settings.get('stat_lower_limit', 20)))
 
+        self.custom_luck_checkbox = self.create_check_with_label(
+            "Custom Luck Value",
+            checked=self.current_settings.get('allow_custom_luck', False)
+        )
+        points_dice_layout.addWidget(self.custom_luck_checkbox)
+
         self.dice_entry = self.create_value_entry(
             "Number of Dice:",
             number_only=True,
@@ -100,24 +97,20 @@ class RuleSettingsDialog(TFComputingDialog):
         )
         layout.addWidget(self.interest_limit_entry)
 
-        self.mixed_points_checkbox = self.create_checkbox(
-            "Allow mixing occupation and interest points"
-        )
-        self.mixed_points_checkbox.setChecked(
-            self.current_settings.get('allow_mixed_points', True)
+        self.mixed_points_checkbox = self.create_check_with_label(
+            "Allow mixing occupation and interest points",
+            checked=self.current_settings.get('allow_mixed_points', True)
         )
         layout.addWidget(self.mixed_points_checkbox)
 
         exchange_layout = QHBoxLayout()
         exchange_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.stat_exchange_checkbox = self.create_checkbox(
-            "Allow stat exchange"
+        self.stat_exchange_checkbox = self.create_check_with_label(
+            "Allow stat exchange",
+            checked=self.current_settings.get('allow_stat_exchange', False)
         )
-        self.stat_exchange_checkbox.setChecked(
-            self.current_settings.get('allow_stat_exchange', False)
-        )
-        self.stat_exchange_checkbox.stateChanged.connect(self._on_exchange_changed)
+        self.stat_exchange_checkbox.value_changed.connect(self._on_exchange_changed)
         exchange_layout.addWidget(self.stat_exchange_checkbox)
 
         exchange_widget = QWidget()
@@ -144,8 +137,8 @@ class RuleSettingsDialog(TFComputingDialog):
 
         layout.addLayout(exchange_layout)
 
-        self._on_mode_changed(self.mode_combo.currentText())
-        self.set_dialog_size(400, 360)
+        self._on_mode_changed(self.mode_combo.get_value())
+        self.set_dialog_size(400, 380)
 
     def setup_validation_rules(self):
         self.validator.add_rules({
@@ -194,6 +187,10 @@ class RuleSettingsDialog(TFComputingDialog):
                     'min': 'Lower limit must be at least 1',
                     'max': 'Lower limit cannot exceed 100'
                 }
+            ),
+            'allow_custom_luck': TFValidationRule(
+                type_=bool,
+                required=False
             ),
             'occupation_skill_limit': TFValidationRule(
                 type_=int,
@@ -249,24 +246,26 @@ class RuleSettingsDialog(TFComputingDialog):
         })
 
     def get_field_values(self):
-        mode = self.mode_combo.currentText().lower()
+        mode = self.mode_combo.get_value().lower()
         values = {
             'generation_mode': mode,
             'occupation_skill_limit': self.occupation_limit_entry.get_value(),
             'interest_skill_limit': self.interest_limit_entry.get_value(),
-            'allow_mixed_points': self.mixed_points_checkbox.isChecked(),
-            'allow_stat_exchange': self.stat_exchange_checkbox.isChecked(),
-            'stat_exchange_times': self.exchange_times_entry.get_value() if self.stat_exchange_checkbox.isChecked() else "0"
+            'allow_mixed_points': self.mixed_points_checkbox.get_value(),
+            'allow_stat_exchange': self.stat_exchange_checkbox.get_value(),
+            'stat_exchange_times': self.exchange_times_entry.get_value() if self.stat_exchange_checkbox.get_value() else "0"
         }
 
         if mode == 'points':
             values.update({
                 'points_available': self.points_entry.get_value(),
                 'stat_upper_limit': self.upper_limit_entry.get_value(),
-                'stat_lower_limit': self.lower_limit_entry.get_value()
+                'stat_lower_limit': self.lower_limit_entry.get_value(),
+                'allow_custom_luck': self.custom_luck_checkbox.get_value()
             })
         else:
             values['dice_count'] = self.dice_entry.get_value()
+            values['allow_custom_luck'] = False
 
         return values
 
@@ -289,8 +288,13 @@ class RuleSettingsDialog(TFComputingDialog):
 
         return data
 
-    def _on_mode_changed(self, mode):
-        points_widgets = [self.points_entry, self.upper_limit_entry, self.lower_limit_entry]
+    def _on_mode_changed(self, mode: str):
+        points_widgets = [
+            self.points_entry, 
+            self.upper_limit_entry, 
+            self.lower_limit_entry,
+            self.custom_luck_checkbox
+        ]
         dice_widgets = [self.dice_entry]
 
         if mode == "Points":
@@ -302,16 +306,18 @@ class RuleSettingsDialog(TFComputingDialog):
             self.points_entry.set_value(str(self.current_settings.get('points_available', 480)))
             self.upper_limit_entry.set_value(str(self.current_settings.get('stat_upper_limit', 80)))
             self.lower_limit_entry.set_value(str(self.current_settings.get('stat_lower_limit', 20)))
+            self.custom_luck_checkbox.set_value(self.current_settings.get('allow_custom_luck', False))
         else:
             for widget in points_widgets:
                 widget.setVisible(False)
-                widget.set_value('0')
+                if isinstance(widget, type(self.points_entry)):
+                    widget.set_value('0')
             for widget in dice_widgets:
                 widget.setVisible(True)
                 self.dice_entry.set_value(str(self.current_settings.get('dice_count', 3)))
 
-        self.exchange_times_entry.setVisible(self.stat_exchange_checkbox.isChecked())
-        if not self.stat_exchange_checkbox.isChecked():
+        self.exchange_times_entry.setVisible(self.stat_exchange_checkbox.get_value())
+        if not self.stat_exchange_checkbox.get_value():
             self.exchange_times_entry.set_value('0')
 
     def _on_exchange_changed(self, state):

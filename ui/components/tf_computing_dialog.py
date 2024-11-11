@@ -1,12 +1,14 @@
+from typing import List
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, 
                              QFrame, QLabel, QLineEdit, QCheckBox, QScrollArea, QWidget)
 from PyQt6.QtCore import Qt, QRegularExpression
 from PyQt6.QtGui import QFont, QRegularExpressionValidator
 
 from ui.components.tf_message_box import TFMessageBox
-from ui.components.tf_separator import TFSeparator
 from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_number_receiver import TFNumberReceiver
+from ui.components.tf_option_entry import TFOptionEntry
+from ui.components.tf_check_with_label import TFCheckWithLabel
 from utils.validator.tf_validator import TFValidator
 
 class TFComputingDialog(QDialog):
@@ -144,6 +146,50 @@ class TFComputingDialog(QDialog):
         )
         entry.value_field.setEnabled(True)
         return entry
+    
+    def create_option_entry(self, label_text: str, options: List[str], current_value: str = "",
+                          label_size: int = 120, value_size: int = 100) -> TFOptionEntry:
+        """
+        Create a standardized option entry field with label.
+
+        Args:
+            label_text (str): Label text for the entry field.
+            options (List[str]): List of options to display in the dropdown.
+            current_value (str): Currently selected value.
+            label_size (int): Width of the label in pixels.
+            value_size (int): Width of the value field in pixels.
+
+        Returns:
+            TFOptionEntry: Configured option entry instance.
+        """
+        entry = TFOptionEntry(
+            label_text=label_text,
+            options=options,
+            current_value=current_value,
+            label_size=label_size,
+            value_size=value_size,
+            custom_label_font=self.create_font(bold=True),
+            custom_edit_font=self.create_font(),
+            alignment=Qt.AlignmentFlag.AlignLeft
+        )
+        return entry
+    
+    def create_check_with_label(self, label_text: str, checked: bool = False) -> TFCheckWithLabel:
+        """
+        Create a standardized checkbox with right-side label.
+
+        Args:
+            label_text (str): Text for the label.
+            checked (bool): Initial checked state.
+
+        Returns:
+            TFCheckWithLabel: Configured check with label instance.
+        """
+        return TFCheckWithLabel(
+            label_text=label_text,
+            checked=checked,
+            custom_font=self.create_font(),
+        )
 
     def create_number_receiver(self, allow_decimal=False, allow_negative=False) -> TFNumberReceiver:
         """
