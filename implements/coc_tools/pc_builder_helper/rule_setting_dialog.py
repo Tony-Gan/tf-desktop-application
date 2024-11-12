@@ -162,10 +162,10 @@ class RuleSettingsDialog(TFComputingDialog):
                 type_=int,
                 required=False,
                 min_val=1,
-                max_val=10,
+                max_val=8,
                 error_messages={
                     'min': 'Must roll at least 1 die',
-                    'max': 'Cannot roll more than 10 dice'
+                    'max': 'Cannot roll more than 8 dice'
                 }
             ),
             'stat_upper_limit': TFValidationRule(

@@ -13,7 +13,7 @@ class GenerationMode(Enum):
 
 @dataclass
 class PCBuilderConfig:
-    generation_mode: str = GenerationMode.POINTS.value
+    generation_mode: str = GenerationMode.DESTINY.value
     points_available: int = 480
     dice_count: int = 3
     stat_upper_limit: int = 80

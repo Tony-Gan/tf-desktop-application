@@ -1,7 +1,7 @@
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget, QComboBox
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFont, QMouseEvent
-from typing import Optional, Callable, List, Union, Any
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget, QComboBox, QCompleter, QListView
+from PyQt6.QtCore import Qt, pyqtSignal, QSize
+from PyQt6.QtGui import QFont, QMouseEvent, QStandardItemModel, QStandardItem
+from typing import Dict, Optional, Callable, List, Union
 
 class TFOptionEntry(QWidget):
     value_changed = pyqtSignal(str)
@@ -18,19 +18,20 @@ class TFOptionEntry(QWidget):
         font.setWeight(QFont.Weight.Normal)
         return font
 
-    def __init__(self, label_text: str = "", options: List[str] = None, current_value: str = "", 
-                 label_size: int = 80, value_size: int = 36, height: int = 24,
-                 custom_label_font: Optional[QFont] = None, custom_edit_font: Optional[QFont] = None,
-                 alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
-                 label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
-                 object_name: Optional[str] = None,
-                 special_edit: Optional[Callable[[], Optional[str]]] = None,
-                 parent: Optional[QWidget] = None) -> None:
+    def __init__(self, label_text: str = "", options: Union[List[str], Dict[str, List[str]]] = None,
+                current_value: str = "", label_size: int = 80, value_size: int = 36, height: int = 24,
+                custom_label_font: Optional[QFont] = None, custom_edit_font: Optional[QFont] = None,
+                alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+                label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                object_name: Optional[str] = None, special_edit: Optional[Callable[[], Optional[str]]] = None,
+                extra_value_width: int = None, filter: bool = False, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        
+
         self.special_edit = special_edit
+        self.extra_value_width = extra_value_width
+        self.filter_enabled = filter
         self._setup_ui(label_text, options or [], current_value, label_size, value_size, height,
-                      custom_label_font, custom_edit_font, alignment, label_alignment, object_name)
+                    custom_label_font, custom_edit_font, alignment, label_alignment, object_name)
 
     def _setup_ui(self, label_text: str, options: List[str], current_value: str,
                  label_size: int, value_size: int, height: int,
@@ -48,11 +49,13 @@ class TFOptionEntry(QWidget):
         self.label.setAlignment(label_alignment)
 
         self.value_field = QComboBox()
+        if self.extra_value_width:
+            self.value_field.view().setMinimumWidth(value_size + self.extra_value_width)
         self.value_field.setFont(custom_edit_font if custom_edit_font else self.edit_font)
         if object_name:
             self.value_field.setObjectName(object_name)
         self.value_field.setFixedWidth(value_size)
-        self.value_field.addItems(options)
+        self._set_grouped_options(options)
         self.value_field.setStyleSheet("""
             QComboBox { 
                 padding: 2px 5px;
@@ -72,6 +75,43 @@ class TFOptionEntry(QWidget):
         self.layout.addWidget(self.value_field)
         self.layout.addStretch()
 
+        if self.filter_enabled:
+            self._enable_filter()
+
+    def _set_grouped_options(self, options: Union[List[str], Dict[str, List[str]]]) -> None:
+        model = QStandardItemModel(self.value_field)
+
+        group_font = QFont("Open Sans", 10)
+        group_font.setWeight(QFont.Weight.Normal)
+
+        if isinstance(options, dict):
+            for group_name, items in options.items():
+                group_item = QStandardItem(group_name)
+                group_item.setFlags(Qt.ItemFlag.NoItemFlags)
+                group_item.setFont(group_font)
+                model.appendRow(group_item)
+
+                group_item.setData("color: #555555;", Qt.ItemDataRole.ToolTipRole)
+
+                for item in items:
+                    option_item = QStandardItem(item)
+                    model.appendRow(option_item)
+        else:
+            for item in options:
+                option_item = QStandardItem(item)
+                model.appendRow(option_item)
+
+        self.value_field.setModel(model)
+
+        self.value_field.setStyleSheet("""
+            QComboBox::item:hover:!enabled {
+                background-color: transparent;
+            }
+            QComboBox QStandardItem {
+                font-family: 'Open Sans';
+            }
+        """)
+
     def _handle_special_edit(self, event: QMouseEvent) -> None:
         if self.special_edit:
             result = self.special_edit()
@@ -85,6 +125,21 @@ class TFOptionEntry(QWidget):
     def _on_value_changed(self, text: str) -> None:
         self.value_changed.emit(text)
 
+    def _enable_filter(self) -> None:
+        model = self.value_field.model()
+
+        completer = QCompleter(model, self.value_field)
+        completer.setCompletionRole(Qt.ItemDataRole.DisplayRole)
+        completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+
+        popup = QListView()
+        popup.setIconSize(QSize(24, 24))
+        popup.setUniformItemSizes(True)
+        completer.setPopup(popup)
+
+        self.value_field.setCompleter(completer)
+
     def get_value(self) -> str:
         return self.value_field.currentText()
 
@@ -93,11 +148,10 @@ class TFOptionEntry(QWidget):
         if index >= 0:
             self.value_field.setCurrentIndex(index)
 
-    def set_options(self, options: List[str], current_value: Optional[str] = None) -> None:
-        self.value_field.clear()
-        self.value_field.addItems(options)
-        if current_value and current_value in options:
-            self.value_field.setCurrentText(current_value)
+    def set_options(self, options: Union[List[str], Dict[str, List[str]]], current_value: Optional[str] = None) -> None:
+        self._set_grouped_options(options)
+        if current_value:
+            self.set_value(current_value)
 
     def set_label(self, text: str) -> None:
         self.label.setText(text)
