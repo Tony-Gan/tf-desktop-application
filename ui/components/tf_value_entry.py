@@ -99,6 +99,7 @@ class TFValueEntry(QWidget):
                 custom_label_font: Optional[QFont] = None, custom_edit_font: Optional[QFont] = None, 
                 alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignCenter,
                 label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                enabled: bool = True,
                 object_name: Optional[str] = None, 
                 number_only: bool = False,
                 allow_decimal: bool = True,
@@ -109,12 +110,12 @@ class TFValueEntry(QWidget):
 
         self.special_edit = special_edit
         self._setup_ui(label_text, value_text, label_size, value_size, height,
-                     custom_label_font, custom_edit_font, alignment, label_alignment,
+                     custom_label_font, custom_edit_font, alignment, label_alignment, enabled,
                      object_name, number_only, allow_decimal, allow_negative)
 
     def _setup_ui(self, label_text: str, value_text: str, label_size: int, value_size: int, height: int,
                 custom_label_font: Optional[QFont], custom_edit_font: Optional[QFont], 
-                alignment: Qt.AlignmentFlag, label_alignment: Qt.AlignmentFlag,
+                alignment: Qt.AlignmentFlag, label_alignment: Qt.AlignmentFlag, enabled: bool,
                 object_name: Optional[str], number_only: bool, allow_decimal: bool, allow_negative: bool) -> None:
         self.setFixedHeight(height)
         self.layout = QHBoxLayout(self)
@@ -144,7 +145,7 @@ class TFValueEntry(QWidget):
         if object_name:
             self.value_field.setObjectName(object_name)
         self.value_field.setFixedWidth(value_size)
-        self.value_field.setEnabled(False)
+        self.value_field.setEnabled(enabled)
         self.value_field.setStyleSheet("QLineEdit { padding: 1px; }")
         
         self.value_field.textChanged.connect(self._on_value_changed)

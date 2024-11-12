@@ -530,12 +530,12 @@ class TFPcCard(TFDraggableWindow):
         return display_name.lower().replace(' ', '_')
 
     def _update_ui(self):
-        self._setup_avator()
+        self._setup_avatar()
         self.pc_info_panel.update_data(self.pc_data)
         self.left_info_panel.update_data(self.pc_data)
         self.lower_panel.update_data(self.pc_data)
 
-    def _setup_avator(self):
+    def _setup_avatar(self):
         avatar_path = resource_path(self.pc_data.get('metadata', {}).get('avatar_file'))
         if not avatar_path:
             self.app.show_message("No avatar path found in character data", 2000, 'yellow')
@@ -648,7 +648,10 @@ class PCInfoPanel(QFrame):
         ]
         
         for label_text, field_name in fields:
-            entry = TFValueEntry(label_text=label_text, label_size=100, value_size=120, object_name=f"edit_{field_name}", alignment=Qt.AlignmentFlag.AlignLeft)
+            entry = TFValueEntry(
+                label_text=label_text, label_size=100, value_size=120, object_name=f"edit_{field_name}",
+                alignment=Qt.AlignmentFlag.AlignLeft, enabled=False
+            )
             layout.addWidget(entry)
         
         return widget
@@ -677,7 +680,8 @@ class PCInfoPanel(QFrame):
                     value_size=50, 
                     object_name=f"edit_{stats[i][1]}",
                     number_only=True,
-                    allow_decimal=False
+                    allow_decimal=False,
+                    enabled=False
                 )
                 row_layout.addWidget(entry1)
                 row_layout.addSpacing(20)
@@ -689,7 +693,8 @@ class PCInfoPanel(QFrame):
                     value_size=50, 
                     object_name=f"edit_{stats[i + 1][1]}",
                     number_only=True,
-                    allow_decimal=False
+                    allow_decimal=False,
+                    enabled=False
                 )
                 row_layout.addWidget(entry2)
             
@@ -788,7 +793,8 @@ class LeftInfoPanel(QFrame):
                     label_size=100, 
                     value_size=160, 
                     object_name=f"edit_{field_name}", 
-                    alignment=Qt.AlignmentFlag.AlignLeft
+                    alignment=Qt.AlignmentFlag.AlignLeft,
+                    enabled=False
                 )
             else:
                 entry = TFValueEntry(
@@ -798,7 +804,8 @@ class LeftInfoPanel(QFrame):
                     object_name=f"edit_{field_name}", 
                     alignment=Qt.AlignmentFlag.AlignLeft,
                     number_only=True,
-                    allow_decimal=False
+                    allow_decimal=False,
+                    enabled=False
                 )
             layout.addWidget(entry)
         
@@ -1041,6 +1048,7 @@ class StatusBar(QFrame):
                 object_name=f"edit_{field_name}",
                 number_only=True,
                 allow_decimal=False,
+                enabled=False
             )
         elif label_text == 'Build':
             entry = TFValueEntry(
@@ -1050,14 +1058,16 @@ class StatusBar(QFrame):
                 object_name=f"edit_{field_name}",
                 number_only=True,
                 allow_decimal=False,
-                allow_negative=True
+                allow_negative=True,
+                enabled=False
             )
         else:
             entry = TFValueEntry(
                 label_text=label_text, 
                 label_size=40, 
                 value_size=40, 
-                object_name=f"edit_{field_name}"
+                object_name=f"edit_{field_name}",
+                enabled=False
             )
         
         layout.addWidget(entry)
@@ -1265,7 +1275,8 @@ class SkillsGrid(QFrame):
                 custom_label_font=font,
                 number_only=True,
                 allow_decimal=False,
-                special_edit=special_edit_callback if is_special else None
+                special_edit=special_edit_callback if is_special else None,
+                enabled=False
             )
             
             skill_entry.value_changed.connect(lambda val, name=skill_name: self._on_skill_value_changed(name, val))
@@ -1603,7 +1614,8 @@ class ItemsPanel(QFrame):
                 alignment=Qt.AlignmentFlag.AlignLeft,
                 label_size=75,
                 value_size=450,
-                custom_label_font=font
+                custom_label_font=font,
+                enabled=False
             )
             
             self.items_grid.addWidget(item_entry, row, 0)
@@ -1619,7 +1631,8 @@ class ItemsPanel(QFrame):
                 alignment=Qt.AlignmentFlag.AlignLeft,
                 label_size=75,
                 value_size=450,
-                custom_label_font=QFont("Inconsolata SemiCondensed")
+                custom_label_font=QFont("Inconsolata SemiCondensed"),
+                enabled=False
             )
             
             self.items_grid.addWidget(item_entry, row, 0)
@@ -1635,7 +1648,8 @@ class ItemsPanel(QFrame):
                 alignment=Qt.AlignmentFlag.AlignLeft,
                 label_size=75,
                 value_size=450,
-                custom_label_font=QFont("Inconsolata SemiCondensed")
+                custom_label_font=QFont("Inconsolata SemiCondensed"),
+                enabled=False
             )
             
             self.items_grid.addWidget(item_entry, row, 0)

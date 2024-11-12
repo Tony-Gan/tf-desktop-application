@@ -36,7 +36,6 @@ class TFPcBuilder(TFDraggableWindow):
 
         self.current_phase = PCBuilderPhase.PHASE1
         self.phase_status = {phase: PhaseStatus.NOT_START for phase in PCBuilderPhase}
-        self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
         self.phase_uis = {phase: None for phase in PCBuilderPhase}
 
         self.progress_ui = None

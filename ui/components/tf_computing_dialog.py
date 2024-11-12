@@ -142,9 +142,9 @@ class TFComputingDialog(QDialog):
             custom_edit_font=self.create_font(),
             alignment=Qt.AlignmentFlag.AlignLeft,
             number_only=number_only,
-            allow_decimal=allow_decimal
+            allow_decimal=allow_decimal,
+            enabled=True
         )
-        entry.value_field.setEnabled(True)
         return entry
     
     def create_option_entry(self, label_text: str, options: List[str], current_value: str = "",

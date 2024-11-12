@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QWidget
 
 from ui.components.tf_base_button import TFNextButton, TFResetButton
 from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
+from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
 
 
 class BasePhaseUI(QFrame):
@@ -14,9 +15,12 @@ class BasePhaseUI(QFrame):
         self.button_container = None
         self.reset_button = None
         self.next_button = None
+
+        self.has_activated = False
         
         self._setup_base_ui()
         self._setup_ui()
+        self.content_area.mousePressEvent = self._on_first_activate
         
     def _setup_base_ui(self):
         main_layout = QVBoxLayout(self)
@@ -28,8 +32,8 @@ class BasePhaseUI(QFrame):
         
         self.button_container = QFrame()
         button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(0, 0, 0, 0)
-        button_layout.setSpacing(10)
+        button_layout.setContentsMargins(0, 0, 20, 0)
+        button_layout.setSpacing(20)
         
         self.reset_button = TFResetButton(
             self,
@@ -40,10 +44,10 @@ class BasePhaseUI(QFrame):
             enabled=False,
             on_clicked=self._on_next_clicked
         )
-        
+
+        button_layout.addStretch(1)
         button_layout.addWidget(self.reset_button)
         self._setup_phase_buttons(button_layout)
-        button_layout.addStretch()
         button_layout.addWidget(self.next_button)
         
         self.button_container.setLayout(button_layout)
@@ -80,7 +84,12 @@ class BasePhaseUI(QFrame):
             self._perform_reset()
     
     def _perform_reset(self):
-        raise NotImplementedError("Child classes must implement _perform_reset")
+        self.has_activated = False
+        self.main_window.set_phase_status(self.phase, PhaseStatus.NOT_START)
+        self._reset_content()
+
+    def _reset_content(self):
+        raise NotImplementedError("Child classes must implement _reset_content")
     
     def _on_next_clicked(self):
         if self.main_window.can_proceed_to_next_phase():
@@ -91,6 +100,12 @@ class BasePhaseUI(QFrame):
 
     def get_content_layout(self) -> QVBoxLayout:
         return self.content_area.layout()
+
+    def _on_first_activate(self, event):
+        if not self.has_activated:
+            self.has_activated = True
+            self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETING)
+        QFrame.mousePressEvent(self.content_area, event)
 
 class Phase2UI(BasePhaseUI):
     def __init__(self, main_window, parent=None):
