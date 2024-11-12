@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame, QWidget
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame
+from PyQt6.QtCore import pyqtSignal, QCoreApplication
 
 from core.windows.tf_draggable_window import TFDraggableWindow
 from utils.registry.tf_tool_matadata import TFToolMetadata
@@ -97,17 +97,28 @@ class TFPcBuilder(TFDraggableWindow):
         for widget in self.phase_container.findChildren(QFrame):
             widget.deleteLater()
 
+        QCoreApplication.processEvents()
+
         self.phase_uis[self.current_phase] = None
+
         new_ui = self._create_phase_ui(self.current_phase)
         self.phase_uis[self.current_phase] = new_ui
 
-        if new_ui:
-            if self.phase_container.layout():
-                QWidget().setLayout(self.phase_container.layout())
+        if not new_ui:
+            return
 
-            layout = QVBoxLayout(self.phase_container)
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.addWidget(new_ui)
+        existing_layout = self.phase_container.layout()
+        if existing_layout:
+            while existing_layout.count():
+                item = existing_layout.takeAt(0)
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+            del existing_layout
+
+        layout = QVBoxLayout(self.phase_container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(new_ui)
 
         self._update_progress_display()
 
@@ -164,9 +175,7 @@ class TFPcBuilder(TFDraggableWindow):
 
         current_idx = list(PCBuilderPhase).index(self.current_phase)
         if current_idx < len(PCBuilderPhase) - 1:
-            self.phase_status[self.current_phase] = PhaseStatus.COMPLETED
             next_phase = list(PCBuilderPhase)[current_idx + 1]
-            self.phase_status[next_phase] = PhaseStatus.COMPLETING
 
             self.current_phase = next_phase
             self._load_phase_ui()
@@ -210,16 +219,20 @@ class TFPcBuilder(TFDraggableWindow):
 
     def _reset_progress(self):
         self.pc_data.clear()
+
         self.phase_status = {
             phase: PhaseStatus.NOT_START for phase in PCBuilderPhase
         }
         self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
-        self.current_phase = PCBuilderPhase.PHASE1
+        if self.current_phase != PCBuilderPhase.PHASE1:
+            self.current_phase = PCBuilderPhase.PHASE1
+            if self.phase_uis[PCBuilderPhase.PHASE1]:
+                self.phase_uis[PCBuilderPhase.PHASE1]._reset_content()
+                self.phase_container.layout().addWidget(self.phase_uis[PCBuilderPhase.PHASE1])
+        else:
+            if self.phase_uis[PCBuilderPhase.PHASE1]:
+                self.phase_uis[PCBuilderPhase.PHASE1]._reset_content()
 
-        for phase in PCBuilderPhase:
-            self.phase_uis[phase] = None
-
-        self._load_phase_ui()
         self._update_progress_display()
 
     def closeEvent(self, event):

@@ -1,10 +1,12 @@
 import os
 import shutil
 import random
+from datetime import datetime
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Dict, Tuple
 
+from PyQt6 import sip
 from PyQt6.QtWidgets import (QFrame, QVBoxLayout, QHBoxLayout, QGroupBox, QButtonGroup,
                            QLabel, QRadioButton, QGridLayout, QWidget, QFileDialog)
 from PyQt6.QtCore import Qt
@@ -16,6 +18,7 @@ from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_option_entry import TFOptionEntry
 from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
 from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
+from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
 from utils.validator.tf_validation_rules import TFValidationRule
 from utils.validator.tf_validator import TFValidator
 from utils.helper import resource_path
@@ -89,6 +92,7 @@ class Phase1UI(BasePhaseUI):
         self.skill_points_label = None
         self.custom_luck_checkbox = None
         self.remaining_points = 0
+        self.derived_entries = {}
         
         self.roll_button = None
         self.roll_results_frame = None
@@ -117,6 +121,8 @@ class Phase1UI(BasePhaseUI):
         
         upper_frame.setLayout(upper_layout)
         content_layout.addWidget(upper_frame)
+
+        content_layout.addWidget(self._create_derived_stats_group())
         
         stats_frame = QFrame()
         stats_layout = QHBoxLayout()
@@ -192,22 +198,24 @@ class Phase1UI(BasePhaseUI):
                 required=True
             )
         }
-        
-        for stat in ['strength', 'constitution', 'size', 'dexterity', 
-                    'appearance', 'intelligence', 'power', 'education']:
-            rules[f'basic_stats.{stat}'] = TFValidationRule(
-                type_=int,
-                required=True,
-                min_val=self.config.stat_lower_limit,
-                max_val=self.config.stat_upper_limit
-            )
-        
-        rules['basic_stats.luck'] = TFValidationRule(
-            type_=int,
-            required=False,
-            min_val=self.config.stat_lower_limit,
-            max_val=self.config.stat_upper_limit
-        )
+
+        if self.config.is_points_mode():
+            for stat in ['strength', 'constitution', 'size', 'dexterity',
+                         'appearance', 'intelligence', 'power', 'education']:
+                rules[f'basic_stats.{stat}'] = TFValidationRule(
+                    type_=int,
+                    required=True,
+                    min_val=self.config.stat_lower_limit,
+                    max_val=self.config.stat_upper_limit
+                )
+
+            if self.config.allow_custom_luck:
+                rules['basic_stats.luck'] = TFValidationRule(
+                    type_=int,
+                    required=True,
+                    min_val=self.config.stat_lower_limit,
+                    max_val=self.config.stat_upper_limit
+                )
         
         self.validator = TFValidator()
         self.validator.add_rules(rules)
@@ -292,13 +300,54 @@ class Phase1UI(BasePhaseUI):
 
         self._update_occupation_formula()
         return group
-    
+
+    def _create_derived_stats_group(self) -> QFrame:
+        frame = QFrame()
+        layout = QHBoxLayout(frame)
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(10)
+
+        derived_stats = [
+            ('HP', 'Hit Points'),
+            ('MP', 'Magic Points'),
+            ('SAN', 'Sanity'),
+            ('MOV', 'Movement Rate'),
+            ('DB', 'Damage Bonus'),
+            ('Build', 'Build')
+        ]
+
+        for stat_key, label_text in derived_stats:
+            entry = TFValueEntry(
+                label_text + ":",
+                value_size=60,
+                number_only=True
+            )
+            entry.value_field.setEnabled(False)
+            entry.set_value("0")
+            self.derived_entries[stat_key] = entry
+            layout.addWidget(entry)
+
+        return frame
+
     def _update_stats_display(self):
         if self.stats_left_panel.layout():
-            QWidget().setLayout(self.stats_left_panel.layout())
+            while self.stats_left_panel.layout().count():
+                item = self.stats_left_panel.layout().takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
+            sip.delete(self.stats_left_panel.layout())
+
         if self.stats_right_panel.layout():
-            QWidget().setLayout(self.stats_right_panel.layout())
-            
+            while self.stats_right_panel.layout().count():
+                item = self.stats_right_panel.layout().takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
+            sip.delete(self.stats_right_panel.layout())
+
+        self.stat_entries.clear()
+        self.points_label = None
+        self.skill_points_label = None
+
         if self.config.is_points_mode():
             self._setup_points_mode()
         else:
@@ -329,7 +378,7 @@ class Phase1UI(BasePhaseUI):
         )
         left_layout.addWidget(self.custom_luck_label)
 
-        self.skill_points_label = QLabel()
+        self.skill_points_label = QLabel("")
         left_layout.addWidget(self.skill_points_label)
 
         left_layout.addStretch()
@@ -356,6 +405,9 @@ class Phase1UI(BasePhaseUI):
             right_layout.addWidget(entry, i // 3, i % 3)
 
     def _setup_destiny_mode(self):
+        self.points_label = None
+        self.skill_points_label = None
+
         left_layout = QVBoxLayout()
         left_layout.setContentsMargins(5, 5, 5, 5)
         
@@ -376,7 +428,7 @@ class Phase1UI(BasePhaseUI):
         self.roll_results_frame = QFrame()
         right_layout.addWidget(self.roll_results_frame)
         right_layout.addStretch()
-        
+
         self.stats_right_panel.setLayout(right_layout)
     
     def _on_avatar_upload(self):
@@ -391,7 +443,7 @@ class Phase1UI(BasePhaseUI):
             return
 
         try:
-            avatar_dir = Path(resource_path("resources/coc/pcs/avatars"))
+            avatar_dir = Path(resource_path("resources/data/coc/pcs/avatars"))
             avatar_dir.mkdir(parents=True, exist_ok=True)
 
             avatar_filename = os.path.basename(file_path)
@@ -424,7 +476,7 @@ class Phase1UI(BasePhaseUI):
             relative_path = str(avatar_path.relative_to(Path.cwd()))
             if 'metadata' not in self.main_window.pc_data:
                 self.main_window.pc_data['metadata'] = {}
-            self.main_window.pc_data['metadata']['avatar'] = relative_path
+            self.main_window.pc_data['metadata']['avatar_file'] = relative_path
 
         except Exception as e:
             self.main_window.app.show_warning(
@@ -457,6 +509,70 @@ class Phase1UI(BasePhaseUI):
         interest_points = stats['INT'] * 2
 
         return occupation_points, interest_points
+
+    def _calculate_derived_stats(self) -> dict:
+        try:
+            con = int(self.stat_entries['CON'].get_value())
+            siz = int(self.stat_entries['SIZ'].get_value())
+            pow_stat = int(self.stat_entries['POW'].get_value())
+            str_stat = int(self.stat_entries['STR'].get_value())
+            dex = int(self.stat_entries['DEX'].get_value())
+
+            hp = (con + siz) // 10
+            self.derived_entries['HP'].set_value(str(hp))
+
+            mp = pow_stat // 5
+            self.derived_entries['MP'].set_value(str(mp))
+
+            san = pow_stat
+            self.derived_entries['SAN'].set_value(str(san))
+
+            if dex < siz and str_stat < siz:
+                mov = 7
+            elif dex > siz and str_stat > siz:
+                mov = 9
+            else:
+                mov = 8
+            self.derived_entries['MOV'].set_value(str(mov))
+
+            str_siz = str_stat + siz
+
+            if 2 <= str_siz <= 64:
+                build = -2
+                db = "-2"
+            elif 65 <= str_siz <= 84:
+                build = -1
+                db = "-1"
+            elif 85 <= str_siz <= 124:
+                build = 0
+                db = "0"
+            elif 125 <= str_siz <= 164:
+                build = 1
+                db = "+1d4"
+            elif 165 <= str_siz <= 204:
+                build = 2
+                db = "+1d6"
+            else:
+                build = 3
+                db = "+2d6"
+
+            self.derived_entries['DB'].set_value(db)
+            self.derived_entries['Build'].set_value(str(build))
+
+            return {
+                "hp_max": hp,
+                "hp_current": hp,
+                "mp_max": mp,
+                "mp_current": mp,
+                "san_max": san,
+                "san_current": san,
+                "movement_rate": mov,
+                "damage_bonus": db,
+                "build": build
+            }
+
+        except (ValueError, KeyError) as e:
+            return
 
     def _on_roll_stats(self):
         if self.roll_results_frame.layout():
@@ -565,24 +681,37 @@ class Phase1UI(BasePhaseUI):
         self.points_label.setText(f"Remaining Points: {self.remaining_points}")
 
     def _on_calculate(self):
+        if not self.config.allow_custom_luck:
+            luck_value = (sum(random.randint(1, 6) for _ in range(2)) + 6) * 5
+            self.stat_entries['LUCK'].set_value(str(luck_value))
+
         if not self._validate_all_fields():
             return
 
         self._perform_age_calculation()
+        derived_stats = self._calculate_derived_stats()
+        if derived_stats is None:
+            return
 
-        occupation_points, interest_points = self._calculate_skill_points()
-        self.skill_points_label.setText(
-            f"Occupation Skill Points: {occupation_points}\n"
-            f"Interest Skill Points: {interest_points}"
-        )
+        if self.config.is_points_mode():
+            occupation_points, interest_points = self._calculate_skill_points()
+            if self.skill_points_label:
+                self.skill_points_label.setText(
+                    f"Occupation Skill Points: {occupation_points}\n"
+                    f"Interest Skill Points: {interest_points}"
+                )
 
         self._save_data_to_pc_data()
-
         self._lock_fields()
+
         self.next_button.setEnabled(True)
+        self.calculate_button.setEnabled(False)
+
         if self.config.allow_stat_exchange:
             self.exchange_button.setEnabled(True)
-        
+
+        self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETED)
+
     def _on_exchange(self):
         current_stats = {
             stat: int(entry.get_value())
@@ -603,8 +732,61 @@ class Phase1UI(BasePhaseUI):
             self.remaining_exchange_times -= 1
             if self.remaining_exchange_times == 0:
                 self.exchange_button.setEnabled(False)
-            
-            self._save_data_to_pc_data()
+
+            self._calculate_derived_stats()
+
+    def _on_next_clicked(self):
+        if not self.main_window.can_proceed_to_next_phase():
+            return
+
+        derived_stats = self._calculate_derived_stats()
+        if derived_stats is None:
+            return
+
+        current_time = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        if 'metadata' not in self.main_window.pc_data:
+            self.main_window.pc_data['metadata'] = {}
+
+        metadata = self.main_window.pc_data['metadata']
+        metadata.update({
+            'player_name': self.player_name.get_value(),
+            'campaign_date': self.campaign_date.get_value(),
+            'era': self.era.get_value(),
+            'updated_at': current_time
+        })
+
+        if 'created_at' not in metadata:
+            metadata['created_at'] = current_time
+
+        if 'avatar_file' not in metadata:
+            metadata['avatar_file'] = ""
+
+        self.main_window.pc_data['personal_info'] = {
+            'name': self.char_name.get_value(),
+            'age': int(self.age.get_value()),
+            'occupation': self.occupation.get_value(),
+            'residence': self.residence.get_value(),
+            'birthplace': self.birthplace.get_value(),
+            'nationality': ""
+        }
+
+        self.main_window.pc_data['basic_stats'] = {
+            'strength': int(self.stat_entries['STR'].get_value()),
+            'constitution': int(self.stat_entries['CON'].get_value()),
+            'size': int(self.stat_entries['SIZ'].get_value()),
+            'dexterity': int(self.stat_entries['DEX'].get_value()),
+            'appearance': int(self.stat_entries['APP'].get_value()),
+            'intelligence': int(self.stat_entries['INT'].get_value()),
+            'power': int(self.stat_entries['POW'].get_value()),
+            'education': int(self.stat_entries['EDU'].get_value()),
+            'luck': int(self.stat_entries['LUCK'].get_value())
+        }
+
+        self.main_window.pc_data['status'] = derived_stats
+
+        super()._on_next_clicked()
+
+        print(self.main_window.pc_data)
     
     def _perform_age_calculation(self):
         age = int(self.age.get_value())
@@ -704,8 +886,11 @@ class Phase1UI(BasePhaseUI):
                 'occupation': self.occupation.get_value(),
                 'residence': self.residence.get_value(),
                 'birthplace': self.birthplace.get_value()
-            },
-            'basic_stats': {
+            }
+        }
+
+        if self.config.is_points_mode():
+            data['basic_stats'] = {
                 'strength': self.stat_entries['STR'].get_value(),
                 'constitution': self.stat_entries['CON'].get_value(),
                 'size': self.stat_entries['SIZ'].get_value(),
@@ -715,22 +900,21 @@ class Phase1UI(BasePhaseUI):
                 'power': self.stat_entries['POW'].get_value(),
                 'education': self.stat_entries['EDU'].get_value()
             }
-        }
 
-        if self.config.allow_mixed_points:
-            data['basic_stats']['luck'] = self.stat_entries['LUCK'].get_value()
+            if self.config.allow_custom_luck:
+                data['basic_stats']['luck'] = self.stat_entries['LUCK'].get_value()
+
+            if self.remaining_points != 0:
+                self._show_validation_error(
+                    f"Points allocation must be exact. "
+                    f"Currently {abs(self.remaining_points)} points "
+                    f"{'over' if self.remaining_points < 0 else 'remaining'}"
+                )
+                return False
 
         errors = self.validator.validate_dict(data, is_new=True)
         if errors:
             self._show_validation_error("\n".join(errors))
-            return False
-            
-        if self.config.is_points_mode() and self.remaining_points != 0:
-            self._show_validation_error(
-                f"Points allocation must be exact. "
-                f"Currently {abs(self.remaining_points)} points "
-                f"{'over' if self.remaining_points < 0 else 'remaining'}"
-            )
             return False
             
         return True
@@ -802,7 +986,29 @@ class Phase1UI(BasePhaseUI):
         self.residence.set_value("")
         self.birthplace.set_value("")
 
-        self._update_stats_display()
+        self.age.value_field.setEnabled(True)
+
+        for entry in self.derived_entries.values():
+            entry.set_value("")
+
+        if self.config.is_points_mode():
+            self.remaining_points = self.config.points_available
+            if self.points_label:
+                self.points_label.setText(f"Remaining Points: {self.remaining_points}")
+            for stat in ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUCK']:
+                if stat in self.stat_entries:
+                    self.stat_entries[stat].set_value("")
+                    if stat != 'LUCK':
+                        self.stat_entries[stat].value_field.setEnabled(True)
+        else:
+            self.roll_button.setEnabled(True)
+            if self.roll_results_frame.layout():
+                while self.roll_results_frame.layout().count():
+                    item = self.roll_results_frame.layout().takeAt(0)
+                    if item.widget():
+                        item.widget().deleteLater()
+            for stat in self.stat_entries.values():
+                stat.value_field.setEnabled(False)
 
         if self.skill_points_label:
             self.skill_points_label.setText("")
@@ -810,6 +1016,8 @@ class Phase1UI(BasePhaseUI):
         self.calculate_button.setEnabled(True)
         self.exchange_button.setEnabled(False)
         self.next_button.setEnabled(False)
+
+        super()._reset_content()
 
     def _show_validation_error(self, message: str):
         self.main_window.app.show_warning(

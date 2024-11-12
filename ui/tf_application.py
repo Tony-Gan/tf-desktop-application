@@ -1,6 +1,6 @@
 from typing import List
 
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtCore import QTranslator
 
 from core.database.tf_database import TFDatabase
@@ -304,6 +304,49 @@ class TFApplication(QApplication):
             
             self.show_message(message, colour='red', display_time=5000)
             self.display_output(f"CRITICAL ERROR: {message}")
+
+    def show_custom(
+            self,
+            title: str,
+            message: str,
+            icon=None,
+            button_text: str = "OK",
+            parent=None
+    ) -> None:
+        """
+        Show a custom dialog box with specified icon and a single button.
+
+        Args:
+            title (str): Dialog title
+            message (str): Message to display
+            icon: Icon to display. Can be either:
+                - QMessageBox.Icon enum value for standard icons
+                - str: Path to custom icon file
+                - None: No icon
+            button_text (str, optional): Text for the confirm button.
+                Defaults to "OK".
+            parent: Parent widget. If None, uses active window
+
+        Example:
+            >>> app = TFApplication.instance()
+            # Using standard icon
+            >>> app.show_custom(
+            ...     "Notice",
+            ...     "Operation completed successfully",
+            ...     icon=QMessageBox.Icon.Information,
+            ...     button_text="Confirm"
+            ... )
+            # Using custom icon
+            >>> app.show_custom(
+            ...     "Custom Notice",
+            ...     "Operation completed successfully",
+            ...     icon="path/to/icon.png",
+            ...     button_text="Got it"
+            ... )
+        """
+        if parent is None:
+            parent = self.activeWindow()
+        return self._message_box.custom(parent, title, message, icon, button_text)
 
     def show_question(
         self,

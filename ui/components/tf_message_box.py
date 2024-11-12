@@ -10,6 +10,45 @@ class TFMessageBox:
     This class provides a consistent interface for showing different types of
     message boxes throughout the application.
     """
+
+    @staticmethod
+    def custom(
+            parent,
+            title: str,
+            message: str,
+            icon=None,
+            button_text: str = "OK"
+    ) -> None:
+        """Show a custom message box with specified icon and a single button.
+
+        Args:
+            parent: Parent widget
+            title (str): Window title
+            message (str): Message to display
+            icon: Icon to display. Can be either:
+                - QMessageBox.Icon enum value
+                - str: Path to icon file
+                - None: No icon
+            button_text (str, optional): Text for the confirm button.
+                Defaults to "OK".
+        """
+        msg_box = QMessageBox(parent)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+
+        if icon is not None:
+            if isinstance(icon, QMessageBox.Icon):
+                msg_box.setIcon(icon)
+            elif isinstance(icon, str):
+                from PyQt6.QtGui import QPixmap
+                pixmap = QPixmap(icon)
+                if not pixmap.isNull():
+                    scaled_pixmap = pixmap.scaled(32, 32)
+                    msg_box.setIconPixmap(scaled_pixmap)
+
+        msg_box.addButton(button_text, QMessageBox.ButtonRole.AcceptRole)
+
+        msg_box.exec()
     
     @staticmethod
     def question(

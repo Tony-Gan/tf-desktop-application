@@ -275,7 +275,7 @@ class TFResetButton(TFBaseButton):
         height: int = 30,
         font_family: str = "Inconsolata SemiCondensed",
         font_size: int = 10,
-        enabled:bool = False,
+        enabled:bool = True,
         on_clicked=None, 
         tooltip="Reset to default"
     ):
