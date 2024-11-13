@@ -24,13 +24,16 @@ class BasePhaseUI(QFrame):
 
     def _setup_base_ui(self):
         main_layout = QVBoxLayout(self)
+        main_layout.setObjectName("main_layout")
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.setSpacing(10)
 
         self.content_area = QFrame()
+        self.content_area.setObjectName("content_area")
         main_layout.addWidget(self.content_area, 9)
 
         self.button_container = QFrame()
+        self.button_container.setObjectName("button_container")
         button_layout = QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 20, 0)
         button_layout.setSpacing(20)
@@ -41,7 +44,8 @@ class BasePhaseUI(QFrame):
         )
         self.next_button = TFNextButton(
             self,
-            enabled=False,
+            # TODO: TEMP DEBUG
+            enabled=True,
             on_clicked=self._on_next_clicked
         )
 

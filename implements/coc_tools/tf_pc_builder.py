@@ -118,11 +118,12 @@ class TFPcBuilder(TFDraggableWindow):
         new_layout = QVBoxLayout()
         new_layout.setContentsMargins(0, 0, 0, 0)
 
-        new_layout.addWidget(new_ui)
-
         if self.phase_container.layout():
             QWidget().setLayout(self.phase_container.layout())
         self.phase_container.setLayout(new_layout)
+
+        self._clear_content_area(self.phase_container)
+        new_layout.addWidget(new_ui)
 
         for widget in old_widgets:
             widget.deleteLater()
@@ -130,6 +131,23 @@ class TFPcBuilder(TFDraggableWindow):
         new_ui.show()
 
         QCoreApplication.processEvents()
+
+    def _clear_content_area(self, widget):
+        if widget.objectName() == "content_area" and isinstance(widget, QFrame):
+            if widget.layout():
+                while widget.layout().count():
+                    item = widget.layout().takeAt(0)
+                    child_widget = item.widget()
+                    if child_widget:
+                        child_widget.deleteLater()
+                QWidget().setLayout(widget.layout())
+            return True 
+
+        for child in widget.findChildren(QWidget):
+            if self._clear_content_area(child):
+                return True
+
+        return False
 
     def _update_progress_display(self):
         if self.progress_ui:
@@ -176,7 +194,8 @@ class TFPcBuilder(TFDraggableWindow):
             )
 
     def can_proceed_to_next_phase(self):
-        return self.phase_status[self.current_phase] == PhaseStatus.COMPLETED
+        # TODO: TEMP DEBUG
+        return self.phase_status[self.current_phase] == PhaseStatus.COMPLETED or 1 == 1
 
     def proceed_to_next_phase(self) -> bool:
         if not self.can_proceed_to_next_phase():

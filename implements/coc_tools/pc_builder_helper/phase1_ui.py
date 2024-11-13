@@ -28,6 +28,7 @@ from utils.helper import resource_path
 class Phase1UI(BasePhaseUI):
     def __init__(self, main_window, parent=None):
         self.config = main_window.config
+        self.main_window = main_window
         
         self.avatar_label = None
         self.avatar_button = None
@@ -72,7 +73,6 @@ class Phase1UI(BasePhaseUI):
 
     def _setup_ui(self):
         content_layout = QVBoxLayout()
-        content_layout.setParent(self.main_window)
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(10)
         
@@ -937,61 +937,60 @@ class Phase1UI(BasePhaseUI):
             self._calculate_derived_stats()
 
     def _on_next_clicked(self):
-        if not self._validate_all_fields():
-            return
+        # if not self._validate_all_fields():
+        #     return
         
-        if not self.main_window.can_proceed_to_next_phase():
-            return
+        # if not self.main_window.can_proceed_to_next_phase():
+        #     return
 
-        derived_stats = self._calculate_derived_stats()
-        if derived_stats is None:
-            return
+        # derived_stats = self._calculate_derived_stats()
+        # if derived_stats is None:
+        #     return
 
-        current_time = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-        if 'metadata' not in self.main_window.pc_data:
-            self.main_window.pc_data['metadata'] = {}
+        # current_time = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        # if 'metadata' not in self.main_window.pc_data:
+        #     self.main_window.pc_data['metadata'] = {}
 
-        metadata = self.main_window.pc_data['metadata']
-        metadata.update({
-            'player_name': self.player_name.get_value(),
-            'campaign_date': self.campaign_date.get_value(),
-            'era': self.era.get_value(),
-            'updated_at': current_time
-        })
+        # metadata = self.main_window.pc_data['metadata']
+        # metadata.update({
+        #     'player_name': self.player_name.get_value(),
+        #     'campaign_date': self.campaign_date.get_value(),
+        #     'era': self.era.get_value(),
+        #     'updated_at': current_time
+        # })
 
-        if 'created_at' not in metadata:
-            metadata['created_at'] = current_time
+        # if 'created_at' not in metadata:
+        #     metadata['created_at'] = current_time
 
-        if 'avatar_file' not in metadata:
-            metadata['avatar_file'] = ""
+        # if 'avatar_file' not in metadata:
+        #     metadata['avatar_file'] = ""
 
-        occupation_points, interest_points = self._calculate_skill_points()
+        # occupation_points, interest_points = self._calculate_skill_points()
 
-        self.main_window.pc_data['personal_info'] = {
-            'name': self.char_name.get_value(),
-            'age': int(self.age.get_value()),
-            'occupation': self.occupation.get_value(),
-            'residence': self.residence.get_value(),
-            'birthplace': self.birthplace.get_value(),
-            'nationality': "",
-            'occupation_skill_points': occupation_points,
-            'interest_skill_points': interest_points
-        }
+        # self.main_window.pc_data['personal_info'] = {
+        #     'name': self.char_name.get_value(),
+        #     'age': int(self.age.get_value()),
+        #     'occupation': self.occupation.get_value(),
+        #     'residence': self.residence.get_value(),
+        #     'birthplace': self.birthplace.get_value(),
+        #     'nationality': "",
+        #     'occupation_skill_points': occupation_points,
+        #     'interest_skill_points': interest_points
+        # }
 
-        self.main_window.pc_data['basic_stats'] = {
-            'strength': int(self.stat_entries['STR'].get_value()),
-            'constitution': int(self.stat_entries['CON'].get_value()),
-            'size': int(self.stat_entries['SIZ'].get_value()),
-            'dexterity': int(self.stat_entries['DEX'].get_value()),
-            'appearance': int(self.stat_entries['APP'].get_value()),
-            'intelligence': int(self.stat_entries['INT'].get_value()),
-            'power': int(self.stat_entries['POW'].get_value()),
-            'education': int(self.stat_entries['EDU'].get_value()),
-            'luck': int(self.stat_entries['LUK'].get_value())
-        }
+        # self.main_window.pc_data['basic_stats'] = {
+        #     'strength': int(self.stat_entries['STR'].get_value()),
+        #     'constitution': int(self.stat_entries['CON'].get_value()),
+        #     'size': int(self.stat_entries['SIZ'].get_value()),
+        #     'dexterity': int(self.stat_entries['DEX'].get_value()),
+        #     'appearance': int(self.stat_entries['APP'].get_value()),
+        #     'intelligence': int(self.stat_entries['INT'].get_value()),
+        #     'power': int(self.stat_entries['POW'].get_value()),
+        #     'education': int(self.stat_entries['EDU'].get_value()),
+        #     'luck': int(self.stat_entries['LUK'].get_value())
+        # }
 
-        self.main_window.pc_data['status'] = derived_stats
-
+        # self.main_window.pc_data['status'] = derived_stats
         super()._on_next_clicked()
     
     def _perform_age_calculation(self):

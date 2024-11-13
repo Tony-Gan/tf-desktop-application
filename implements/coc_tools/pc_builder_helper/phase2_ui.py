@@ -9,6 +9,8 @@ from utils.validator.tf_validator import TFValidator
 class Phase2UI(BasePhaseUI):
     def __init__(self, main_window, parent=None):
         self.config = main_window.config
+        self.main_window = main_window
+
         self.check_button = None
         self.previous_button = None
 
@@ -22,7 +24,6 @@ class Phase2UI(BasePhaseUI):
         content_layout = QHBoxLayout()
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(10)
-        self.content_area.setLayout(content_layout)
 
     def _setup_phase_buttons(self, button_layout):
         self.check_button = TFBaseButton(
