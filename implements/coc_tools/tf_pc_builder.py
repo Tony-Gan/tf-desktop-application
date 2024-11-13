@@ -14,7 +14,9 @@ from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
 from implements.coc_tools.pc_builder_helper.progress_container import ProgressContainer
 from implements.coc_tools.pc_builder_helper.phase1_ui import Phase1UI
 from implements.coc_tools.pc_builder_helper.phase2_ui import Phase2UI
-from implements.coc_tools.pc_builder_helper.phase_ui import Phase3UI, Phase4UI, Phase5UI
+from implements.coc_tools.pc_builder_helper.phase3_ui import Phase3UI
+from implements.coc_tools.pc_builder_helper.phase4_ui import Phase4UI
+from implements.coc_tools.pc_builder_helper.phase5_ui import Phase5UI
 
 
 class TFPcBuilder(TFDraggableWindow):
@@ -102,13 +104,6 @@ class TFPcBuilder(TFDraggableWindow):
         return None
 
     def load_phase_ui(self):
-        old_widgets = []
-        if self.phase_container.layout():
-            while self.phase_container.layout().count():
-                item = self.phase_container.layout().takeAt(0)
-                if item.widget():
-                    old_widgets.append(item.widget())
-
         new_ui = self._create_phase_ui(self.current_phase)
         self.phase_uis[self.current_phase] = new_ui
 
@@ -117,37 +112,15 @@ class TFPcBuilder(TFDraggableWindow):
 
         new_layout = QVBoxLayout()
         new_layout.setContentsMargins(0, 0, 0, 0)
+        new_layout.addWidget(new_ui)
 
         if self.phase_container.layout():
             QWidget().setLayout(self.phase_container.layout())
         self.phase_container.setLayout(new_layout)
 
-        self._clear_content_area(self.phase_container)
-        new_layout.addWidget(new_ui)
-
-        for widget in old_widgets:
-            widget.deleteLater()
-
         new_ui.show()
 
         QCoreApplication.processEvents()
-
-    def _clear_content_area(self, widget):
-        if widget.objectName() == "content_area" and isinstance(widget, QFrame):
-            if widget.layout():
-                while widget.layout().count():
-                    item = widget.layout().takeAt(0)
-                    child_widget = item.widget()
-                    if child_widget:
-                        child_widget.deleteLater()
-                QWidget().setLayout(widget.layout())
-            return True 
-
-        for child in widget.findChildren(QWidget):
-            if self._clear_content_area(child):
-                return True
-
-        return False
 
     def _update_progress_display(self):
         if self.progress_ui:

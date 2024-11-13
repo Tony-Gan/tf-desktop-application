@@ -4,7 +4,7 @@ import copy
 from typing import Dict, Tuple
 from datetime import datetime, timezone
 
-from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QLabel, QFrame, QComboBox,QGridLayout,
+from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QLabel, QFrame,QGridLayout,
                              QTextEdit, QFileDialog, QWidget, QLineEdit, QScrollArea)
 from PyQt6.QtCore import Qt, QRegularExpression, QTimer, pyqtSignal, QEvent
 from PyQt6.QtGui import QPixmap, QFont, QKeySequence, QShortcut, QRegularExpressionValidator

@@ -1,7 +1,6 @@
 import os
 import shutil
 import random
-from datetime import datetime
 from pathlib import Path
 from typing import Tuple
 
@@ -19,7 +18,6 @@ from ui.components.tf_option_entry import TFOptionEntry
 from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
 from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
 from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
-from implements.coc_tools.pc_builder_helper.occupation import OCCUPATIONS
 from utils.validator.tf_validation_rules import TFValidationRule
 from utils.validator.tf_validator import TFValidator
 from utils.helper import resource_path
@@ -116,12 +114,20 @@ class Phase1UI(BasePhaseUI):
         self._update_stats_display()
 
     def _setup_phase_buttons(self, button_layout: QHBoxLayout):
+        self.occupation_list_button = TFBaseButton(
+            "Occupation List",
+            self,
+            height=30,
+            on_clicked=self._on_occupation_list_clicked
+        )
+        self.occupation_list_button.setObjectName("occupation_list_button")
         self.calculate_button = TFBaseButton(
             "Calculate",
             self,
             height=30,
             on_clicked=self._on_calculate
         )
+        self.calculate_button.setObjectName("calculate_button")
         self.exchange_button = TFBaseButton(
             "Stat Exchange",
             self,
@@ -129,7 +135,9 @@ class Phase1UI(BasePhaseUI):
             enabled=False,
             on_clicked=self._on_exchange
         )
-        
+        self.exchange_button.setObjectName("exchange_button")
+
+        button_layout.addWidget(self.occupation_list_button)
         button_layout.addWidget(self.calculate_button)
         button_layout.addWidget(self.exchange_button)
 
@@ -175,10 +183,6 @@ class Phase1UI(BasePhaseUI):
                 required=True,
                 min_val=12,
                 max_val=80
-            ),
-            'personal_info.occupation': TFValidationRule(
-                type_=str,
-                required=True
             ),
             'personal_info.residence': TFValidationRule(
                 type_=str,
@@ -308,7 +312,7 @@ class Phase1UI(BasePhaseUI):
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         
-        occupation_options = ["None"] + sorted([str(occ) for occ in OCCUPATIONS])
+        occupation_options = ["None"] + sorted([occ.name for occ in self.occupation_list])
         self.occupation = TFOptionEntry(
             "Occupation:", 
             occupation_options, 
@@ -414,7 +418,7 @@ class Phase1UI(BasePhaseUI):
 
     def _update_occupation_formula(self):
         current_text = self.occupation.get_value()
-        selected_occupation = next((occ for occ in OCCUPATIONS if str(occ) == current_text), None)
+        selected_occupation = next((occ for occ in self.occupation_list if occ.name == current_text), None)
         if selected_occupation:
             formula = selected_occupation.skill_points_formula
             if 'MAX' in formula:
@@ -656,7 +660,7 @@ class Phase1UI(BasePhaseUI):
         }
 
         current_occupation = next(
-            (occ for occ in OCCUPATIONS if str(occ) == self.occupation.get_value()),
+            (occ for occ in self.occupation_list if occ.name == self.occupation.get_value()),
             None
         )
 
@@ -935,6 +939,9 @@ class Phase1UI(BasePhaseUI):
                 self.exchange_button.setEnabled(False)
 
             self._calculate_derived_stats()
+
+    def _on_occupation_list_clicked(self):
+        print("Yo!")
 
     def _on_next_clicked(self):
         # if not self._validate_all_fields():

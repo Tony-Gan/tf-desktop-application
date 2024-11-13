@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, 
                              QFrame, QLabel, QLineEdit, QCheckBox, QScrollArea, QWidget)
 from PyQt6.QtCore import Qt, QRegularExpression
@@ -50,12 +50,25 @@ class TFComputingDialog(QDialog):
     DEFAULT_FONT_SIZE = 10
     TITLE_FONT_SIZE = 11
     
-    def __init__(self, title: str, parent=None):
+    def __init__(self, title: str, parent=None, button_config: List[Dict] = None):
+        """
+        Initialize the dialog with optional custom button configuration.
+
+        Args:
+            title (str): Title of the dialog window.
+            parent (QWidget, optional): Parent widget. Defaults to None.
+            button_config (List[Dict], optional): Custom button configuration.
+                Each button is defined by a dictionary with keys:
+                - 'text': Text displayed on the button.
+                - 'callback': Callable function to execute on click.
+                - 'role': Role of the button ('accept', 'reject', or None).
+        """
         super().__init__(parent)
         self.setWindowTitle(title)
         self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
         self._result = None
         self.validator = TFValidator()
+        self.button_config = button_config or self.default_button_config()
         self.setup_ui()
         
     def setup_ui(self):
@@ -70,19 +83,33 @@ class TFComputingDialog(QDialog):
         
         button_layout = QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 0, 0)
-        
-        self.ok_button = QPushButton("OK")
-        self.ok_button.setFont(self.create_font())
-        self.ok_button.clicked.connect(self._on_ok_clicked)
-        
-        self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.setFont(self.create_font())
-        self.cancel_button.clicked.connect(self.reject)
-        
-        button_layout.addWidget(self.ok_button)
-        button_layout.addWidget(self.cancel_button)
-        
+
+        for button in self.button_config:
+            btn = QPushButton(button["text"])
+            btn.setFont(self.create_font())
+            if "callback" in button and callable(button["callback"]):
+                btn.clicked.connect(button["callback"])
+
+            if button.get("role") == "accept":
+                btn.clicked.connect(self.accept)
+            elif button.get("role") == "reject":
+                btn.clicked.connect(self.reject)
+
+            button_layout.addWidget(btn)
+
         self.main_layout.addLayout(button_layout)
+
+    def default_button_config(self) -> List[Dict]:
+        """
+        Provides the default button configuration with OK and Cancel buttons.
+
+        Returns:
+            List[Dict]: Default button configuration.
+        """
+        return [
+            {"text": "OK", "callback": self._on_ok_clicked, "role": "accept"},
+            {"text": "Cancel", "callback": self.reject, "role": "reject"}
+        ]
 
     def create_font(self, size=None, bold=False) -> QFont:
         """
@@ -238,7 +265,7 @@ class TFComputingDialog(QDialog):
     def create_checkbox(self, text: str) -> QCheckBox:
         """
         Create a standardized checkbox with consistent styling.
-        
+
         Creates a checkbox with the specified text and standard font settings.
 
         Args:
@@ -436,7 +463,7 @@ class TFComputingDialog(QDialog):
         """
         Static method to create dialog and get result.
 
-        Creates and shows dialog modally, returning the result if accepted.
+        Creates and shows dialog modal, returning the result if accepted.
 
         Args:
             parent: Parent widget for the dialog.
