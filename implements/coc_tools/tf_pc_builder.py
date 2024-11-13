@@ -25,7 +25,7 @@ class TFPcBuilder(TFDraggableWindow):
         menu_path="Tools/COC",
         menu_title="Add PC Builder",
         window_title="PC Builder",
-        window_size=(960, 600),
+        window_size=(1080, 640),
         description="PC builder",
         max_instances=1
     )

@@ -1,29 +1,36 @@
 [
     {
+        "name": "AAAAAA",
+        "skill_points_formula": "EDU*4",
+        "occupation_skills": "history,library_use,language:any,art:writing,psychology,fighting:any,interpersonal_skill:any",
+        "category": "Academic",
+        "credit_rating": "10-40"
+    },
+    {
         "name": "Historian",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "history,library_use,language:any,art:writing,credit_rating,psychology",
+        "occupation_skills": "history,library_use,language:any,art:writing,psychology",
         "category": "Academic",
         "credit_rating": "10-40"
     },
     {
         "name": "Art Dealer",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "appraise,art:any,psychology,persuade,credit_rating,language:any",
+        "occupation_skills": "appraise,art:any,psychology,persuade,language:any",
         "category": "Business",
         "credit_rating": "20-70"
     },
     {
         "name": "Banker",
         "skill_points_formula": "EDU*4+APP*1",
-        "occupation_skills": "accounting,credit_rating,persuade,psychology,law,language:any",
+        "occupation_skills": "accounting,persuade,psychology,law,language:any",
         "category": "Business",
         "credit_rating": "30-80"
     },
     {
         "name": "Chef",
         "skill_points_formula": "EDU*2+DEX*2",
-        "occupation_skills": "art:cooking,psychology,persuade,credit_rating,natural_world,spot_hidden",
+        "occupation_skills": "art:cooking,psychology,persuade,natural_world,spot_hidden",
         "category": "Service Industry",
         "credit_rating": "9-30"
     },
@@ -58,7 +65,7 @@
     {
         "name": "Medium",
         "skill_points_formula": "POW*3+APP*1",
-        "occupation_skills": "occult,psychology,persuade,fast_talk,intimidate:any,spot_hidden",
+        "occupation_skills": "occult,psychology,persuade,fast_talk,interpersonal_skill:any,spot_hidden",
         "category": "Occult & Mystic",
         "credit_rating": "9-40"
     },
@@ -86,14 +93,14 @@
     {
         "name": "Soldier of Fortune",
         "skill_points_formula": "EDU*2+MAX(STR,DEX,CON)*2",
-        "occupation_skills": "fighting:brawl,fighting:firearms,first_aid,stealth,navigate,intimidate:any",
+        "occupation_skills": "fighting:brawl,fighting:firearms,first_aid,stealth,navigate,interpersonal_skill:any",
         "category": "Adventurer",
         "credit_rating": "9-40"
     },
     {
         "name": "Bartender",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "charm,fast_talk,psychology,listen,credit_rating,spot_hidden",
+        "occupation_skills": "charm,fast_talk,psychology,listen,spot_hidden",
         "category": "Service Industry",
         "credit_rating": "10-40"
     },

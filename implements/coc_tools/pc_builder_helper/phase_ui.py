@@ -36,7 +36,7 @@ class BasePhaseUI(QFrame):
 
         self.content_area = QFrame()
         self.content_area.setObjectName("content_area")
-        main_layout.addWidget(self.content_area, 9)
+        main_layout.addWidget(self.content_area, 15)
 
         self.button_container = QFrame()
         self.button_container.setObjectName("button_container")

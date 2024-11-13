@@ -9,6 +9,7 @@ class Occupation:
     skill_points_formula: str
     occupation_skills: str
     category: str
+    credit_rating: str
 
     def __str__(self):
         return f"{self.name} ({self.category})"
@@ -40,6 +41,12 @@ class Occupation:
 
     def get_skills(self) -> str:
         return self.occupation_skills
+    
+    def get_credit_rating_min(self) -> int:
+        return int(self.credit_rating.split('-')[0])
+
+    def get_credit_rating_max(self) -> int:
+        return int(self.credit_rating.split('-')[1])
 
     @classmethod
     def from_json(cls, data: Dict) -> 'Occupation':
@@ -47,5 +54,6 @@ class Occupation:
             name=data["name"],
             skill_points_formula=data["skill_points_formula"],
             occupation_skills=data["occupation_skills"],
-            category=data["category"]
+            category=data["category"],
+            credit_rating=data["credit_rating"]
         )

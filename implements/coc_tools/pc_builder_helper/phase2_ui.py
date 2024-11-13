@@ -1,11 +1,35 @@
+from dataclasses import dataclass
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFrame, QGroupBox
 
 from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
 from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
+from implements.coc_tools.pc_builder_helper.constants import DEFAULT_SKILLS, PARENT_SKILL_DEFAULTS
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
 from ui.components.tf_value_entry import TFValueEntry
 from utils.validator.tf_validator import TFValidator
+
+
+@dataclass
+class Skill:
+    name: str
+    super_name: str
+    default_point: int
+    is_occupation: bool = False
+    occupation_point: int = 0
+    interest_point: int = 0
+
+    @property
+    def total_point(self) -> int:
+        return self.default_point + self.occupation_point + self.interest_point
+
+    @property
+    def display_name(self) -> str:
+        formatted_name = self.name.replace("_", " ").title()
+        if self.super_name:
+            formatted_super_name = self.super_name.replace("_", " ").title()
+            return f"{formatted_super_name} - {formatted_name}"
+        return formatted_name
 
 
 class Phase2UI(BasePhaseUI):
@@ -15,6 +39,14 @@ class Phase2UI(BasePhaseUI):
 
         self.check_button = None
         self.previous_button = None
+        self.skills = [
+            Skill(
+                name=skill_key.split(":")[1] if ":" in skill_key else skill_key,
+                super_name=skill_key.split(":")[0] if ":" in skill_key else None,
+                default_point=default_point
+            )
+            for skill_key, default_point in DEFAULT_SKILLS.items()
+        ]
 
         super().__init__(PCBuilderPhase.PHASE2, main_window, parent)
 
@@ -32,11 +64,11 @@ class Phase2UI(BasePhaseUI):
         upper_layout.setContentsMargins(0, 0, 0, 0)
         upper_layout.setSpacing(10)
 
-        upper_layout.addWidget(self._create_points_group(), 3)
-        upper_layout.addWidget(self._create_info_group(), 7)
+        upper_layout.addWidget(self._create_points_group(), 2)
+        upper_layout.addWidget(self._create_info_group(), 8)
 
-        content_layout.addWidget(upper_frame, 3)
-        content_layout.addWidget(self._create_skills_group(), 7)
+        content_layout.addWidget(upper_frame, 2)
+        content_layout.addWidget(self._create_skills_group(), 8)
 
         self.content_area.setLayout(content_layout)
 
