@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Tuple
 
 from PyQt6 import sip
-from PyQt6.QtWidgets import (QFrame, QVBoxLayout, QHBoxLayout, QGroupBox, QButtonGroup, QDialog, QScrollArea,
-                           QLabel, QRadioButton, QGridLayout, QWidget, QFileDialog, QSizePolicy, QSpacerItem)
+from PyQt6.QtWidgets import (QFrame, QVBoxLayout, QHBoxLayout, QGroupBox, QButtonGroup,
+                             QDialog, QScrollArea, QLabel, QRadioButton, QGridLayout,
+                             QWidget, QFileDialog, QSizePolicy, QSpacerItem)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QFont
 
@@ -71,6 +72,7 @@ class Phase1UI(BasePhaseUI):
 
     def _setup_ui(self):
         content_layout = QVBoxLayout()
+        content_layout.setParent(self.main_window)
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(10)
         
@@ -306,7 +308,7 @@ class Phase1UI(BasePhaseUI):
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         
-        occupation_options = ["None"] + [str(occ) for occ in OCCUPATIONS]
+        occupation_options = ["None"] + sorted([str(occ) for occ in OCCUPATIONS])
         self.occupation = TFOptionEntry(
             "Occupation:", 
             occupation_options, 
@@ -581,10 +583,10 @@ class Phase1UI(BasePhaseUI):
         
         self.roll_results_frame = QFrame()
         self.roll_results_frame.setMinimumHeight(200)
+        self.roll_results_frame.setLayout(QVBoxLayout())
+        self.roll_results_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         right_layout.addWidget(self.roll_results_frame)
-        right_layout.addStretch()
-
         self.stats_right_panel.setLayout(right_layout)
     
     def _on_avatar_upload(self):
@@ -732,16 +734,20 @@ class Phase1UI(BasePhaseUI):
 
     def _on_roll_stats(self):
         if self.roll_results_frame is not None:
-            if self.roll_results_frame.layout():
-                while self.roll_results_frame.layout().count():
-                    item = self.roll_results_frame.layout().takeAt(0)
-                    if item.widget():
-                        item.widget().deleteLater()
-                sip.delete(self.roll_results_frame.layout())
-            
-            sip.delete(self.roll_results_frame)
-            
-        self.roll_results_frame = QFrame()
+            layout = self.roll_results_frame.layout()
+            if layout is not None:
+                while layout.count():
+                    item = layout.takeAt(0)
+                    widget = item.widget()
+                    if widget is not None:
+                        widget.deleteLater()
+            else:
+                self.roll_results_frame.setLayout(QVBoxLayout())
+        else:
+            self.roll_results_frame = QFrame()
+            self.roll_results_frame.setLayout(QVBoxLayout())
+            if self.stats_right_panel.layout():
+                self.stats_right_panel.layout().addWidget(self.roll_results_frame)
         
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -785,11 +791,9 @@ class Phase1UI(BasePhaseUI):
         content_layout.addWidget(self.confirm_roll_button)
         scroll_area.setWidget(scroll_content)
 
-        frame_layout = QVBoxLayout(self.roll_results_frame)
-        frame_layout.addWidget(scroll_area)
+        self.roll_results_frame.layout().addWidget(scroll_area)
 
-        if self.stats_right_panel.layout():
-            self.stats_right_panel.layout().addWidget(self.roll_results_frame)
+        self.roll_results_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.roll_button.setEnabled(False)
 
@@ -826,6 +830,9 @@ class Phase1UI(BasePhaseUI):
         
         stats = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUK']
         for i, stat in enumerate(stats):
+            row = i // 3
+            col = i % 3
+
             entry = TFValueEntry(
                 f"{stat}:",
                 value_size=40,
@@ -837,7 +844,10 @@ class Phase1UI(BasePhaseUI):
             entry.set_value(selected_group[stat])
             
             self.stat_entries[stat] = entry
-            layout.addWidget(entry, i // 3, i % 3)
+            layout.addWidget(entry, row, col)
+
+            if col == 2:
+                layout.addItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum), row, 3)
         
         self.roll_results_frame.setLayout(layout)
 
@@ -983,8 +993,6 @@ class Phase1UI(BasePhaseUI):
         self.main_window.pc_data['status'] = derived_stats
 
         super()._on_next_clicked()
-
-        print(self.main_window.pc_data)
     
     def _perform_age_calculation(self):
         age = int(self.age.get_value())
@@ -1236,9 +1244,15 @@ class Phase1UI(BasePhaseUI):
                     item = self.roll_results_frame.layout().takeAt(0)
                     if item.widget():
                         item.widget().deleteLater()
-                sip.delete(self.roll_results_frame.layout())
-            sip.delete(self.roll_results_frame)
+            else:
+                self.roll_results_frame.setLayout(QVBoxLayout())
+        else:
             self.roll_results_frame = QFrame()
+            self.roll_results_frame.setLayout(QVBoxLayout())
+            self.roll_results_frame.setMinimumHeight(200)
+            self.roll_results_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            if self.stats_right_panel.layout():
+                self.stats_right_panel.layout().addWidget(self.roll_results_frame)
 
         self.calculate_button.setEnabled(True)
         self.exchange_button.setEnabled(False)

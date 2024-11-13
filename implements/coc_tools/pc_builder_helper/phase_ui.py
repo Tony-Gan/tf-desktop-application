@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QLabel
+from PyQt6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QLabel, QWidget
 
 from ui.components.tf_base_button import TFNextButton, TFResetButton
 from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
@@ -21,20 +21,20 @@ class BasePhaseUI(QFrame):
         self._setup_base_ui()
         self._setup_ui()
         self.mousePressEvent = self._on_first_activate
-        
+
     def _setup_base_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.setSpacing(10)
-        
+
         self.content_area = QFrame()
         main_layout.addWidget(self.content_area, 9)
-        
+
         self.button_container = QFrame()
         button_layout = QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 20, 0)
         button_layout.setSpacing(20)
-        
+
         self.reset_button = TFResetButton(
             self,
             on_clicked=self._on_reset_clicked
@@ -49,7 +49,7 @@ class BasePhaseUI(QFrame):
         button_layout.addWidget(self.reset_button)
         self._setup_phase_buttons(button_layout)
         button_layout.addWidget(self.next_button)
-        
+
         self.button_container.setLayout(button_layout)
         main_layout.addWidget(self.button_container, 1)
     
@@ -87,18 +87,6 @@ class BasePhaseUI(QFrame):
             self.has_activated = True
             self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETING)
         QFrame.mousePressEvent(self.content_area, event)
-
-class Phase2UI(BasePhaseUI):
-    def __init__(self, main_window, parent=None):
-        super().__init__(PCBuilderPhase.PHASE2, main_window, parent)
-
-    def _setup_ui(self):
-        print("[Phase2UI] _setup_ui called.")
-        layout = QVBoxLayout(self.content_area)
-        layout.addWidget(QLabel("Phase 2 Content Placeholder"))
-
-    def _reset_content(self):
-        print("[Phase2UI] _reset_content called.")
 
 class Phase3UI(BasePhaseUI):
     def __init__(self, main_window, parent=None):

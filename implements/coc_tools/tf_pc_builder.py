@@ -1,7 +1,9 @@
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame
-from PyQt6.QtCore import pyqtSignal, QCoreApplication
+from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame, QWidget, QLayout
+from PyQt6.QtCore import pyqtSignal, QCoreApplication, Qt
 
 from core.windows.tf_draggable_window import TFDraggableWindow
+from ui.components.tf_option_entry import TFOptionEntry
+from ui.components.tf_value_entry import TFValueEntry
 from utils.registry.tf_tool_matadata import TFToolMetadata
 from utils.validator.tf_validator import TFValidator
 from ui.components.tf_settings_widget import MenuSection
@@ -11,7 +13,8 @@ from implements.coc_tools.pc_builder_helper.pc_builder_phase import  PCBuilderPh
 from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
 from implements.coc_tools.pc_builder_helper.progress_container import ProgressContainer
 from implements.coc_tools.pc_builder_helper.phase1_ui import Phase1UI
-from implements.coc_tools.pc_builder_helper.phase_ui import Phase2UI, Phase3UI, Phase4UI, Phase5UI
+from implements.coc_tools.pc_builder_helper.phase2_ui import Phase2UI
+from implements.coc_tools.pc_builder_helper.phase_ui import Phase3UI, Phase4UI, Phase5UI
 
 
 class TFPcBuilder(TFDraggableWindow):
@@ -65,7 +68,7 @@ class TFPcBuilder(TFDraggableWindow):
         self.phase_container.setObjectName("section_frame")
         self.phase_container.setFrameShape(QFrame.Shape.Box)
         main_layout.addWidget(self.phase_container, 4)
-        self._load_phase_ui()
+        self.load_phase_ui()
 
     def get_tooltip_hover_text(self):
         return "Unfinished"
@@ -74,6 +77,11 @@ class TFPcBuilder(TFDraggableWindow):
         self.rule_settings_action = self.menu_button.add_action(
             "Rule Settings",
             self._show_rule_settings,
+            MenuSection.CUSTOM
+        )
+        self.debug_layout_action = self.menu_button.add_action(
+            "Debug Layouts",
+            self._debug_layouts,
             MenuSection.CUSTOM
         )
 
@@ -93,13 +101,13 @@ class TFPcBuilder(TFDraggableWindow):
             return ui_classes[phase](main_window=self, parent=self.phase_container)
         return None
 
-    def _load_phase_ui(self):
-        for widget in self.phase_container.findChildren(QFrame):
-            widget.deleteLater()
-
-        QCoreApplication.processEvents()
-
-        self.phase_uis[self.current_phase] = None
+    def load_phase_ui(self):
+        old_widgets = []
+        if self.phase_container.layout():
+            while self.phase_container.layout().count():
+                item = self.phase_container.layout().takeAt(0)
+                if item.widget():
+                    old_widgets.append(item.widget())
 
         new_ui = self._create_phase_ui(self.current_phase)
         self.phase_uis[self.current_phase] = new_ui
@@ -107,20 +115,21 @@ class TFPcBuilder(TFDraggableWindow):
         if not new_ui:
             return
 
-        existing_layout = self.phase_container.layout()
-        if existing_layout:
-            while existing_layout.count():
-                item = existing_layout.takeAt(0)
-                widget = item.widget()
-                if widget:
-                    widget.deleteLater()
-            del existing_layout
+        new_layout = QVBoxLayout()
+        new_layout.setContentsMargins(0, 0, 0, 0)
 
-        layout = QVBoxLayout(self.phase_container)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(new_ui)
+        new_layout.addWidget(new_ui)
 
-        self._update_progress_display()
+        if self.phase_container.layout():
+            QWidget().setLayout(self.phase_container.layout())
+        self.phase_container.setLayout(new_layout)
+
+        for widget in old_widgets:
+            widget.deleteLater()
+
+        new_ui.show()
+
+        QCoreApplication.processEvents()
 
     def _update_progress_display(self):
         if self.progress_ui:
@@ -178,7 +187,7 @@ class TFPcBuilder(TFDraggableWindow):
             next_phase = list(PCBuilderPhase)[current_idx + 1]
 
             self.current_phase = next_phase
-            self._load_phase_ui()
+            self.load_phase_ui()
             return True
         return False
 
@@ -192,7 +201,7 @@ class TFPcBuilder(TFDraggableWindow):
                 if self.phase_status[phase] == PhaseStatus.NOT_START:
                     self.phase_status[phase] = PhaseStatus.COMPLETING
                 self.current_phase = phase
-                self._load_phase_ui()
+                self.load_phase_ui()
             else:
                 self._show_cannot_switch_warning(phase)
 
@@ -238,3 +247,62 @@ class TFPcBuilder(TFDraggableWindow):
     def closeEvent(self, event):
         self.closed.emit(self)
         super().closeEvent(event)
+
+    def _debug_layouts(self):
+        try:
+            print("\n=== Layout Debug ===")
+            self._print_widget_info(self.content_container, 0)
+            print("==================\n")
+        except Exception as e:
+            print(f"Debug Error: {str(e)}")
+
+    def _print_widget_info(self, widget: QWidget, level: int, processed=None):
+        if processed is None:
+            processed = set()
+
+        if widget is None or not isinstance(widget, QWidget):
+            return
+
+        widget_id = id(widget)
+        if widget_id in processed:
+            return
+        processed.add(widget_id)
+
+        try:
+            indent = "  " * level
+            obj_name = widget.objectName()
+            name_str = f'"{obj_name}"' if obj_name else "no name"
+            widget_class = widget.__class__.__name__
+
+            # 只打印核心信息
+            print(f"{indent}{widget_class} {name_str} ({widget.size().width()}x{widget.size().height()}) "
+                  f"{'visible' if widget.isVisible() else 'hidden'}")
+
+            # 处理布局
+            layout = widget.layout()
+            if layout and not isinstance(widget, (TFValueEntry, TFOptionEntry)):  # 跳过这些组件的布局打印
+                self._print_layout_info(layout, level + 1, processed)
+
+            # 处理子部件
+            for child in widget.findChildren(QWidget, options=Qt.FindChildOption.FindDirectChildrenOnly):
+                if child and child.parent() is widget:
+                    self._print_widget_info(child, level + 1, processed)
+
+        except Exception as e:
+            # 忽略特定类型的错误
+            if "'QHBoxLayout' object is not callable" not in str(e):
+                print(f"{indent}Error: {str(e)}")
+
+    def _print_layout_info(self, layout: QLayout, level: int, processed):
+        if layout is None:
+            return
+
+        try:
+            indent = "  " * level
+            obj_name = layout.objectName()
+            name_str = f'"{obj_name}"' if obj_name else "no name"
+            print(f"{indent}[{layout.__class__.__name__}] {name_str} {layout.count()} items")
+
+        except Exception as e:
+            if "'QHBoxLayout' object is not callable" not in str(e):
+                print(f"{indent}Layout Error: {str(e)}")
