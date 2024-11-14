@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame, QWidget, QLayout
-from PyQt6.QtCore import pyqtSignal, QCoreApplication, Qt
+from PyQt6.QtWidgets import QHBoxLayout, QFrame, QWidget, QLayout, QStackedWidget
+from PyQt6.QtCore import pyqtSignal, Qt
 
 from core.windows.tf_draggable_window import TFDraggableWindow
 from ui.components.tf_option_entry import TFOptionEntry
@@ -41,10 +41,10 @@ class TFPcBuilder(TFDraggableWindow):
 
         self.current_phase = PCBuilderPhase.PHASE1
         self.phase_status = {phase: PhaseStatus.NOT_START for phase in PCBuilderPhase}
-        self.phase_uis = {phase: None for phase in PCBuilderPhase}
 
+        self.phase_uis = {phase: None for phase in PCBuilderPhase}
         self.progress_ui = None
-        self.phase_container = None
+        self.stacked_widget = None
 
         super().__init__(parent)
 
@@ -62,15 +62,19 @@ class TFPcBuilder(TFDraggableWindow):
         self.progress_ui.phase_selected.connect(self._on_phase_selected)
         main_layout.addWidget(self.progress_ui, 1)
 
+        self.stacked_widget = QStackedWidget(self)
+        self.stacked_widget.setObjectName("section_frame")
+        self.stacked_widget.setFrameShape(QFrame.Shape.Box)
+        main_layout.addWidget(self.stacked_widget, 4)
+
+        self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
         self.progress_ui.set_active_phase(self.current_phase)
         for phase, status in self.phase_status.items():
             self.progress_ui.update_status(phase, status)
 
-        self.phase_container = QFrame(self)
-        self.phase_container.setObjectName("section_frame")
-        self.phase_container.setFrameShape(QFrame.Shape.Box)
-        main_layout.addWidget(self.phase_container, 4)
-        self.load_phase_ui()
+        initial_phase = self._load_phase(PCBuilderPhase.PHASE1)
+        self.stacked_widget.setCurrentWidget(initial_phase)
+        initial_phase.on_enter()
 
     def get_tooltip_hover_text(self):
         return "Unfinished"
@@ -87,6 +91,14 @@ class TFPcBuilder(TFDraggableWindow):
             MenuSection.CUSTOM
         )
 
+    def _load_phase(self, phase: PCBuilderPhase) -> QWidget:
+        """Lazy load phase UI if not already loaded"""
+        if phase not in self.phase_uis:
+            new_phase = self._create_phase_ui(phase)
+            self.phase_uis[phase] = new_phase
+            self.stacked_widget.addWidget(new_phase)
+        return self.phase_uis[phase]
+
     def _setup_shortcut(self):
         pass
 
@@ -100,27 +112,8 @@ class TFPcBuilder(TFDraggableWindow):
         }
 
         if phase in ui_classes:
-            return ui_classes[phase](main_window=self, parent=self.phase_container)
+            return ui_classes[phase](main_window=self, parent=self.stacked_widget)
         return None
-
-    def load_phase_ui(self):
-        new_ui = self._create_phase_ui(self.current_phase)
-        self.phase_uis[self.current_phase] = new_ui
-
-        if not new_ui:
-            return
-
-        new_layout = QVBoxLayout()
-        new_layout.setContentsMargins(0, 0, 0, 0)
-        new_layout.addWidget(new_ui)
-
-        if self.phase_container.layout():
-            QWidget().setLayout(self.phase_container.layout())
-        self.phase_container.setLayout(new_layout)
-
-        new_ui.show()
-
-        QCoreApplication.processEvents()
 
     def _update_progress_display(self):
         if self.progress_ui:
@@ -133,23 +126,8 @@ class TFPcBuilder(TFDraggableWindow):
         self._update_progress_display()
 
     def can_switch_to_phase(self, target_phase: PCBuilderPhase) -> bool:
-        if target_phase.value < self.current_phase.value:
-            return self.phase_status[target_phase] == PhaseStatus.COMPLETED
-
         if target_phase.value > self.current_phase.value:
-            if self.phase_status[self.current_phase] != PhaseStatus.COMPLETED:
-                return False
-
-            phase_list = list(PCBuilderPhase)
-            current_idx = phase_list.index(self.current_phase)
-            target_idx = phase_list.index(target_phase)
-
-            for idx in range(current_idx + 1, target_idx):
-                if self.phase_status[phase_list[idx]] != PhaseStatus.COMPLETED:
-                    return False
-
-            return True
-
+            return self.phase_status[self.current_phase] == PhaseStatus.COMPLETED
         return True
 
     def _show_cannot_switch_warning(self, target_phase: PCBuilderPhase):
@@ -166,36 +144,24 @@ class TFPcBuilder(TFDraggableWindow):
                 buttons=["OK"]
             )
 
-    def can_proceed_to_next_phase(self):
-        # TODO: TEMP DEBUG
-        return self.phase_status[self.current_phase] == PhaseStatus.COMPLETED or 1 == 1
-
-    def proceed_to_next_phase(self) -> bool:
-        if not self.can_proceed_to_next_phase():
-            return False
-
-        current_idx = list(PCBuilderPhase).index(self.current_phase)
-        if current_idx < len(PCBuilderPhase) - 1:
-            next_phase = list(PCBuilderPhase)[current_idx + 1]
-
-            self.current_phase = next_phase
-            self.load_phase_ui()
-            return True
-        return False
-
-    def get_current_phase_number(self):
-        return self.current_phase.value
-
     def _on_phase_selected(self, phase: PCBuilderPhase):
-        if phase != self.current_phase:
+        if phase == self.current_phase:
+            return
 
-            if self.can_switch_to_phase(phase):
-                if self.phase_status[phase] == PhaseStatus.NOT_START:
-                    self.phase_status[phase] = PhaseStatus.COMPLETING
-                self.current_phase = phase
-                self.load_phase_ui()
-            else:
-                self._show_cannot_switch_warning(phase)
+        if self.can_switch_to_phase(phase):
+            current_ui = self.phase_uis.get(self.current_phase)
+            if current_ui:
+                current_ui.on_exit()
+
+            target_ui = self._load_phase(phase)
+
+            self.current_phase = phase
+            self.stacked_widget.setCurrentWidget(target_ui)
+            target_ui.on_enter()
+
+            self.progress_ui.set_active_phase(phase)
+        else:
+            self._show_cannot_switch_warning(phase)
 
     def _show_rule_settings(self):
         if any(status != PhaseStatus.NOT_START for status in self.phase_status.values()):
@@ -221,18 +187,18 @@ class TFPcBuilder(TFDraggableWindow):
     def _reset_progress(self):
         self.pc_data.clear()
 
-        self.phase_status = {
-            phase: PhaseStatus.NOT_START for phase in PCBuilderPhase
-        }
+        # Reset phase statuses
+        self.phase_status = {phase: PhaseStatus.NOT_START for phase in PCBuilderPhase}
         self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
+
+        # Reset all loaded phase UIs
+        for phase_ui in self.phase_uis.values():
+            phase_ui._reset_content()
+
+        # Switch to first phase
         if self.current_phase != PCBuilderPhase.PHASE1:
             self.current_phase = PCBuilderPhase.PHASE1
-            if self.phase_uis[PCBuilderPhase.PHASE1]:
-                self.phase_uis[PCBuilderPhase.PHASE1]._reset_content()
-                self.phase_container.layout().addWidget(self.phase_uis[PCBuilderPhase.PHASE1])
-        else:
-            if self.phase_uis[PCBuilderPhase.PHASE1]:
-                self.phase_uis[PCBuilderPhase.PHASE1]._reset_content()
+            self.stacked_widget.setCurrentWidget(self.phase_uis[PCBuilderPhase.PHASE1])
 
         self._update_progress_display()
 

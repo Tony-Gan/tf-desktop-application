@@ -247,11 +247,15 @@ class Phase2UI(BasePhaseUI):
         print("[Phase2UI] _on_check_clicked called.")
 
     def _on_previous_clicked(self):
-        self.main_window.current_phase = PCBuilderPhase.PHASE1
-        self.main_window.load_phase_ui()
-
-    def _on_next_clicked(self):
-        print("[Phase2UI] _on_next_clicked called.")
+        self.main_window._on_phase_selected(PCBuilderPhase.PHASE1)
 
     def _reset_content(self):
         print("[Phase2UI] _reset_content called.")
+
+    def on_enter(self):
+        """Called when the phase becomes active"""
+        super().on_enter()
+
+    def on_exit(self):
+        """Called when the phase becomes inactive"""
+        pass

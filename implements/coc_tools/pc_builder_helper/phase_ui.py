@@ -1,6 +1,6 @@
 import json
 
-from PyQt6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout
+from PyQt6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QWidget
 
 from implements.coc_tools.pc_builder_helper.occupation import Occupation
 from ui.components.tf_base_button import TFNextButton, TFResetButton
@@ -9,12 +9,12 @@ from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
 from utils.helper import resource_path
 
 
-class BasePhaseUI(QFrame):
+class BasePhaseUI(QWidget):
     def __init__(self, phase: PCBuilderPhase, main_window, parent=None):
         super().__init__(parent)
         self.phase = phase
         self.main_window = main_window
-        
+
         self.content_area = None
         self.button_container = None
         self.reset_button = None
@@ -22,11 +22,19 @@ class BasePhaseUI(QFrame):
 
         self.has_activated = False
         self.occupation_list = self._load_occupation_list()
-        
+
         self._setup_base_ui()
         self._setup_ui()
-        self.mousePressEvent = self._on_first_activate
 
+    def on_enter(self):
+        """Called when the phase becomes active"""
+        if not self.has_activated:
+            self.has_activated = True
+            self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETING)
+
+    def on_exit(self):
+        """Called when the phase becomes inactive"""
+        pass
 
     def _setup_base_ui(self):
         main_layout = QVBoxLayout(self)
@@ -50,7 +58,7 @@ class BasePhaseUI(QFrame):
         )
         self.next_button = TFNextButton(
             self,
-            # TODO: TEMP DEBUG
+            # TODO: DEBUG POINT
             enabled=True,
             on_clicked=self._on_next_clicked
         )
@@ -94,16 +102,14 @@ class BasePhaseUI(QFrame):
         self.main_window.set_phase_status(self.phase, PhaseStatus.NOT_START)
     
     def _on_next_clicked(self):
-        self.main_window.proceed_to_next_phase()
+        phase_list = list(PCBuilderPhase)
+        current_idx = phase_list.index(self.phase)
+        if current_idx < len(phase_list) - 1:
+            next_phase = phase_list[current_idx + 1]
+            self.main_window._on_phase_selected(next_phase)
     
     def enable_next_button(self, enable: bool = True):
         self.next_button.setEnabled(enable)
 
     def get_content_layout(self) -> QVBoxLayout:
         return self.content_area.layout()
-
-    def _on_first_activate(self, event):
-        if not self.has_activated:
-            self.has_activated = True
-            self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETING)
-        QFrame.mousePressEvent(self.content_area, event)
