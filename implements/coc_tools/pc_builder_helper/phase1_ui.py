@@ -1,7 +1,7 @@
 import os
 import shutil
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Tuple
 
@@ -1178,7 +1178,7 @@ class Phase1UI(BasePhaseUI):
         )
 
     def on_exit(self):
-        current_time = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        current_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         if 'metadata' not in self.main_window.pc_data:
             self.main_window.pc_data['metadata'] = {}

@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, List
 
-INTERPERSONAL_SKILLS: List[str] = ["charm", "fast_talk", "intimidate", "persuade"]
-
 @dataclass
 class Occupation:
     name: str

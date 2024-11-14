@@ -8,6 +8,7 @@ EDIT_FONT.setPointSize(10)
 
 GROUPED_SKILLS = {'art', 'science', 'survival', 'pilot'}
 SPECIAL_SKILLS = {'fighting', 'firearms'}
+INTERPERSONAL_SKILLS = ["charm", "fast_talk", "intimidate", "persuade"]
 
 PARENT_SKILL_DEFAULTS = {
     "art": 5,

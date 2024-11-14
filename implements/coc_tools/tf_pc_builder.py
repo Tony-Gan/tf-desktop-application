@@ -42,7 +42,7 @@ class TFPcBuilder(TFDraggableWindow):
         self.current_phase = PCBuilderPhase.PHASE1
         self.phase_status = {phase: PhaseStatus.NOT_START for phase in PCBuilderPhase}
 
-        self.phase_uis = {phase: None for phase in PCBuilderPhase}
+        self.phase_uis = {}
         self.progress_ui = None
         self.stacked_widget = None
 
@@ -92,7 +92,6 @@ class TFPcBuilder(TFDraggableWindow):
         )
 
     def _load_phase(self, phase: PCBuilderPhase) -> QWidget:
-        """Lazy load phase UI if not already loaded"""
         if phase not in self.phase_uis:
             new_phase = self._create_phase_ui(phase)
             self.phase_uis[phase] = new_phase
@@ -126,6 +125,7 @@ class TFPcBuilder(TFDraggableWindow):
         self._update_progress_display()
 
     def can_switch_to_phase(self, target_phase: PCBuilderPhase) -> bool:
+        return True # TODO: DEBUG POINT
         if target_phase.value > self.current_phase.value:
             return self.phase_status[self.current_phase] == PhaseStatus.COMPLETED
         return True
