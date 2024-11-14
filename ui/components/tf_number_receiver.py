@@ -33,12 +33,18 @@ class TFNumberReceiver(QLineEdit):
                  font: QFont=QFont("Montserrat", 12),
                  allow_decimal=True,
                  allow_negative=False,
+                 width=50,
+                 height=24,
                  parent=None):
         super().__init__(text, parent)
         self.setAlignment(alignment)
         self.setFont(font)
         self.allow_decimal = allow_decimal
         self.allow_negative = allow_negative
+        if width:
+            self.setFixedWidth(width)
+        if height:
+            self.setFixedHeight(height)
 
     def keyPressEvent(self, event: QKeyEvent | None):
         """

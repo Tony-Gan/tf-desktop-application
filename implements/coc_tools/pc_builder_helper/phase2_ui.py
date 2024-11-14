@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFrame, QGroupBox
+from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFrame, QGroupBox, QLabel
 
 from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
 from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
 from implements.coc_tools.pc_builder_helper.constants import DEFAULT_SKILLS, PARENT_SKILL_DEFAULTS
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
+from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_value_entry import TFValueEntry
 from utils.validator.tf_validator import TFValidator
 
@@ -30,6 +32,90 @@ class Skill:
             formatted_super_name = self.super_name.replace("_", " ").title()
             return f"{formatted_super_name} - {formatted_name}"
         return formatted_name
+
+
+class SkillEntry(QFrame):
+    def __init__(self, skill: Skill, parent=None):
+        super().__init__(parent)
+
+        self.skill = skill
+
+        text_font = QFont("Inconsolata")
+        text_font.setPointSize(10)
+
+        label_font = QFont("Inconsolata SemiCondensed")
+        label_font.setPointSize(10)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(5)
+
+        self.name_label = QLabel(skill.display_name)
+        self.name_label.setFont(label_font)
+
+        self.occupation_points = TFNumberReceiver(
+            text="0",
+            width=30,
+            font=text_font,
+            allow_decimal=False,
+            allow_negative=False
+        )
+
+        self.interest_points = TFNumberReceiver(
+            text="0",
+            width=30,
+            font=text_font,
+            allow_decimal=False,
+            allow_negative=False
+        )
+
+        self.default_value = TFNumberReceiver(
+            text=str(skill.default_point),
+            width=30,
+            font=text_font,
+            allow_decimal=False,
+            allow_negative=False
+        )
+        self.default_value.setEnabled(False)
+
+        self.total = TFNumberReceiver(
+            text=str(skill.default_point),
+            width=30,
+            font=text_font,
+            allow_decimal=False,
+            allow_negative=False
+        )
+        self.total.setEnabled(False)
+
+        self.occupation_points.textChanged.connect(self._update_total)
+        self.interest_points.textChanged.connect(self._update_total)
+
+        layout.addWidget(self.name_label)
+        layout.addWidget(self.occupation_points)
+        layout.addWidget(self.interest_points)
+        layout.addWidget(self.default_value)
+        layout.addWidget(self.total)
+        layout.addStretch()
+
+    def _update_total(self):
+        try:
+            self.skill.occupation_point = int(self.occupation_points.text() or 0)
+            self.skill.interest_points = int(self.interest_points.text() or 0)
+            self.total.setText(str(self.skill.total_point))
+        except ValueError:
+            pass
+
+    def get_values(self) -> dict:
+        return {
+            'occupation_points': int(self.occupation_points.text() or 0),
+            'interest_points': int(self.interest_points.text() or 0),
+            'total': int(self.total.text())
+        }
+
+    def reset(self):
+        self.occupation_points.setText("0")
+        self.interest_points.setText("0")
+        self._update_total()
 
 
 class Phase2UI(BasePhaseUI):
