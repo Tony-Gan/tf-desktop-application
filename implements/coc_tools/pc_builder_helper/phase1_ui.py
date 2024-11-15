@@ -222,6 +222,7 @@ class Phase1UI(BasePhaseUI):
     def _create_avatar_group(self):
         group = QGroupBox("Avatar")
         layout = QVBoxLayout(group)
+        layout.setObjectName("avatar_group_layout")
         layout.setContentsMargins(5, 5, 5, 5)
         
         self.avatar_label = QLabel()
@@ -244,6 +245,7 @@ class Phase1UI(BasePhaseUI):
     def _create_metadata_group(self):
         group = QGroupBox("Metadata")
         layout = QVBoxLayout(group)
+        layout.setObjectName("metadata_group_layout")
         layout.setContentsMargins(5, 5, 5, 5)
         
         self.player_name = TFValueEntry(
@@ -278,6 +280,7 @@ class Phase1UI(BasePhaseUI):
     def _create_left_personal_info_group(self):
         group = QGroupBox("Personal Information")
         layout = QVBoxLayout(group)
+        layout.setObjectName("left_personal_info_group_layout")
         layout.setContentsMargins(5, 5, 5, 5)
         
         self.char_name = TFValueEntry(
@@ -303,6 +306,7 @@ class Phase1UI(BasePhaseUI):
     def _create_personal_info_group(self):
         group = QGroupBox("Personal Information")
         layout = QVBoxLayout(group)
+        layout.setObjectName("personal_info_group_layout")
         layout.setContentsMargins(5, 5, 5, 5)
 
         self.gender = TFOptionEntry(
@@ -366,6 +370,7 @@ class Phase1UI(BasePhaseUI):
     def _create_derived_stats_group(self) -> QFrame:
         frame = QFrame()
         layout = QHBoxLayout(frame)
+        layout.setObjectName("derived_stats_group_layout")
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(10)
 
@@ -541,7 +546,7 @@ class Phase1UI(BasePhaseUI):
     def _setup_destiny_mode(self):
         left_layout = QVBoxLayout()
         left_layout.setContentsMargins(5, 5, 5, 5)
-        
+
         self.dice_count_entry = TFValueEntry(
             "Dice Count:",
             str(self.config.dice_count),
@@ -551,14 +556,14 @@ class Phase1UI(BasePhaseUI):
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         left_layout.addWidget(self.dice_count_entry)
-        
+
         self.roll_button = TFBaseButton(
             "Roll for Stats",
             self,
             on_clicked=self._on_roll_stats
         )
         left_layout.addWidget(self.roll_button)
-        
+
         self.occupation_points_entry = TFValueEntry(
             "Occupation Points:",
             "",
@@ -578,15 +583,15 @@ class Phase1UI(BasePhaseUI):
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         left_layout.addWidget(self.interest_points_entry)
-        
+
         left_layout.addStretch()
-        
+
         self.stats_left_panel.setLayout(left_layout)
-        
+
         right_layout = QVBoxLayout()
         right_layout.setContentsMargins(5, 5, 5, 5)
-        
-        self.roll_results_frame = QFrame()
+
+        self.roll_results_frame = QFrame(self.stats_right_panel)
         self.roll_results_frame.setMinimumHeight(200)
         self.roll_results_frame.setLayout(QVBoxLayout())
         self.roll_results_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -674,68 +679,64 @@ class Phase1UI(BasePhaseUI):
         return occupation_points, interest_points
 
     def _calculate_derived_stats(self) -> dict:
-        try:
-            con = int(self.stat_entries['CON'].get_value())
-            siz = int(self.stat_entries['SIZ'].get_value())
-            pow_stat = int(self.stat_entries['POW'].get_value())
-            str_stat = int(self.stat_entries['STR'].get_value())
-            dex = int(self.stat_entries['DEX'].get_value())
+        con = int(self.stat_entries['CON'].get_value())
+        siz = int(self.stat_entries['SIZ'].get_value())
+        pow_stat = int(self.stat_entries['POW'].get_value())
+        str_stat = int(self.stat_entries['STR'].get_value())
+        dex = int(self.stat_entries['DEX'].get_value())
 
-            hp = (con + siz) // 10
-            self.derived_entries['HP'].set_value(str(hp))
+        hp = (con + siz) // 10
+        self.derived_entries['HP'].set_value(str(hp))
 
-            mp = pow_stat // 5
-            self.derived_entries['MP'].set_value(str(mp))
+        mp = pow_stat // 5
+        self.derived_entries['MP'].set_value(str(mp))
 
-            san = pow_stat
-            self.derived_entries['SAN'].set_value(str(san))
+        san = pow_stat
+        self.derived_entries['SAN'].set_value(str(san))
 
-            if dex < siz and str_stat < siz:
-                mov = 7
-            elif dex > siz and str_stat > siz:
-                mov = 9
-            else:
-                mov = 8
-            self.derived_entries['MOV'].set_value(str(mov))
+        if dex < siz and str_stat < siz:
+            mov = 7
+        elif dex > siz and str_stat > siz:
+            mov = 9
+        else:
+            mov = 8
+        self.derived_entries['MOV'].set_value(str(mov))
 
-            str_siz = str_stat + siz
+        str_siz = str_stat + siz
 
-            if 2 <= str_siz <= 64:
-                build = -2
-                db = "-2"
-            elif 65 <= str_siz <= 84:
-                build = -1
-                db = "-1"
-            elif 85 <= str_siz <= 124:
-                build = 0
-                db = "0"
-            elif 125 <= str_siz <= 164:
-                build = 1
-                db = "+1d4"
-            elif 165 <= str_siz <= 204:
-                build = 2
-                db = "+1d6"
-            else:
-                build = 3
-                db = "+2d6"
+        if 2 <= str_siz <= 64:
+            build = -2
+            db = "-2"
+        elif 65 <= str_siz <= 84:
+            build = -1
+            db = "-1"
+        elif 85 <= str_siz <= 124:
+            build = 0
+            db = "0"
+        elif 125 <= str_siz <= 164:
+            build = 1
+            db = "+1d4"
+        elif 165 <= str_siz <= 204:
+            build = 2
+            db = "+1d6"
+        else:
+            build = 3
+            db = "+2d6"
 
-            self.derived_entries['DB'].set_value(db)
-            self.derived_entries['Build'].set_value(str(build))
+        self.derived_entries['DB'].set_value(db)
+        self.derived_entries['Build'].set_value(str(build))
 
-            return {
-                "hp_max": hp,
-                "hp_current": hp,
-                "mp_max": mp,
-                "mp_current": mp,
-                "san_max": san,
-                "san_current": san,
-                "movement_rate": mov,
-                "damage_bonus": db,
-                "build": build
-            }
-
-        except (ValueError, KeyError) as e:
-            return
+        return {
+            "hp_max": hp,
+            "hp_current": hp,
+            "mp_max": mp,
+            "mp_current": mp,
+            "san_max": san,
+            "san_current": san,
+            "movement_rate": mov,
+            "damage_bonus": db,
+            "build": build
+        }
 
     def _on_roll_stats(self):
         if self.roll_results_frame is not None:
@@ -1091,84 +1092,101 @@ class Phase1UI(BasePhaseUI):
         self.calculate_button.setEnabled(False)
 
     def _reset_content(self):
-        self.remaining_exchange_times = self.config.stat_exchange_times
+        try:
+            self.remaining_exchange_times = self.config.stat_exchange_times
 
-        if 'metadata' in self.main_window.pc_data:
-            del self.main_window.pc_data['metadata']
-        if 'personal_info' in self.main_window.pc_data:
-            del self.main_window.pc_data['personal_info']
-        if 'basic_stats' in self.main_window.pc_data:
-            del self.main_window.pc_data['basic_stats']
+            # Comment: 改变stat entries的清理方式
+            for entry in self.stat_entries.values():
+                if not sip.isdeleted(entry):
+                    try:
+                        if hasattr(entry.value_field, 'textChanged'):
+                            entry.value_field.textChanged.disconnect()
+                    except TypeError:
+                        pass
+                    entry.value_field.setEnabled(False)
 
-        self.player_name.set_value("")
-        self.campaign_date.set_value("")
-        self.era.set_value("Modern")
+            if 'metadata' in self.main_window.pc_data:
+                del self.main_window.pc_data['metadata']
+            if 'personal_info' in self.main_window.pc_data:
+                del self.main_window.pc_data['personal_info']
+            if 'basic_stats' in self.main_window.pc_data:
+                del self.main_window.pc_data['basic_stats']
 
-        self.char_name.set_value("")
-        self.age.set_value("")
-        self.gender.set_value("None")
-        self.occupation.set_value("None")
-        self.nationality.set_value("")
-        self.residence.set_value("")
-        self.birthplace.set_value("")
-        self.skill_points_formula.set_value("")
+            self.player_name.set_value("")
+            self.campaign_date.set_value("")
+            self.era.set_value("Modern")
 
-        self.age.value_field.setEnabled(True)
-        self.occupation.value_field.setEnabled(True)
+            self.char_name.set_value("")
+            self.age.set_value("")
+            self.gender.set_value("None")
+            self.occupation.set_value("None")
+            self.nationality.set_value("")
+            self.residence.set_value("")
+            self.birthplace.set_value("")
+            self.skill_points_formula.set_value("")
 
-        for entry in self.derived_entries.values():
-            entry.set_value("")
+            self.player_name.value_field.setEnabled(True)
+            self.campaign_date.value_field.setEnabled(True)
+            self.era.value_field.setEnabled(True)
+            self.char_name.value_field.setEnabled(True)
+            self.age.value_field.setEnabled(True)
+            self.gender.value_field.setEnabled(True)
+            self.occupation.value_field.setEnabled(True)
+            self.nationality.value_field.setEnabled(True)
+            self.residence.value_field.setEnabled(True)
+            self.birthplace.value_field.setEnabled(True)
 
-        if self.config.is_points_mode():
-            self.remaining_points = self.config.points_available
-            if self.remaining_points_entry:
-                self.remaining_points_entry.set_value(str(self.remaining_points))
-            if self.occupation_points_entry:
-                self.occupation_points_entry.set_value("")
-            if self.interest_points_entry:
-                self.interest_points_entry.set_value("")
-            for stat in ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUK']:
-                if stat in self.stat_entries:
-                    self.stat_entries[stat].set_value("")
-                    if stat != 'LUK':
-                        self.stat_entries[stat].value_field.setEnabled(True)
-        else:
-            self.roll_button.setEnabled(True)
-            if self.roll_results_frame.layout():
-                while self.roll_results_frame.layout().count():
-                    item = self.roll_results_frame.layout().takeAt(0)
-                    if item.widget():
-                        item.widget().deleteLater()
-            for stat in self.stat_entries.values():
-                stat.value_field.setEnabled(False)
+            for entry in self.derived_entries.values():
+                if not sip.isdeleted(entry):
+                    entry.set_value("")
 
-        if self.occupation_points_entry:
-            self.occupation_points_entry.set_value("")
+            self._update_stats_display()
 
-        if self.interest_points_entry:
-            self.interest_points_entry.set_value("")
+            if self.config.is_points_mode():
+                self.remaining_points = self.config.points_available
+                if self.remaining_points_entry and not sip.isdeleted(self.remaining_points_entry):
+                    self.remaining_points_entry.set_value(str(self.remaining_points))
+                if self.occupation_points_entry and not sip.isdeleted(self.occupation_points_entry):
+                    self.occupation_points_entry.set_value("")
+                if self.interest_points_entry and not sip.isdeleted(self.interest_points_entry):
+                    self.interest_points_entry.set_value("")
 
-        if self.roll_results_frame is not None:
-            if self.roll_results_frame.layout():
-                while self.roll_results_frame.layout().count():
-                    item = self.roll_results_frame.layout().takeAt(0)
-                    if item.widget():
-                        item.widget().deleteLater()
+                for stat in ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUK']:
+                    if stat in self.stat_entries and not sip.isdeleted(self.stat_entries[stat]):
+                        self.stat_entries[stat].set_value("")
+                        if stat != 'LUK' or (stat == 'LUK' and self.config.allow_custom_luck):
+                            self.stat_entries[stat].value_field.setEnabled(True)
+                            self.stat_entries[stat].value_field.textChanged.connect(self._on_stat_value_changed)
+
             else:
-                self.roll_results_frame.setLayout(QVBoxLayout())
-        else:
-            self.roll_results_frame = QFrame()
-            self.roll_results_frame.setLayout(QVBoxLayout())
-            self.roll_results_frame.setMinimumHeight(200)
-            self.roll_results_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-            if self.stats_right_panel.layout():
-                self.stats_right_panel.layout().addWidget(self.roll_results_frame)
+                if not sip.isdeleted(self.roll_button):
+                    self.roll_button.setEnabled(True)
 
-        self.calculate_button.setEnabled(True)
-        self.exchange_button.setEnabled(False)
-        self.next_button.setEnabled(False)
+                if self.roll_results_frame and self.roll_results_frame.layout():
+                    QWidget().setLayout(self.roll_results_frame.layout())
+                    self.roll_results_frame.setLayout(QVBoxLayout())
 
-        super()._reset_content()
+                for stat, entry in list(self.stat_entries.items()):
+                    if not sip.isdeleted(entry):
+                        entry.value_field.setEnabled(False)
+                        entry.set_value("")
+
+            if self.occupation_points_entry and not sip.isdeleted(self.occupation_points_entry):
+                self.occupation_points_entry.set_value("")
+
+            if self.interest_points_entry and not sip.isdeleted(self.interest_points_entry):
+                self.interest_points_entry.set_value("")
+
+            self.calculate_button.setEnabled(True)
+            self.exchange_button.setEnabled(False)
+            self.next_button.setEnabled(False)
+
+            super()._reset_content()
+
+        except Exception as e:
+            print(f"Error in Phase1UI reset: {str(e)}")
+            self.has_activated = False
+            self.main_window.set_phase_status(self.phase, PhaseStatus.NOT_START)
 
     def _show_validation_error(self, message: str):
         self.main_window.app.show_warning(

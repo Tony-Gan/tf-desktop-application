@@ -1,3 +1,4 @@
+from PyQt6 import sip
 from PyQt6.QtWidgets import QHBoxLayout, QFrame, QWidget, QLayout, QStackedWidget
 from PyQt6.QtCore import pyqtSignal, Qt
 
@@ -125,7 +126,6 @@ class TFPcBuilder(TFDraggableWindow):
         self._update_progress_display()
 
     def can_switch_to_phase(self, target_phase: PCBuilderPhase) -> bool:
-        return True # TODO: DEBUG POINT
         if target_phase.value > self.current_phase.value:
             return self.phase_status[self.current_phase] == PhaseStatus.COMPLETED
         return True
@@ -164,6 +164,7 @@ class TFPcBuilder(TFDraggableWindow):
             self._show_cannot_switch_warning(phase)
 
     def _show_rule_settings(self):
+        response = None
         if any(status != PhaseStatus.NOT_START for status in self.phase_status.values()):
             response = self.app.show_warning(
                 "Change Creation Rules?",
@@ -172,8 +173,6 @@ class TFPcBuilder(TFDraggableWindow):
             )
             if response == "No, Cancel":
                 return
-            elif response == "Yes, Reset Progress":
-                self._reset_progress()
 
         confirmed, result = RuleSettingsDialog.get_input(
             self,
@@ -181,26 +180,67 @@ class TFPcBuilder(TFDraggableWindow):
         )
 
         if confirmed:
+            old_mode = self.config.generation_mode
             self.config.update_from_dict(result)
+
+            if response == "Yes, Reset Progress" or old_mode != self.config.generation_mode:
+                self._disable_all_components()
+                self._reset_progress()
+
             self.config_updated.emit()
 
-    def _reset_progress(self):
-        self.pc_data.clear()
+    def _disable_all_components(self):
+        if hasattr(self, 'calculate_button'):
+            self.calculate_button.setEnabled(False)
+        if hasattr(self, 'exchange_button'):
+            self.exchange_button.setEnabled(False)
+        if hasattr(self, 'next_button'):
+            self.next_button.setEnabled(False)
 
-        # Reset phase statuses
-        self.phase_status = {phase: PhaseStatus.NOT_START for phase in PCBuilderPhase}
-        self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
-
-        # Reset all loaded phase UIs
         for phase_ui in self.phase_uis.values():
-            phase_ui._reset_content()
+            if not sip.isdeleted(phase_ui):
+                for entry in getattr(phase_ui, 'stat_entries', {}).values():
+                    if not sip.isdeleted(entry):
+                        entry.value_field.setEnabled(False)
 
-        # Switch to first phase
-        if self.current_phase != PCBuilderPhase.PHASE1:
-            self.current_phase = PCBuilderPhase.PHASE1
-            self.stacked_widget.setCurrentWidget(self.phase_uis[PCBuilderPhase.PHASE1])
+                for attr in ['age', 'occupation', 'gender', 'nationality',
+                             'residence', 'birthplace', 'player_name',
+                             'campaign_date', 'era']:
+                    if hasattr(phase_ui, attr) and not sip.isdeleted(getattr(phase_ui, attr)):
+                        getattr(phase_ui, attr).value_field.setEnabled(False)
 
-        self._update_progress_display()
+    def _reset_progress(self):
+        try:
+            self.pc_data.clear()
+
+            self.phase_status = {phase: PhaseStatus.NOT_START for phase in PCBuilderPhase}
+            self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
+
+            for phase_ui in list(self.phase_uis.values()):
+                try:
+                    if not sip.isdeleted(phase_ui):
+                        phase_ui._reset_content()
+                except Exception as e:
+                    print(f"Error resetting phase UI: {str(e)}")
+
+            if (self.current_phase != PCBuilderPhase.PHASE1 and
+                    PCBuilderPhase.PHASE1 in self.phase_uis and
+                    not sip.isdeleted(self.phase_uis[PCBuilderPhase.PHASE1])):
+                self.current_phase = PCBuilderPhase.PHASE1
+                self.stacked_widget.setCurrentWidget(self.phase_uis[PCBuilderPhase.PHASE1])
+
+            self._update_progress_display()
+
+            if hasattr(self, 'calculate_button'):
+                self.calculate_button.setEnabled(True)
+            if hasattr(self, 'rule_settings_action'):
+                self.rule_settings_action.setEnabled(True)
+
+        except Exception as e:
+            print(f"Error in reset progress: {str(e)}")
+            self.phase_status = {phase: PhaseStatus.NOT_START for phase in PCBuilderPhase}
+            self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
+            self._update_progress_display()
 
     def closeEvent(self, event):
         self.closed.emit(self)

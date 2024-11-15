@@ -58,8 +58,7 @@ class BasePhaseUI(QWidget):
         )
         self.next_button = TFNextButton(
             self,
-            # TODO: DEBUG POINT
-            enabled=True,
+            enabled=False,
             on_clicked=self._on_next_clicked
         )
 
