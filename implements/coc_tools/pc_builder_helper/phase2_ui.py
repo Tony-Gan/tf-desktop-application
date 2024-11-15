@@ -114,12 +114,19 @@ class SkillEntry(QFrame):
         layout.addStretch()
 
     def _update_total(self):
-        try:
-            self.skill.occupation_point = int(self.occupation_points.text() or 0)
-            self.skill.interest_points = int(self.interest_points.text() or 0)
-            self.total.setText(str(self.skill.total_point))
-        except ValueError:
-            pass
+        self.skill.occupation_point = int(self.occupation_points.text() or 0)
+        self.skill.interest_point = int(self.interest_points.text() or 0)
+        self.total.setText(str(self.skill.total_point))
+
+        parent = self.parent()
+        while parent and not isinstance(parent, Phase2UI):
+            if hasattr(parent, 'parent_ui'):
+                parent = parent.parent_ui
+            else:
+                parent = parent.parent()
+        
+        if parent and isinstance(parent, Phase2UI):
+            parent.update_points_display()
 
     def get_values(self) -> dict:
         return {
@@ -171,117 +178,14 @@ class PointsGroup(QGroupBox):
         self.layout.addStretch()
 
 
-class InfoGroup(QGroupBox):
-    def __init__(self, pc_data, parent:'Phase2UI'):
-        personal_info = pc_data.get('personal_info', {})
-        occupation_name = personal_info.get('occupation', '')
-        super().__init__(occupation_name, parent)
-        self.parent = parent
-
-        self.setObjectName("info_group")
-        self.layout = QGridLayout(self)
-        self.layout.setContentsMargins(10, 10, 10, 10)
-        self.layout.setSpacing(10)
-
-        self._pc_data = pc_data
-        self._occupation_name = occupation_name
-        self._setup_content()
-
-    def _setup_content(self):
-        occupation = next((occ for occ in self.parent.occupation_list if occ.name == self._occupation_name), None)
-        if not occupation:
-            return QGroupBox(self._occupation_name)
-
-        occ_skills = occupation.get_skills().split(',')
-        row, col = 0, 0
-
-        for skill in occ_skills:
-            skill_text = InfoCell.format_skill_name(skill)
-
-            if 'any' in skill.lower():
-                cell = InfoCell(
-                    text=skill_text,
-                    on_button_clicked=lambda checked, s=skill: self._on_skill_select(s)
-                )
-            else:
-                cell = InfoCell(text=skill_text)
-                if ':' in skill:
-                    super_name, skill_name = skill.split(':')
-                else:
-                    skill_name = skill
-                    super_name = None
-
-                target_skill = next(
-                    (s for s in self.parent.skills
-                     if s.name == skill_name and s.super_name == super_name),
-                    None
-                )
-                if target_skill:
-                    target_skill.is_occupation = True
-
-            self.layout.addLayout(cell, row, col)
-
-            col += 1
-            if col == 3:
-                col = 0
-                row += 1
-
-        credit_min = occupation.get_credit_rating_min()
-        credit_max = occupation.get_credit_rating_max()
-        credit_cell = InfoCell(f"Credit Rating ({credit_min} - {credit_max})")
-        self.layout.addLayout(credit_cell, row, col)
-
-        col += 1
-        while col < 3:
-            empty_cell = InfoCell("")
-            self.layout.addLayout(empty_cell, row, col)
-            col += 1
-            if col == 3 and row < 2:
-                col = 0
-                row += 1
-
-    def _on_skill_select(self, skill: str):
-        dialog = None
-        target_cell = None
-
-        for i in range(self.layout.count()):
-            item = self.layout.itemAt(i)
-            if isinstance(item, InfoCell) and item.label.text() == InfoCell.format_skill_name(skill):
-                target_cell = item
-                break
-
-        if target_cell and target_cell.button:
-            if target_cell.button.text() == "Switch":
-                current_skill = next(
-                    (s for s in self.parent.skills if s.display_name == target_cell.label.text()),
-                    None
-                )
-                if current_skill:
-                    current_skill.is_occupation = False
-                    self.parent.refresh_skill_display()
-
-            if "interpersonal_skill:any" in skill.lower():
-                dialog = InterpersonalSkillDialog(parent_ui=self.parent)
-            elif ":any" in skill.lower():
-                skill_type = skill.split(":")[0]
-                dialog = SpecificSkillDialog(skill_type=skill_type, parent_ui=self.parent)
-            elif skill.lower() == "any":
-                dialog = AnySkillDialog(parent_ui=self.parent)
-
-            if dialog and dialog.exec():
-                selected_skill = dialog.get_result()
-                if selected_skill:
-                    selected_skill.is_occupation = True
-                    target_cell.update_display(selected_skill.display_name, "Switch")
-                    self.parent.refresh_skill_display()
-
-
 class InfoCell(QHBoxLayout):
 
     def __init__(self, text: str, on_button_clicked=None):
         super().__init__()
         self.setContentsMargins(0, 0, 0, 0)
         self.setSpacing(5)
+
+        self.initial_text = text 
 
         self.label = QLabel(text)
         self.label.setFont(LABEL_FONT)
@@ -290,7 +194,7 @@ class InfoCell(QHBoxLayout):
         self.button = None
         if on_button_clicked is not None:
             self.button = TFBaseButton("Select", None, height=24, width=50)
-            self.button.clicked.connect(on_button_clicked)
+            self.button.clicked.connect(lambda: on_button_clicked(self))
             self.addWidget(self.button)
 
         self.addStretch()
@@ -309,16 +213,128 @@ class InfoCell(QHBoxLayout):
                 return parent
             child = child.replace('_', ' ').title()
             return f"{parent} - {child}"
-        elif skill == 'any':
+        elif skill.lower() == 'any':
             return "Any Skill"
         else:
             return skill.replace('_', ' ').title()
+
+
+class InfoGroup(QGroupBox):
+
+    def __init__(self, pc_data, parent:'Phase2UI'):
+        personal_info = pc_data.get('personal_info', {})
+        occupation_name = personal_info.get('occupation', '')
+        super().__init__(occupation_name, parent)
+        self.parent = parent
+
+        self.setObjectName("info_group")
+        self.layout = QGridLayout(self)
+        self.layout.setContentsMargins(10, 10, 10, 10)
+        self.layout.setSpacing(10)
+
+        self._pc_data = pc_data
+        self._occupation_name = occupation_name
+        self.info_cells = []
+        self._setup_content()
+
+    def _setup_content(self):
+        occupation = next((occ for occ in self.parent.occupation_list if occ.name == self._occupation_name), None)
+        if not occupation:
+            return
+
+        occ_skills = occupation.get_skills().split(',')
+        row, col = 0, 0
+
+        for skill in occ_skills:
+            skill_text = InfoCell.format_skill_name(skill)
+
+            if 'any' in skill.lower():
+                cell = InfoCell(
+                    text=skill_text,
+                    on_button_clicked=self._on_skill_select
+                )
+            else:
+                cell = InfoCell(text=skill_text)
+                if ':' in skill:
+                    super_name, skill_name = skill.split(':')
+                else:
+                    skill_name = skill
+                    super_name = None
+
+                target_skill = next(
+                    (s for s in self.parent.skills
+                     if s.name == skill_name and s.super_name == super_name),
+                    None
+                )
+                if target_skill:
+                    target_skill.is_occupation = True
+
+            self.layout.addLayout(cell, row, col)
+            self.info_cells.append(cell)
+
+            col += 1
+            if col == 3:
+                col = 0
+                row += 1
+
+        credit_min = occupation.get_credit_rating_min()
+        credit_max = occupation.get_credit_rating_max()
+        credit_cell = InfoCell(f"Credit Rating ({credit_min} - {credit_max})")
+        self.layout.addLayout(credit_cell, row, col)
+        self.info_cells.append(credit_cell)
+
+        col += 1
+        while col < 3:
+            empty_cell = InfoCell("")
+            self.layout.addLayout(empty_cell, row, col)
+            self.info_cells.append(empty_cell)
+            col += 1
+            if col == 3 and row < 2:
+                col = 0
+                row += 1
+
+    def _on_skill_select(self, target_cell: InfoCell):
+        dialog = None
+
+        if target_cell.button and target_cell.button.text() == "Switch":
+            current_skill = next(
+                (s for s in self.parent.skills if s.display_name == target_cell.label.text()),
+                None
+            )
+
+        skill = target_cell.initial_text
+
+        if "interpersonal skill" == skill.lower():
+            dialog = InterpersonalSkillDialog(parent_ui=self.parent)
+        elif skill.lower() in ["language", "fighting", "firearm", "science", "art", "pilot", "survival"]:
+            skill_type = skill.split(":")[0]
+            dialog = SpecificSkillDialog(skill_type=skill_type, parent_ui=self.parent)
+        elif skill.lower() == "any skill":
+            dialog = AnySkillDialog(parent_ui=self.parent)
+
+        if dialog and dialog.exec():
+            selected_skill = dialog.get_result()
+            if selected_skill:
+                if target_cell.button.text() == "Switch":
+                    current_skill = next(
+                        (s for s in self.parent.skills if s.display_name == target_cell.label.text()),
+                        None
+                    )
+                    if current_skill:
+                        current_skill.is_occupation = False
+                        
+                selected_skill.is_occupation = True
+                target_cell.update_display(selected_skill.display_name, "Switch")
+                self.parent.refresh_skill_display()
 
 
 class Phase2UI(BasePhaseUI):
     def __init__(self, main_window, parent=None):
         self.config = main_window.config
         self.main_window = main_window
+
+        self.max_occupation_points = self.main_window.pc_data.get('personal_info', {}).get('occupation_skill_points', 0)
+        self.max_interest_points = self.main_window.pc_data.get('personal_info', {}).get('interest_skill_points', 0)
 
         self.check_button = None
         self.previous_button = None
@@ -459,7 +475,8 @@ class Phase2UI(BasePhaseUI):
         pass
 
     def _on_expand_skill(self, skill: str):
-        print(skill)
+        dialog = SkillExpandDialog(skill.lower(), self)
+        dialog.exec()
 
     def _on_add_new_skill(self):
         print("Adding new skill")
@@ -470,6 +487,20 @@ class Phase2UI(BasePhaseUI):
                 skill_entry.name_label.setStyleSheet("color: blue;")
             else:
                 skill_entry.name_label.setStyleSheet("")
+
+    def calculate_remaining_points(self):
+        occupation_used = sum(skill.occupation_point for skill in self.skills)
+        interest_used = sum(skill.interest_point for skill in self.skills)
+        
+        return {
+            'occupation': self.max_occupation_points - occupation_used,
+            'interest': self.max_interest_points - interest_used
+        }
+
+    def update_points_display(self):
+        remaining = self.calculate_remaining_points()
+        self.points_group.occupation_points_entry.set_value(str(remaining['occupation']))
+        self.points_group.interest_points_entry.set_value(str(remaining['interest']))
 
 
 class SkillExpandDialog(TFComputingDialog):
@@ -575,6 +606,15 @@ class SkillExpandDialog(TFComputingDialog):
     def get_result(self) -> List[Skill]:
         return [entry.skill for entry in self.skill_entries.values()]
     
+    def get_field_values(self) -> dict:
+        skill_data = {}
+        for name, entry in self.skill_entries.items():
+            skill_data[name] = entry.get_values()
+        return skill_data
+    
+    def process_validated_data(self, data: dict) -> any:
+        pass
+    
 
 class BaseSkillSelectDialog(TFComputingDialog):
     def __init__(self, title: str, parent_ui: 'Phase2UI'):
@@ -626,7 +666,7 @@ class BaseSkillSelectDialog(TFComputingDialog):
             self._result = result
             self.accept()
         else:
-            self.parent_ui.main_window.app.show_warning("Select Failure", "This skill is already an occupation skill.")
+            self.parent_ui.main_window.app.show_warning("Select Failure", result)
 
 
 class InterpersonalSkillDialog(BaseSkillSelectDialog):
@@ -674,7 +714,7 @@ class SpecificSkillDialog(BaseSkillSelectDialog):
 
         type_skills = sorted(
             [skill for skill in self.parent_ui.skills 
-             if skill.super_name == self.skill_type],
+             if skill.super_name == self.skill_type.lower()],
             key=lambda x: x.name
         )
 

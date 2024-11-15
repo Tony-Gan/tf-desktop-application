@@ -2,7 +2,7 @@
     {
         "name": "AAAAAA",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "history,library_use,language:any,art:writing,psychology,fighting:any,interpersonal_skill:any,any",
+        "occupation_skills": "history,art:any,language:any,art:writing,psychology,interpersonal_skill:any,any,any",
         "category": "Academic",
         "credit_rating": "10-40"
     },
