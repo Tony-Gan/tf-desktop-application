@@ -66,7 +66,8 @@ class TFValidationRule:
         Returns:
             (is_valid, error_message): Validation result and error message
         """
-        if is_new and self.required and not value:
+        # if is_new and self.required and not value:
+        if self.required and not value:
             return False, self.error_messages['required']
         
         if not value and not self.required:

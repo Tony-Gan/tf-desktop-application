@@ -97,8 +97,17 @@ class BasePhaseUI(QWidget):
             self._reset_content()
 
     def _reset_content(self):
-        self.has_activated = False
-        self.main_window.set_phase_status(self.phase, PhaseStatus.NOT_START)
+        self.reset_all()
+    
+    def reset_all(self):
+        instantiated_phases = sorted(self.main_window.phase_uis.keys(), key=lambda phase: phase.value, reverse=True)
+
+        current_phase = self.phase
+
+        for phase in instantiated_phases:
+            if phase.value > current_phase.value:
+                print(f"Calling reset for {phase}")
+                self.main_window.phase_uis[phase]._reset_content()
     
     def _on_next_clicked(self):
         phase_list = list(PCBuilderPhase)

@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QFrame, QWidget, QLayout, QStackedWidge
 from PyQt6.QtCore import pyqtSignal, Qt
 
 from core.windows.tf_draggable_window import TFDraggableWindow
+from ui.components.tf_date_entry import TFDateEntry
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_value_entry import TFValueEntry
 from utils.registry.tf_tool_matadata import TFToolMetadata
@@ -121,6 +122,9 @@ class TFPcBuilder(TFDraggableWindow):
             for phase, status in self.phase_status.items():
                 self.progress_ui.update_status(phase, status)
 
+    def get_phase_status(self, phase: PCBuilderPhase) -> PhaseStatus:
+        return self.phase_status.get(phase, PhaseStatus.NOT_START)
+    
     def set_phase_status(self, phase: PCBuilderPhase, status: PhaseStatus):
         self.phase_status[phase] = status
         self._update_progress_display()
@@ -184,63 +188,40 @@ class TFPcBuilder(TFDraggableWindow):
             self.config.update_from_dict(result)
 
             if response == "Yes, Reset Progress" or old_mode != self.config.generation_mode:
-                self._disable_all_components()
                 self._reset_progress()
 
             self.config_updated.emit()
 
-    def _disable_all_components(self):
-        if hasattr(self, 'calculate_button'):
-            self.calculate_button.setEnabled(False)
-        if hasattr(self, 'exchange_button'):
-            self.exchange_button.setEnabled(False)
-        if hasattr(self, 'next_button'):
-            self.next_button.setEnabled(False)
-
-        for phase_ui in self.phase_uis.values():
-            if not sip.isdeleted(phase_ui):
-                for entry in getattr(phase_ui, 'stat_entries', {}).values():
-                    if not sip.isdeleted(entry):
-                        entry.value_field.setEnabled(False)
-
-                for attr in ['age', 'occupation', 'gender', 'nationality',
-                             'residence', 'birthplace', 'player_name',
-                             'campaign_date', 'era']:
-                    if hasattr(phase_ui, attr) and not sip.isdeleted(getattr(phase_ui, attr)):
-                        getattr(phase_ui, attr).value_field.setEnabled(False)
+    def _reset_field(self, field):
+        if isinstance(field, TFDateEntry):
+            field.date_field.setEnabled(True)
+            field.set_value("")
+        else:
+            field.value_field.setEnabled(True)
+            field.set_value("")
 
     def _reset_progress(self):
-        try:
-            self.pc_data.clear()
+        self.pc_data.clear()
 
-            self.phase_status = {phase: PhaseStatus.NOT_START for phase in PCBuilderPhase}
-            self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
+        self.phase_status = {phase: PhaseStatus.NOT_START for phase in PCBuilderPhase}
+        self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
 
-            for phase_ui in list(self.phase_uis.values()):
-                try:
-                    if not sip.isdeleted(phase_ui):
-                        phase_ui._reset_content()
-                except Exception as e:
-                    print(f"Error resetting phase UI: {str(e)}")
+        for phase_ui in list(self.phase_uis.values()):
+            if not sip.isdeleted(phase_ui):
+                phase_ui._reset_content()
 
-            if (self.current_phase != PCBuilderPhase.PHASE1 and
-                    PCBuilderPhase.PHASE1 in self.phase_uis and
-                    not sip.isdeleted(self.phase_uis[PCBuilderPhase.PHASE1])):
-                self.current_phase = PCBuilderPhase.PHASE1
-                self.stacked_widget.setCurrentWidget(self.phase_uis[PCBuilderPhase.PHASE1])
+        if (self.current_phase != PCBuilderPhase.PHASE1 and
+                PCBuilderPhase.PHASE1 in self.phase_uis and
+                not sip.isdeleted(self.phase_uis[PCBuilderPhase.PHASE1])):
+            self.current_phase = PCBuilderPhase.PHASE1
+            self.stacked_widget.setCurrentWidget(self.phase_uis[PCBuilderPhase.PHASE1])
 
-            self._update_progress_display()
+        self._update_progress_display()
 
-            if hasattr(self, 'calculate_button'):
-                self.calculate_button.setEnabled(True)
-            if hasattr(self, 'rule_settings_action'):
-                self.rule_settings_action.setEnabled(True)
-
-        except Exception as e:
-            print(f"Error in reset progress: {str(e)}")
-            self.phase_status = {phase: PhaseStatus.NOT_START for phase in PCBuilderPhase}
-            self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
-            self._update_progress_display()
+        if hasattr(self, 'calculate_button'):
+            self.calculate_button.setEnabled(True)
+        if hasattr(self, 'rule_settings_action'):
+            self.rule_settings_action.setEnabled(True)
 
     def closeEvent(self, event):
         self.closed.emit(self)
@@ -272,22 +253,18 @@ class TFPcBuilder(TFDraggableWindow):
             name_str = f'"{obj_name}"' if obj_name else "no name"
             widget_class = widget.__class__.__name__
 
-            # 只打印核心信息
             print(f"{indent}{widget_class} {name_str} ({widget.size().width()}x{widget.size().height()}) "
                   f"{'visible' if widget.isVisible() else 'hidden'}")
 
-            # 处理布局
             layout = widget.layout()
-            if layout and not isinstance(widget, (TFValueEntry, TFOptionEntry)):  # 跳过这些组件的布局打印
+            if layout and not isinstance(widget, (TFValueEntry, TFOptionEntry)):
                 self._print_layout_info(layout, level + 1, processed)
 
-            # 处理子部件
             for child in widget.findChildren(QWidget, options=Qt.FindChildOption.FindDirectChildrenOnly):
                 if child and child.parent() is widget:
                     self._print_widget_info(child, level + 1, processed)
 
         except Exception as e:
-            # 忽略特定类型的错误
             if "'QHBoxLayout' object is not callable" not in str(e):
                 print(f"{indent}Error: {str(e)}")
 

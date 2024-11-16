@@ -1,4 +1,5 @@
 import os
+import math
 import shutil
 import random
 from datetime import datetime, timezone
@@ -10,12 +11,13 @@ from PyQt6.QtWidgets import (QFrame, QVBoxLayout, QHBoxLayout, QGroupBox, QButto
                              QDialog, QScrollArea, QLabel, QRadioButton, QGridLayout,
                              QWidget, QFileDialog, QSizePolicy, QSpacerItem)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QFont
+from PyQt6.QtGui import QPixmap, QFont, QPainter, QPen, QColor
 
 from ui.components.tf_base_button import TFBaseButton, TFConfirmButton
 from ui.components.tf_computing_dialog import TFComputingDialog
 from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_option_entry import TFOptionEntry
+from ui.components.tf_date_entry import TFDateEntry
 from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
 from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
 from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
@@ -47,7 +49,7 @@ class Phase1UI(BasePhaseUI):
         self.skill_points = None
         
         self.stats_left_panel = None
-        self.stats_right_panel = None
+        self.stats_mid_panel = None
         self.stat_entries = {}
         self.points_label = None
         self.occupation_points_entry = None
@@ -80,7 +82,7 @@ class Phase1UI(BasePhaseUI):
         upper_layout.setContentsMargins(0, 0, 0, 0)
         upper_layout.setSpacing(10)
 
-        upper_layout.addWidget(self._create_avatar_group())
+        upper_layout.addWidget(self._create_avatar_group(), 1)
         
         mid_panel = QFrame()
         mid_layout = QVBoxLayout(mid_panel)
@@ -90,13 +92,13 @@ class Phase1UI(BasePhaseUI):
         mid_layout.addWidget(self._create_metadata_group())
         mid_layout.addWidget(self._create_left_personal_info_group())
         
-        upper_layout.addWidget(mid_panel)
+        upper_layout.addWidget(mid_panel, 2)
         
-        upper_layout.addWidget(self._create_personal_info_group())
+        upper_layout.addWidget(self._create_personal_info_group(), 2)
         
-        content_layout.addWidget(upper_frame)
+        content_layout.addWidget(upper_frame, 4)
         
-        content_layout.addWidget(self._create_derived_stats_group())
+        content_layout.addWidget(self._create_derived_stats_group(), 1)
         
         stats_frame = QFrame()
         stats_layout = QHBoxLayout(stats_frame)
@@ -104,12 +106,14 @@ class Phase1UI(BasePhaseUI):
         stats_layout.setSpacing(10)
         
         self.stats_left_panel = QFrame()
+        self.stats_mid_panel = QFrame()
         self.stats_right_panel = QFrame()
         
-        stats_layout.addWidget(self.stats_left_panel, 1)
-        stats_layout.addWidget(self.stats_right_panel, 2)
+        stats_layout.addWidget(self.stats_left_panel, 4)
+        stats_layout.addWidget(self.stats_mid_panel, 7)
+        stats_layout.addWidget(self.stats_right_panel, 6)
         
-        content_layout.addWidget(stats_frame)
+        content_layout.addWidget(stats_frame, 11)
         
         self.content_area.setLayout(content_layout)
         self._update_stats_display()
@@ -137,10 +141,19 @@ class Phase1UI(BasePhaseUI):
             on_clicked=self._on_exchange
         )
         self.exchange_button.setObjectName("exchange_button")
+        self.description_button = TFBaseButton(
+            "Char. Info",
+            self,
+            height=30,
+            enabled=False,
+            on_clicked=self._on_description_clicked
+        )
+        self.description_button.setObjectName("description_button")
 
         button_layout.addWidget(self.occupation_list_button)
         button_layout.addWidget(self.calculate_button)
         button_layout.addWidget(self.exchange_button)
+        button_layout.addWidget(self.description_button)
 
     def _setup_validation_rules(self):
         self.validator.add_custom_validator(
@@ -182,8 +195,8 @@ class Phase1UI(BasePhaseUI):
             'personal_info.age': TFValidationRule(
                 type_=int,
                 required=True,
-                min_val=12,
-                max_val=80
+                min_val=15,
+                max_val=90
             ),
             'personal_info.residence': TFValidationRule(
                 type_=str,
@@ -228,17 +241,18 @@ class Phase1UI(BasePhaseUI):
         self.avatar_label = QLabel()
         self.avatar_label.setFixedSize(100, 100)
         self.avatar_label.setStyleSheet("border: 1px solid gray")
-        self.avatar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         self.avatar_button = TFBaseButton(
             "Upload Avatar",
             self,
-            on_clicked=self._on_avatar_upload
+            on_clicked=self._on_avatar_upload,
+            width=100
         )
         
         layout.addStretch()
         layout.addWidget(self.avatar_label, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.avatar_button)
+        layout.addSpacing(15)
+        layout.addWidget(self.avatar_button, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addStretch()
         return group
 
@@ -251,13 +265,13 @@ class Phase1UI(BasePhaseUI):
         self.player_name = TFValueEntry(
             "Player Name:",
             label_size=135,
-            value_size=140,
+            value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
-        self.campaign_date = TFValueEntry(
+        self.campaign_date = TFDateEntry(
             "Campaign Date:",
             label_size=135,
-            value_size=140,
+            value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         
@@ -267,7 +281,7 @@ class Phase1UI(BasePhaseUI):
             era_options,
             current_value="Modern",
             label_size=135,
-            value_size=140,
+            value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         
@@ -285,13 +299,13 @@ class Phase1UI(BasePhaseUI):
         
         self.char_name = TFValueEntry(
             "Character Name:", 
-            value_size=140, 
+            value_size=150, 
             label_size=135,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         self.age = TFValueEntry(
             "Age:", 
-            value_size=140, 
+            value_size=150, 
             label_size=135, 
             number_only=True,
             alignment=Qt.AlignmentFlag.AlignLeft,
@@ -313,7 +327,7 @@ class Phase1UI(BasePhaseUI):
             "Gender:", 
             ["None", "Male", "Female", "Other"],
             label_size=130,
-            value_size=140,
+            value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         
@@ -322,7 +336,7 @@ class Phase1UI(BasePhaseUI):
             "Occupation:", 
             occupation_options, 
             label_size=130, 
-            value_size=140,
+            value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft,
             extra_value_width=40
         )
@@ -330,7 +344,7 @@ class Phase1UI(BasePhaseUI):
         self.skill_points_formula = TFValueEntry(
             "Skill Points:",
             label_size=130,
-            value_size=140,
+            value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         self.skill_points_formula.value_field.setEnabled(False)
@@ -339,21 +353,21 @@ class Phase1UI(BasePhaseUI):
         self.nationality = TFValueEntry(
             "Nationality:", 
             label_size=130, 
-            value_size=140,
+            value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         
         self.residence = TFValueEntry(
             "Residence:", 
             label_size=130, 
-            value_size=140,
+            value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         
         self.birthplace = TFValueEntry(
             "Birthplace:", 
             label_size=130, 
-            value_size=140,
+            value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         
@@ -406,12 +420,12 @@ class Phase1UI(BasePhaseUI):
                     item.widget().deleteLater()
             sip.delete(self.stats_left_panel.layout())
 
-        if self.stats_right_panel.layout():
-            while self.stats_right_panel.layout().count():
-                item = self.stats_right_panel.layout().takeAt(0)
+        if self.stats_mid_panel.layout():
+            while self.stats_mid_panel.layout().count():
+                item = self.stats_mid_panel.layout().takeAt(0)
                 if item.widget():
                     item.widget().deleteLater()
-            sip.delete(self.stats_right_panel.layout())
+            sip.delete(self.stats_mid_panel.layout())
 
         self.stat_entries.clear()
         self.points_label = None
@@ -421,6 +435,20 @@ class Phase1UI(BasePhaseUI):
             self._setup_points_mode()
         else:
             self._setup_destiny_mode()
+
+    def _update_right_panel_chart(self):
+        layout = QVBoxLayout()
+        layout.setContentsMargins(5, 5, 5, 5)
+        
+        radar_chart = StatRadarChart()
+        stats = {
+            stat: int(entry.get_value())
+            for stat, entry in self.stat_entries.items()
+        }
+        radar_chart.set_stats(stats)
+        
+        layout.addWidget(radar_chart)
+        self.stats_right_panel.setLayout(layout)
 
     def _update_occupation_formula(self):
         current_text = self.occupation.get_value()
@@ -509,7 +537,7 @@ class Phase1UI(BasePhaseUI):
 
         left_layout.addStretch()
 
-        right_layout = QGridLayout(self.stats_right_panel)
+        right_layout = QGridLayout(self.stats_mid_panel)
         right_layout.setContentsMargins(5, 5, 5, 5)
         right_layout.setSpacing(5)
 
@@ -546,6 +574,9 @@ class Phase1UI(BasePhaseUI):
     def _setup_destiny_mode(self):
         left_layout = QVBoxLayout()
         left_layout.setContentsMargins(5, 5, 5, 5)
+        left_layout.setSpacing(15)
+
+        left_layout.addStretch()
 
         self.dice_count_entry = TFValueEntry(
             "Dice Count:",
@@ -556,13 +587,6 @@ class Phase1UI(BasePhaseUI):
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         left_layout.addWidget(self.dice_count_entry)
-
-        self.roll_button = TFBaseButton(
-            "Roll for Stats",
-            self,
-            on_clicked=self._on_roll_stats
-        )
-        left_layout.addWidget(self.roll_button)
 
         self.occupation_points_entry = TFValueEntry(
             "Occupation Points:",
@@ -584,6 +608,15 @@ class Phase1UI(BasePhaseUI):
         )
         left_layout.addWidget(self.interest_points_entry)
 
+        self.roll_button = TFBaseButton(
+            "Roll for Stats",
+            self,
+            on_clicked=self._on_roll_stats,
+            height=45,
+            width=150
+        )
+        left_layout.addWidget(self.roll_button)
+
         left_layout.addStretch()
 
         self.stats_left_panel.setLayout(left_layout)
@@ -591,13 +624,13 @@ class Phase1UI(BasePhaseUI):
         right_layout = QVBoxLayout()
         right_layout.setContentsMargins(5, 5, 5, 5)
 
-        self.roll_results_frame = QFrame(self.stats_right_panel)
+        self.roll_results_frame = QFrame(self.stats_mid_panel)
         self.roll_results_frame.setMinimumHeight(200)
         self.roll_results_frame.setLayout(QVBoxLayout())
         self.roll_results_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         right_layout.addWidget(self.roll_results_frame)
-        self.stats_right_panel.setLayout(right_layout)
+        self.stats_mid_panel.setLayout(right_layout)
     
     def _on_avatar_upload(self):
         file_path, _ = QFileDialog.getOpenFileName(
@@ -752,8 +785,8 @@ class Phase1UI(BasePhaseUI):
         else:
             self.roll_results_frame = QFrame()
             self.roll_results_frame.setLayout(QVBoxLayout())
-            if self.stats_right_panel.layout():
-                self.stats_right_panel.layout().addWidget(self.roll_results_frame)
+            if self.stats_mid_panel.layout():
+                self.stats_mid_panel.layout().addWidget(self.roll_results_frame)
         
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -776,10 +809,13 @@ class Phase1UI(BasePhaseUI):
             group_layout.setContentsMargins(2, 2, 2, 2)
 
             stat_values = {stat: self._roll_stat(stat) for stat in stats}
-            stats_text = ", ".join(
-                f"{stat}: {value}" if stat != "INT" else f"\n{stat}: {value}"
+            total_without_luck = sum(value for stat, value in stat_values.items() if stat != 'LUK')
+            total_with_luck = sum(stat_values.values())
+            base_stats_text = "|".join(
+                f"{stat}:{value}" if stat not in ["INT"] else f"\n{stat}:{value}"
                 for stat, value in stat_values.items()
             )
+            stats_text = f"{base_stats_text}\nTotals(base/with luck): {total_without_luck}/{total_with_luck}"
             
             radio = QRadioButton(stats_text)
             radio.setFont(QFont("Inconsolata", 10))
@@ -804,10 +840,8 @@ class Phase1UI(BasePhaseUI):
         self.roll_button.setEnabled(False)
 
     def _roll_stat(self, stat_type: str) -> int:
-        if stat_type in ['SIZ', 'INT']:
+        if stat_type in ['SIZ', 'INT', 'EDU']:
             result = (sum(random.randint(1, 6) for _ in range(2)) + 6) * 5
-        elif stat_type == 'EDU':
-            result = (sum(random.randint(1, 6) for _ in range(3)) + 3) * 5
         else:
             result = sum(random.randint(1, 6) for _ in range(3)) * 5
             
@@ -905,10 +939,13 @@ class Phase1UI(BasePhaseUI):
             self.occupation_points_entry.set_value(str(occupation_points))
             self.interest_points_entry.set_value(str(interest_points))
 
+        self._update_right_panel_chart()
+
         self._lock_fields()
 
         self.next_button.setEnabled(True)
         self.calculate_button.setEnabled(False)
+        self.description_button.setEnabled(True)
 
         if self.config.allow_stat_exchange:
             self.exchange_button.setEnabled(True)
@@ -944,6 +981,9 @@ class Phase1UI(BasePhaseUI):
     def _on_occupation_list_clicked(self):
         print("Yo!")
     
+    def _on_description_clicked(self):
+        print("Developing")
+
     def _perform_age_calculation(self):
         age = int(self.age.get_value())
         modifications = []
@@ -1049,14 +1089,14 @@ class Phase1UI(BasePhaseUI):
 
         if self.config.is_points_mode():
             data['basic_stats'] = {
-                'strength': self.stat_entries['STR'].get_value(),
-                'constitution': self.stat_entries['CON'].get_value(),
-                'size': self.stat_entries['SIZ'].get_value(),
-                'dexterity': self.stat_entries['DEX'].get_value(),
-                'appearance': self.stat_entries['APP'].get_value(),
-                'intelligence': self.stat_entries['INT'].get_value(),
-                'power': self.stat_entries['POW'].get_value(),
-                'education': self.stat_entries['EDU'].get_value()
+                'strength': self.stat_entries.get('STR', TFValueEntry("STR:", value_size=40)).get_value() or "0",
+                'constitution': self.stat_entries.get('CON', TFValueEntry("CON:", value_size=40)).get_value() or "0",
+                'size': self.stat_entries.get('SIZ', TFValueEntry("SIZ:", value_size=40)).get_value() or "0",
+                'dexterity': self.stat_entries.get('DEX', TFValueEntry("DEX:", value_size=40)).get_value() or "0",
+                'appearance': self.stat_entries.get('APP', TFValueEntry("APP:", value_size=40)).get_value() or "0",
+                'intelligence': self.stat_entries.get('INT', TFValueEntry("INT:", value_size=40)).get_value() or "0",
+                'power': self.stat_entries.get('POW', TFValueEntry("POW:", value_size=40)).get_value() or "0",
+                'education': self.stat_entries.get('EDU', TFValueEntry("EDU:", value_size=40)).get_value() or "0"
             }
 
             if self.config.allow_custom_luck:
@@ -1068,6 +1108,13 @@ class Phase1UI(BasePhaseUI):
                     f"Currently {abs(self.remaining_points)} points "
                     f"{'over' if self.remaining_points < 0 else 'remaining'}"
                 )
+                return False
+        else:
+            if self.roll_button.isEnabled():
+                self._show_validation_error("Please roll for stats before calculating")
+                return False
+            if 'STR' not in self.stat_entries:
+                self._show_validation_error("Please complete rolling and selecting stats before calculating")
                 return False
 
         errors = self.validator.validate_dict(data, is_new=True)
@@ -1092,101 +1139,104 @@ class Phase1UI(BasePhaseUI):
         self.calculate_button.setEnabled(False)
 
     def _reset_content(self):
-        try:
-            self.remaining_exchange_times = self.config.stat_exchange_times
+        super()._reset_content()
+        
+        self.remaining_exchange_times = self.config.stat_exchange_times
 
-            # Comment: 改变stat entries的清理方式
-            for entry in self.stat_entries.values():
-                if not sip.isdeleted(entry):
-                    try:
-                        if hasattr(entry.value_field, 'textChanged'):
-                            entry.value_field.textChanged.disconnect()
-                    except TypeError:
-                        pass
-                    entry.value_field.setEnabled(False)
+        for entry in self.stat_entries.values():
+            if not sip.isdeleted(entry):
+                try:
+                    if hasattr(entry.value_field, 'textChanged'):
+                        entry.value_field.textChanged.disconnect()
+                except TypeError:
+                    pass
+                entry.value_field.setEnabled(False)
 
-            if 'metadata' in self.main_window.pc_data:
-                del self.main_window.pc_data['metadata']
-            if 'personal_info' in self.main_window.pc_data:
-                del self.main_window.pc_data['personal_info']
-            if 'basic_stats' in self.main_window.pc_data:
-                del self.main_window.pc_data['basic_stats']
+        if 'metadata' in self.main_window.pc_data:
+            del self.main_window.pc_data['metadata']
+        if 'personal_info' in self.main_window.pc_data:
+            del self.main_window.pc_data['personal_info']
+        if 'basic_stats' in self.main_window.pc_data:
+            del self.main_window.pc_data['basic_stats']
 
-            self.player_name.set_value("")
-            self.campaign_date.set_value("")
-            self.era.set_value("Modern")
+        self.player_name.set_value("")
+        self.campaign_date.set_value("")
+        self.era.set_value("Modern")
 
-            self.char_name.set_value("")
-            self.age.set_value("")
-            self.gender.set_value("None")
-            self.occupation.set_value("None")
-            self.nationality.set_value("")
-            self.residence.set_value("")
-            self.birthplace.set_value("")
-            self.skill_points_formula.set_value("")
+        self.char_name.set_value("")
+        self.age.set_value("")
+        self.gender.set_value("None")
+        self.occupation.set_value("None")
+        self.nationality.set_value("")
+        self.residence.set_value("")
+        self.birthplace.set_value("")
+        self.skill_points_formula.set_value("")
 
-            self.player_name.value_field.setEnabled(True)
-            self.campaign_date.value_field.setEnabled(True)
-            self.era.value_field.setEnabled(True)
-            self.char_name.value_field.setEnabled(True)
-            self.age.value_field.setEnabled(True)
-            self.gender.value_field.setEnabled(True)
-            self.occupation.value_field.setEnabled(True)
-            self.nationality.value_field.setEnabled(True)
-            self.residence.value_field.setEnabled(True)
-            self.birthplace.value_field.setEnabled(True)
+        self.player_name.value_field.setEnabled(True)
+        self.campaign_date.date_field.setEnabled(True)
+        self.era.value_field.setEnabled(True)
+        self.char_name.value_field.setEnabled(True)
+        self.age.value_field.setEnabled(True)
+        self.gender.value_field.setEnabled(True)
+        self.occupation.value_field.setEnabled(True)
+        self.nationality.value_field.setEnabled(True)
+        self.residence.value_field.setEnabled(True)
+        self.birthplace.value_field.setEnabled(True)
 
-            for entry in self.derived_entries.values():
-                if not sip.isdeleted(entry):
-                    entry.set_value("")
+        for entry in self.derived_entries.values():
+            if not sip.isdeleted(entry):
+                entry.set_value("")
 
-            self._update_stats_display()
+        self._update_stats_display()
 
-            if self.config.is_points_mode():
-                self.remaining_points = self.config.points_available
-                if self.remaining_points_entry and not sip.isdeleted(self.remaining_points_entry):
-                    self.remaining_points_entry.set_value(str(self.remaining_points))
-                if self.occupation_points_entry and not sip.isdeleted(self.occupation_points_entry):
-                    self.occupation_points_entry.set_value("")
-                if self.interest_points_entry and not sip.isdeleted(self.interest_points_entry):
-                    self.interest_points_entry.set_value("")
-
-                for stat in ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUK']:
-                    if stat in self.stat_entries and not sip.isdeleted(self.stat_entries[stat]):
-                        self.stat_entries[stat].set_value("")
-                        if stat != 'LUK' or (stat == 'LUK' and self.config.allow_custom_luck):
-                            self.stat_entries[stat].value_field.setEnabled(True)
-                            self.stat_entries[stat].value_field.textChanged.connect(self._on_stat_value_changed)
-
-            else:
-                if not sip.isdeleted(self.roll_button):
-                    self.roll_button.setEnabled(True)
-
-                if self.roll_results_frame and self.roll_results_frame.layout():
-                    QWidget().setLayout(self.roll_results_frame.layout())
-                    self.roll_results_frame.setLayout(QVBoxLayout())
-
-                for stat, entry in list(self.stat_entries.items()):
-                    if not sip.isdeleted(entry):
-                        entry.value_field.setEnabled(False)
-                        entry.set_value("")
-
+        if self.config.is_points_mode():
+            self.remaining_points = self.config.points_available
+            if self.remaining_points_entry and not sip.isdeleted(self.remaining_points_entry):
+                self.remaining_points_entry.set_value(str(self.remaining_points))
             if self.occupation_points_entry and not sip.isdeleted(self.occupation_points_entry):
                 self.occupation_points_entry.set_value("")
-
             if self.interest_points_entry and not sip.isdeleted(self.interest_points_entry):
                 self.interest_points_entry.set_value("")
 
-            self.calculate_button.setEnabled(True)
-            self.exchange_button.setEnabled(False)
-            self.next_button.setEnabled(False)
+            for stat in ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUK']:
+                if stat in self.stat_entries and not sip.isdeleted(self.stat_entries[stat]):
+                    self.stat_entries[stat].set_value("")
+                    if stat != 'LUK' or (stat == 'LUK' and self.config.allow_custom_luck):
+                        self.stat_entries[stat].value_field.setEnabled(True)
+                        self.stat_entries[stat].value_field.textChanged.connect(self._on_stat_value_changed)
 
-            super()._reset_content()
+        else:
+            if not sip.isdeleted(self.roll_button):
+                self.roll_button.setEnabled(True)
 
-        except Exception as e:
-            print(f"Error in Phase1UI reset: {str(e)}")
-            self.has_activated = False
-            self.main_window.set_phase_status(self.phase, PhaseStatus.NOT_START)
+            if self.roll_results_frame and self.roll_results_frame.layout():
+                QWidget().setLayout(self.roll_results_frame.layout())
+                self.roll_results_frame.setLayout(QVBoxLayout())
+
+            for stat, entry in list(self.stat_entries.items()):
+                if not sip.isdeleted(entry):
+                    entry.value_field.setEnabled(False)
+                    entry.set_value("")
+
+        if self.occupation_points_entry and not sip.isdeleted(self.occupation_points_entry):
+            self.occupation_points_entry.set_value("")
+
+        if self.interest_points_entry and not sip.isdeleted(self.interest_points_entry):
+            self.interest_points_entry.set_value("")
+
+        if self.stats_right_panel.layout():
+            while self.stats_right_panel.layout().count():
+                item = self.stats_right_panel.layout().takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
+            sip.delete(self.stats_right_panel.layout())
+
+        self.calculate_button.setEnabled(True)
+        self.exchange_button.setEnabled(False)
+        self.next_button.setEnabled(False)
+        self.description_button.setEnabled(False)
+
+        self.main_window.set_phase_status(self.phase, PhaseStatus.NOT_START)
 
     def _show_validation_error(self, message: str):
         self.main_window.app.show_warning(
@@ -1397,3 +1447,109 @@ class AgeReductionDialog(TFComputingDialog):
             result[stat] = reduction
 
         return result
+
+
+class StatRadarChart(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.stats = {}
+        self.stats_order = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUK']
+        
+    def set_stats(self, stats: dict):
+        self.stats = stats
+        self.update()
+        
+    def paintEvent(self, event):
+        if not self.stats:
+            return
+            
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        width = self.width()
+        height = self.height()
+        center_x = width / 2
+        center_y = height / 2
+        radius = min(width, height) / 2 - 40 
+        
+        grid_pen = QPen(QColor(180, 180, 180)) 
+        grid_pen.setWidth(1)
+        
+        for i in range(5):
+            current_radius = radius * (i + 1) / 5
+            points = []
+            for j in range(9):
+                angle = j * 2 * math.pi / 9 - math.pi / 2
+                x = center_x + current_radius * math.cos(angle)
+                y = center_y + current_radius * math.sin(angle)
+                points.append((x, y))
+            
+            painter.setPen(grid_pen)
+            for j in range(9):
+                painter.drawLine(
+                    int(points[j][0]), 
+                    int(points[j][1]), 
+                    int(points[(j + 1) % 9][0]), 
+                    int(points[(j + 1) % 9][1])
+                )
+            
+            if i < 4:
+                value = (i + 1) * 20
+                painter.drawText(
+                    int(center_x - 10), 
+                    int(center_y - current_radius - 5),
+                    str(value)
+                )
+        
+        for i in range(9):
+            angle = i * 2 * math.pi / 9 - math.pi / 2
+            end_x = center_x + radius * math.cos(angle)
+            end_y = center_y + radius * math.sin(angle)
+            painter.drawLine(
+                int(center_x),
+                int(center_y),
+                int(end_x),
+                int(end_y)
+            )
+            
+        stat_pen = QPen(QColor(0, 139, 139))
+        stat_pen.setWidth(2)
+        painter.setPen(stat_pen)
+        
+        points = []
+        for i, stat in enumerate(self.stats_order):
+            value = min(self.stats[stat], 100)
+            current_radius = radius * value / 100
+            angle = i * 2 * math.pi / 9 - math.pi / 2
+            x = center_x + current_radius * math.cos(angle)
+            y = center_y + current_radius * math.sin(angle)
+            points.append((x, y))
+        
+        for i in range(len(points)):
+            painter.drawLine(
+                int(points[i][0]),
+                int(points[i][1]),
+                int(points[(i + 1) % 9][0]),
+                int(points[(i + 1) % 9][1])
+            )
+
+        text_pen = QPen(QColor(100, 100, 100))
+        painter.setPen(text_pen)
+        
+        font = QFont()
+        font.setPointSize(9)
+        painter.setFont(font)
+        
+        for i, stat in enumerate(self.stats_order):
+            value = min(self.stats[stat], 100)
+            angle = i * 2 * math.pi / 9 - math.pi / 2
+            label_radius = radius + 20
+            label_x = center_x + label_radius * math.cos(angle)
+            label_y = center_y + label_radius * math.sin(angle)
+            
+            text = f"{stat}:{value}"
+            painter.drawText(
+                int(label_x - 20), 
+                int(label_y + 5), 
+                text
+            )

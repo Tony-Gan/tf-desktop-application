@@ -2023,7 +2023,10 @@ class SkillInputDialog(TFComputingDialog):
 class SkillAddDialog(TFComputingDialog):
     def __init__(self, parent=None, **kwargs):
         self.all_grouped_skills = GROUPED_SKILLS | {'language'} | SPECIAL_SKILLS
-        super().__init__("Add Skill", parent)
+        button_config = [
+            {"text": "OK", "callback": self._on_ok_clicked}
+        ]
+        super().__init__("Add Skill", parent, button_config=button_config)
         self.setup_validation_rules()
         self.setup_content()
         
@@ -2377,10 +2380,13 @@ class ItemAddDialog(TFComputingDialog):
 
 class SkillDeleteDialog(TFComputingDialog):
     def __init__(self, parent=None, **kwargs):
+        button_config = [
+            {"text": "OK", "callback": self._on_ok_clicked}
+        ]
         self.skills = kwargs.get('skills', {})
         self.grouped_skills = self._group_skills(self.skills)
         self.checkboxes = {}
-        super().__init__("Delete Skills", parent)
+        super().__init__("Delete Skills", parent, button_config)
         self.setup_validation_rules()
         self.setup_content()
         

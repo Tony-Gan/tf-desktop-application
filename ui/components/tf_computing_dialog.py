@@ -9,6 +9,7 @@ from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_check_with_label import TFCheckWithLabel
+from ui.components.tf_base_button import TFBaseButton
 from utils.validator.tf_validator import TFValidator
 
 class TFComputingDialog(QDialog):
@@ -85,7 +86,7 @@ class TFComputingDialog(QDialog):
         button_layout.setContentsMargins(0, 0, 0, 0)
 
         for button in self.button_config:
-            btn = QPushButton(button["text"])
+            btn = TFBaseButton(button["text"])
             btn.setFont(self.create_font())
             if "callback" in button and callable(button["callback"]):
                 btn.clicked.connect(button["callback"])

@@ -55,7 +55,7 @@ DEFAULT_SKILLS = {
     "history": 5,
     "intimidate": 15,
     "jump": 20,
-    "language:own": 1,
+    "language_own": 1,
     "language:english": 1,
     "language:spanish": 1,
     "language:latin": 1,
