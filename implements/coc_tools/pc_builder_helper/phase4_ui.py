@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout
+from PyQt6.QtWidgets import QVBoxLayout
 
 from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
 from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
@@ -18,10 +18,9 @@ class Phase4UI(BasePhaseUI):
 
         self.validator = TFValidator()
         self._setup_validation_rules()
-        self.main_window.config_updated.connect(self._on_config_updated)
 
     def _setup_ui(self):
-        content_layout = QHBoxLayout()
+        content_layout = QVBoxLayout()
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(10)
 
@@ -60,11 +59,17 @@ class Phase4UI(BasePhaseUI):
         print("[Phase4UI] _on_check_clicked called.")
 
     def _on_previous_clicked(self):
-        self.main_window.current_phase = PCBuilderPhase.PHASE3
-        self.main_window.load_phase_ui()
+        self.main_window._on_phase_selected(PCBuilderPhase.PHASE2)
 
     def _on_next_clicked(self):
         print("[Phase4UI] _on_next_clicked called.")
 
     def _reset_content(self):
         print("[Phase4UI] _reset_content called.")
+
+    def on_enter(self):
+        print(self.main_window.pc_data)
+        super().on_enter()
+
+    def on_exit(self):
+        super().on_exit()

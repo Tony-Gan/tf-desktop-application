@@ -8,6 +8,7 @@ from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPha
 from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
 from implements.coc_tools.pc_builder_helper.constants import DEFAULT_SKILLS, PARENT_SKILL_DEFAULTS, INTERPERSONAL_SKILLS
 from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
+from implements.coc_tools.pc_builder_helper.occupation_list_dialog import OccupationListDialog
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
 from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_value_entry import TFValueEntry
@@ -668,7 +669,8 @@ class Phase2UI(BasePhaseUI):
         self.validator.add_custom_validator('credit_rating_range', validate_credit_rating)
 
     def _on_occupation_list_clicked(self):
-        print("[Phase2UI] on_occupation_list_clicked called.")
+        dialog = OccupationListDialog(self, self.occupation_list)
+        dialog.exec()
 
     def _on_check_clicked(self):
         remaining_occ = int(self.points_group.occupation_points_entry.get_value())
