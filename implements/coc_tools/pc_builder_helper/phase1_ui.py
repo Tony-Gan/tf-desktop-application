@@ -4,7 +4,7 @@ import shutil
 import random
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Tuple
+from typing import Dict, Tuple
 
 from PyQt6 import sip
 from PyQt6.QtWidgets import (QFrame, QVBoxLayout, QHBoxLayout, QGroupBox, QButtonGroup,
@@ -21,6 +21,7 @@ from ui.components.tf_date_entry import TFDateEntry
 from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
 from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
 from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
+from implements.coc_tools.pc_builder_helper.occupation_list_dialog import OccupationListDialog
 from utils.validator.tf_validation_rules import TFValidationRule
 from utils.validator.tf_validator import TFValidator
 from utils.helper import resource_path
@@ -1006,18 +1007,13 @@ class Phase1UI(BasePhaseUI):
             self.occupation_points_entry.set_value(str(occupation_points))
             self.interest_points_entry.set_value(str(interest_points))
 
-        self._update_right_panel_chart()
-
         self._lock_fields()
 
         self.age_modification_button.setEnabled(True)
         self.calculate_button.setEnabled(False)
-        self.description_button.setEnabled(True)
 
         if self.config.allow_stat_exchange:
             self.exchange_button.setEnabled(True)
-
-        self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETED)
 
     def _on_exchange(self):
         current_stats = {
@@ -1046,10 +1042,24 @@ class Phase1UI(BasePhaseUI):
             self._calculate_derived_stats()
 
     def _on_occupation_list_clicked(self):
-        print("Yo!")
+        dialog = OccupationListDialog(self, self.occupation_list)
+        dialog.exec()
     
     def _on_description_clicked(self):
-        print("Developing")
+        stats = {
+            'strength': int(self.stat_entries['STR'].get_value()),
+            'constitution': int(self.stat_entries['CON'].get_value()),
+            'size': int(self.stat_entries['SIZ'].get_value()),
+            'dexterity': int(self.stat_entries['DEX'].get_value()),
+            'appearance': int(self.stat_entries['APP'].get_value()),
+            'intelligence': int(self.stat_entries['INT'].get_value()),
+            'power': int(self.stat_entries['POW'].get_value()),
+            'education': int(self.stat_entries['EDU'].get_value()),
+            'luck': int(self.stat_entries['LUK'].get_value())
+        }
+        
+        dialog = CharacterDescriptionDialog(self, stats)
+        dialog.exec()
 
     def _on_age_modification(self):
         self._perform_age_calculation()
@@ -1072,7 +1082,7 @@ class Phase1UI(BasePhaseUI):
             edu_improvement_count = 4
 
         if age < 20:
-            base_reduction = 0
+            base_reduction = 5
             app_reduction = 0
             edu_reduction = 5
         elif age < 40:
@@ -1100,8 +1110,12 @@ class Phase1UI(BasePhaseUI):
             app_reduction = 25
             edu_reduction = 0
 
-        if base_reduction > 0:
-            self._handle_physical_reduction(base_reduction, modifications)
+        if age < 20:
+            self._handle_physical_reduction(base_reduction, modifications, 2)
+        elif age < 40:
+            self._handle_physical_reduction(base_reduction, modifications, 3)
+        else:
+            self._handle_physical_reduction(base_reduction, modifications, 1)
 
         current_edu = int(self.stat_entries['EDU'].get_value())
         total_improvement, improvement_details = self._perform_edu_improvements(edu_improvement_count, current_edu)
@@ -1123,6 +1137,9 @@ class Phase1UI(BasePhaseUI):
         if new_edu != current_edu:
             modifications.append(f"EDU reduced from {current_edu} to {new_edu}")
             self.stat_entries['EDU'].set_value(str(new_edu))
+
+        self._update_right_panel_chart()
+        self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETED)
             
         if modifications:
             self.main_window.app.show_warning(
@@ -1147,39 +1164,59 @@ class Phase1UI(BasePhaseUI):
 
         return total_improvement, improvement_details
 
-    def _handle_physical_reduction(self, total_reduction: int, modifications: list) -> None:
-        physical_stats = ['STR', 'CON', 'DEX']
-        current_stats = {
-            stat: int(self.stat_entries[stat].get_value())
-            for stat in physical_stats
-        }
+    def _handle_physical_reduction(self, total_reduction: int, modifications: list, mode: int = 1) -> None:
+        current_stats = None
+        if mode == 1:
+            physical_stats = ['STR', 'CON', 'DEX']
+            current_stats = {
+                stat: int(self.stat_entries[stat].get_value())
+                for stat in physical_stats
+            }
+        elif mode == 2:
+            physical_stats = ['STR', 'SIZ']
+            current_stats = {
+                stat: int(self.stat_entries[stat].get_value())
+                for stat in physical_stats
+            }
 
-        confirmed, result = AgeReductionDialog.get_input(
-            self,
-            total_reduction=total_reduction,
-            current_stats=current_stats
-        )
+        if mode != 3:
+            confirmed, result = AgeReductionDialog.get_input(
+                self,
+                total_reduction=total_reduction,
+                current_stats=current_stats
+            )
 
-        print(confirmed, result)
+            if not confirmed:
+                return
 
-        if not confirmed:
-            return
+            if mode == 1:
+                str_deduction = result.get('STR', 0)
+                con_deduction = result.get('CON', 0)
+                dex_deduction = result.get('DEX', 0)
 
-        str_deduction = result.get('STR', 0)
-        con_deduction = result.get('CON', 0)
-        dex_deduction = result.get('DEX', 0)
+                self.stat_entries['STR'].set_value(str(current_stats['STR'] - str_deduction))
+                self.stat_entries['CON'].set_value(str(current_stats['CON'] - con_deduction))
+                self.stat_entries['DEX'].set_value(str(current_stats['DEX'] - dex_deduction))
+                
+                if str_deduction != 0:
+                    modifications.append(f"STR reduced {str_deduction} points.")
+                if con_deduction != 0:
+                    modifications.append(f"CON reduced {con_deduction} points.")
+                if dex_deduction != 0:
+                    modifications.append(f"DEX reduced {dex_deduction} points.")
+            else:
+                str_deduction = result.get('STR', 0)
+                siz_deduction = result.get('SIZ', 0)
 
-        self.stat_entries['STR'].set_value(str(current_stats['STR'] - str_deduction))
-        self.stat_entries['CON'].set_value(str(current_stats['CON'] - con_deduction))
-        self.stat_entries['DEX'].set_value(str(current_stats['DEX'] - dex_deduction))
-        
-        if str_deduction != 0:
-            modifications.append(f"STR reduced {str_deduction} points.")
-        if con_deduction != 0:
-            modifications.append(f"STR reduced {con_deduction} points.")
-        if dex_deduction != 0:
-            modifications.append(f"STR reduced {dex_deduction} points.")
+                self.stat_entries['STR'].set_value(str(current_stats['STR'] - str_deduction))
+                self.stat_entries['SIZ'].set_value(str(current_stats['SIZ'] - siz_deduction))
 
+                if str_deduction != 0:
+                    modifications.append(f"STR reduced {str_deduction} points.")
+                if siz_deduction != 0:
+                    modifications.append(f"SIZ reduced {siz_deduction} points.")
+
+        self.description_button.setEnabled(True)
         self.age_modification_button.setEnabled(False)
         self.next_button.setEnabled(True)
 
@@ -1684,3 +1721,179 @@ class AgeReductionDialog(TFComputingDialog):
         dialog = cls(parent, total_reduction, current_stats)
         confirmed = dialog.exec()
         return confirmed == 1, dialog.get_result() if confirmed == 1 else None
+
+
+class CharacterDescriptionDialog(TFComputingDialog):
+    def __init__(self, parent, stats: Dict[str, int]):
+        self.stats = stats
+        button_config = [{"text": "OK", "role": "accept"}]
+        super().__init__("Character Description", parent, button_config=button_config)
+        self.setup_content()
+        
+    def setup_validation_rules(self):
+        pass
+        
+    def get_field_values(self):
+        return {}
+        
+    def process_validated_data(self, data):
+        return None
+        
+    def _get_str_description(self, value: int) -> str:
+        if value <= 15:
+            return "Struggles with even basic physical tasks"
+        elif value <= 40:
+            return "Notably weak, has difficulty with manual labor"
+        elif value <= 60:
+            return "Possesses average human strength"
+        elif value <= 80:
+            return "Remarkably strong, could be a successful athlete"
+        else:
+            return "Exceptionally powerful, rivals professional strongmen"
+            
+    def _get_con_description(self, value: int) -> str:
+        if value <= 20:
+            return "Chronically ill, requires frequent medical attention"
+        elif value <= 40:
+            return "Often sick, has a weak constitution"
+        elif value <= 60:
+            return "Generally healthy with normal resilience"
+        elif value <= 80:
+            return "Robust health, rarely gets sick"
+        else:
+            return "Iron constitution, seems immune to illness"
+            
+    def _get_siz_description(self, value: int) -> str:
+        if value <= 20:
+            return "Child-sized, very small and thin"
+        elif value <= 40:
+            return "Small and slight of build"
+        elif value <= 60:
+            return "Average height and build"
+        elif value <= 80:
+            return "Notably tall or broad"
+        elif value <= 100:
+            return "Exceptionally large, stands out in any crowd"
+        else:
+            return "Giant-like proportions, possibly record-breaking"
+            
+    def _get_dex_description(self, value: int) -> str:
+        if value <= 20:
+            return "Severely uncoordinated, struggles with basic motor tasks"
+        elif value <= 40:
+            return "Clumsy and awkward in movement"
+        elif value <= 60:
+            return "Average coordination and reflexes"
+        elif value <= 80:
+            return "Graceful and agile, excellent physical coordination"
+        else:
+            return "Exceptional agility, could be a professional acrobat"
+            
+    def _get_app_description(self, value: int) -> str:
+        if value <= 20:
+            return "Appearance causes discomfort in others"
+        elif value <= 40:
+            return "Plain, tends to blend into the background"
+        elif value <= 60:
+            return "Average appearance, neither striking nor forgettable"
+        elif value <= 80:
+            return "Attractive, draws positive attention"
+        else:
+            return "Stunning beauty, could be a professional model"
+            
+    def _get_int_description(self, value: int) -> str:
+        if value <= 20:
+            return "Severe cognitive limitations"
+        elif value <= 40:
+            return "Below average mental capacity"
+        elif value <= 60:
+            return "Average intelligence, capable of normal reasoning"
+        elif value <= 80:
+            return "Sharp mind, quick to understand complex concepts"
+        else:
+            return "Genius-level intellect"
+            
+    def _get_pow_description(self, value: int) -> str:
+        if value <= 20:
+            return "Weak-willed, easily manipulated"
+        elif value <= 40:
+            return "Lacks mental fortitude"
+        elif value <= 60:
+            return "Normal willpower and determination"
+        elif value <= 80:
+            return "Strong-willed, difficult to influence"
+        elif value <= 100:
+            return "Exceptional mental fortitude, almost unshakeable"
+        else:
+            return "Superhuman willpower, possibly psychically sensitive"
+            
+    def _get_edu_description(self, value: int) -> str:
+        if value <= 20:
+            return "Minimal formal education"
+        elif value <= 40:
+            return "Basic education, equivalent to elementary school"
+        elif value <= 60:
+            return "High school level education"
+        elif value <= 80:
+            return "University graduate, well-educated"
+        else:
+            return "Scholarly excellence, extensive knowledge in many fields"
+            
+    def _get_luck_description(self, value: int) -> str:
+        if value <= 20:
+            return "Seems to attract misfortune"
+        elif value <= 40:
+            return "Often experiences bad luck"
+        elif value <= 60:
+            return "Average fortune in life"
+        elif value <= 80:
+            return "Notably lucky, things tend to work out well"
+        else:
+            return "Incredibly fortunate, seems blessed by fate"
+    
+    def setup_content(self):
+        scroll_area, container, layout = self.create_scroll_area()
+        
+        descriptions = {
+            'STR': ('Strength', self._get_str_description(self.stats['strength'])),
+            'CON': ('Constitution', self._get_con_description(self.stats['constitution'])),
+            'SIZ': ('Size', self._get_siz_description(self.stats['size'])),
+            'DEX': ('Dexterity', self._get_dex_description(self.stats['dexterity'])),
+            'APP': ('Appearance', self._get_app_description(self.stats['appearance'])),
+            'INT': ('Intelligence', self._get_int_description(self.stats['intelligence'])),
+            'POW': ('Power', self._get_pow_description(self.stats['power'])),
+            'EDU': ('Education', self._get_edu_description(self.stats['education'])),
+            'LUK': ('Luck', self._get_luck_description(self.stats['luck']))
+        }
+        
+        frame = QFrame()
+        grid_layout = QGridLayout(frame)
+        grid_layout.setSpacing(15)
+        grid_layout.setContentsMargins(15, 15, 15, 15)
+        
+        for idx, (stat, (full_name, desc)) in enumerate(descriptions.items()):
+            stat_frame = QFrame()
+            stat_layout = QVBoxLayout(stat_frame)
+            
+            header_label = self.create_label(
+                f"{stat} ({full_name}): {self.stats[full_name.lower()]}",
+                bold=True
+            )
+            header_label.setStyleSheet("color: #2c3e50;")
+            
+            desc_label = self.create_label(desc)
+            desc_label.setWordWrap(True)
+            
+            stat_layout.addWidget(header_label)
+            stat_layout.addWidget(desc_label)
+            
+            row = idx // 2
+            col = idx % 2
+            grid_layout.addWidget(stat_frame, row, col)
+        
+        layout.addWidget(frame)
+        
+        main_layout = QVBoxLayout(self.content_frame)
+        main_layout.addWidget(scroll_area)
+        
+        self.set_dialog_size(800, 600)

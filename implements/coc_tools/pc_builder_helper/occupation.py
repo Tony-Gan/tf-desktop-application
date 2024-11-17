@@ -45,6 +45,27 @@ class Occupation:
 
     def get_credit_rating_max(self) -> int:
         return int(self.credit_rating.split('-')[1])
+    
+    def format_skills(self) -> str:
+        skills = self.occupation_skills.split(',')
+        formatted_skills = []
+        
+        for skill in skills:
+            skill = skill.strip()
+            if ':' in skill:
+                category, subtype = skill.split(':')
+                if subtype == 'any':
+                    formatted = f"{category.replace('_', ' ').title()} - Any Skill"
+                else:
+                    formatted = f"{category.replace('_', ' ').title()} - {subtype.replace('_', ' ').title()}"
+            elif skill == 'any':
+                formatted = "Any Skill"
+            else:
+                formatted = skill.replace('_', ' ').title()
+            
+            formatted_skills.append(formatted)
+        
+        return ', '.join(formatted_skills)
 
     @classmethod
     def from_json(cls, data: Dict) -> 'Occupation':
