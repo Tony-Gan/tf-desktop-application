@@ -127,7 +127,7 @@ class Phase1UI(BasePhaseUI):
         )
         self.occupation_list_button.setObjectName("occupation_list_button")
         self.calculate_button = TFBaseButton(
-            "Calculate",
+            "Check",
             self,
             height=30,
             on_clicked=self._on_calculate
@@ -141,6 +141,14 @@ class Phase1UI(BasePhaseUI):
             on_clicked=self._on_exchange
         )
         self.exchange_button.setObjectName("exchange_button")
+        self.age_modification_button = TFBaseButton(
+            "Age Modify",
+            self,
+            height=30,
+            enabled=False,
+            on_clicked=self._on_age_modification
+        )
+        self.age_modification_button.setObjectName("age_modification_button")
         self.description_button = TFBaseButton(
             "Char. Info",
             self,
@@ -153,82 +161,136 @@ class Phase1UI(BasePhaseUI):
         button_layout.addWidget(self.occupation_list_button)
         button_layout.addWidget(self.calculate_button)
         button_layout.addWidget(self.exchange_button)
+        button_layout.addWidget(self.age_modification_button)
         button_layout.addWidget(self.description_button)
 
     def _setup_validation_rules(self):
         self.validator.add_custom_validator(
             'check_occupation',
-            lambda x: (x != "None", "Please select an occupation")
+            lambda x: (x is not None and x != "None", "Please select an occupation")
         )
+        
         self.validator.add_custom_validator(
             'check_gender',
-            lambda x: (x != "None", "Please select a gender")
+            lambda x: (x is not None and x != "None", "Please select a gender")
         )
-        rules = {
-            'metadata.player_name': TFValidationRule(
-                type_=str,
-                required=True
-            ),
-            'metadata.campaign_date': TFValidationRule(
-                type_=str,
-                required=True
-            ),
-            'metadata.era': TFValidationRule(
+        
+        self.validator.add_custom_validator(
+            'check_stats_total',
+            lambda stats: (
+                sum(int(v) for v in stats.values()) == self.config.points_available,
+                f"Total stats points must equal exactly {self.config.points_available}"
+            )
+        )
+        
+        self.validator.add_custom_validator(
+            'check_roll_complete',
+            lambda x: (
+                (not self.roll_button.isEnabled() and
+                len(self.stat_entries) == 9 and
+                all(stat in self.stat_entries for stat in ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUK'])),
+                "Please complete rolling and selecting stats before calculating"
+            )
+        )
+
+        base_rules = {
+            'player_name': TFValidationRule(
                 type_=str,
                 required=True,
-                choices=['Medieval', '1890s', '1920s', 'Modern', 'Near Future', 'Future']
+                error_messages={'required': 'Player name is required'}
             ),
-            'personal_info.name': TFValidationRule(
+            'campaign_date': TFValidationRule(
                 type_=str,
-                required=True
+                required=True,
+                error_messages={'required': 'Campaign date is required'}
             ),
-            'personal_info.gender': TFValidationRule(
+            'era': TFValidationRule(
+                type_=str,
+                required=True,
+                choices=['Medieval', '1890s', '1920s', 'Modern', 'Near Future', 'Future'],
+                error_messages={'choices': 'Invalid era selection'}
+            ),
+            'char_name': TFValidationRule(
+                type_=str,
+                required=True,
+                error_messages={'required': 'Character name is required'}
+            ),
+            'age': TFValidationRule(
+                type_=int,
+                required=True,
+                min_val=15,
+                max_val=90,
+                error_messages={
+                    'required': 'Age is required',
+                    'min': 'Age must be at least 15',
+                    'max': 'Age cannot exceed 90'
+                }
+            ),
+            'gender': TFValidationRule(
                 type_=str,
                 required=True,
                 custom='check_gender'
             ),
-            'personal_info.occupation': TFValidationRule(
+            'occupation': TFValidationRule(
                 type_=str,
                 required=True,
                 custom='check_occupation'
             ),
-            'personal_info.age': TFValidationRule(
-                type_=int,
+            'check_roll_complete': TFValidationRule(
+                custom='check_roll_complete'
+            ),
+            'nationality': TFValidationRule(
+                type_=str,
                 required=True,
-                min_val=15,
-                max_val=90
+                error_messages={'required': 'Nationality is required'}
             ),
-            'personal_info.residence': TFValidationRule(
+            'residence': TFValidationRule(
                 type_=str,
-                required=True
+                required=True,
+                error_messages={'required': 'Residence is required'}
             ),
-            'personal_info.birthplace': TFValidationRule(
+            'birthplace': TFValidationRule(
                 type_=str,
-                required=True
+                required=True,
+                error_messages={'required': 'Birthplace is required'}
             )
         }
 
         if self.config.is_points_mode():
-            for stat in ['strength', 'constitution', 'size', 'dexterity',
-                         'appearance', 'intelligence', 'power', 'education']:
-                rules[f'basic_stats.{stat}'] = TFValidationRule(
+            stats_rules = {
+                stat: TFValidationRule(
                     type_=int,
                     required=True,
                     min_val=self.config.stat_lower_limit,
-                    max_val=self.config.stat_upper_limit
+                    max_val=self.config.stat_upper_limit,
+                    error_messages={
+                        'required': f'{stat} value is required',
+                        'min': f'{stat} cannot be lower than {self.config.stat_lower_limit}',
+                        'max': f'{stat} cannot exceed {self.config.stat_upper_limit}'
+                    }
                 )
-
+                for stat in ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU']
+            }
+            
             if self.config.allow_custom_luck:
-                rules['basic_stats.luck'] = TFValidationRule(
+                stats_rules['LUK'] = TFValidationRule(
                     type_=int,
                     required=True,
                     min_val=self.config.stat_lower_limit,
-                    max_val=self.config.stat_upper_limit
+                    max_val=self.config.stat_upper_limit,
+                    error_messages={
+                        'required': 'Luck value is required',
+                        'min': f'Luck cannot be lower than {self.config.stat_lower_limit}',
+                        'max': f'Luck cannot exceed {self.config.stat_upper_limit}'
+                    }
                 )
+            
+            base_rules.update(stats_rules)
 
-        self.validator.add_rules(rules)
+        self.validator.add_rules(base_rules)
 
     def _on_config_updated(self):
+        self.config = self.main_window.config
         self.remaining_exchange_times = self.config.stat_exchange_times
         self._update_stats_display()
 
@@ -554,6 +616,8 @@ class Phase1UI(BasePhaseUI):
                 allow_decimal=False,
                 alignment=Qt.AlignmentFlag.AlignLeft
             )
+            entry.set_value("0")
+
             if stat == 'LUK':
                 if self.config.allow_custom_luck:
                     entry.value_field.setEnabled(True)
@@ -688,14 +752,14 @@ class Phase1UI(BasePhaseUI):
 
     def _calculate_skill_points(self) -> Tuple[int, int]:
         stats = {
-            'STR': int(self.stat_entries['STR'].get_value()),
-            'DEX': int(self.stat_entries['DEX'].get_value()),
-            'POW': int(self.stat_entries['POW'].get_value()),
-            'CON': int(self.stat_entries['CON'].get_value()),
-            'APP': int(self.stat_entries['APP'].get_value()),
-            'EDU': int(self.stat_entries['EDU'].get_value()),
-            'SIZ': int(self.stat_entries['SIZ'].get_value()),
-            'INT': int(self.stat_entries['INT'].get_value())
+            'STR': int(self.stat_entries['STR'].get_value() or '0'),
+            'DEX': int(self.stat_entries['DEX'].get_value() or '0'),
+            'POW': int(self.stat_entries['POW'].get_value() or '0'),
+            'CON': int(self.stat_entries['CON'].get_value() or '0'),
+            'APP': int(self.stat_entries['APP'].get_value() or '0'),
+            'EDU': int(self.stat_entries['EDU'].get_value() or '0'),
+            'SIZ': int(self.stat_entries['SIZ'].get_value() or '0'),
+            'INT': int(self.stat_entries['INT'].get_value() or '0')
         }
 
         current_occupation = next(
@@ -712,11 +776,11 @@ class Phase1UI(BasePhaseUI):
         return occupation_points, interest_points
 
     def _calculate_derived_stats(self) -> dict:
-        con = int(self.stat_entries['CON'].get_value())
-        siz = int(self.stat_entries['SIZ'].get_value())
-        pow_stat = int(self.stat_entries['POW'].get_value())
-        str_stat = int(self.stat_entries['STR'].get_value())
-        dex = int(self.stat_entries['DEX'].get_value())
+        con = int(self.stat_entries['CON'].get_value() or '0')
+        siz = int(self.stat_entries['SIZ'].get_value() or '0')
+        pow_stat = int(self.stat_entries['POW'].get_value() or '0')
+        str_stat = int(self.stat_entries['STR'].get_value() or '0')
+        dex = int(self.stat_entries['DEX'].get_value() or '0')
 
         hp = (con + siz) // 10
         self.derived_entries['HP'].set_value(str(hp))
@@ -909,7 +973,7 @@ class Phase1UI(BasePhaseUI):
             if stat == 'LUK' and not self.config.allow_custom_luck:
                 continue
             try:
-                value = int(entry.get_value() or 0)
+                value = int(entry.get_value() or '0')
                 total_points += value
             except ValueError:
                 pass
@@ -921,15 +985,18 @@ class Phase1UI(BasePhaseUI):
         if not self._validate_all_fields():
             return
 
-        try:
-            if not self.config.allow_custom_luck:
-                luck_value = (sum(random.randint(1, 6) for _ in range(2)) + 6) * 5
-                if 'LUK' in self.stat_entries and not sip.isdeleted(self.stat_entries['LUK']):
-                    self.stat_entries['LUK'].set_value(str(luck_value))
-        except (RuntimeError, KeyError):
-            pass
+        if not self.config.allow_custom_luck:
+            luck_value = (sum(random.randint(1, 6) for _ in range(2)) + 6) * 5
 
-        self._perform_age_calculation()
+            age = int(self.age.get_value())
+            if age < 20:
+                extra_luck_value = (sum(random.randint(1, 6) for _ in range(2)) + 6) * 5
+                if extra_luck_value > luck_value:
+                    luck_value = extra_luck_value
+
+            if 'LUK' in self.stat_entries and not sip.isdeleted(self.stat_entries['LUK']):
+                self.stat_entries['LUK'].set_value(str(luck_value))
+
         derived_stats = self._calculate_derived_stats()
         if derived_stats is None:
             return
@@ -943,7 +1010,7 @@ class Phase1UI(BasePhaseUI):
 
         self._lock_fields()
 
-        self.next_button.setEnabled(True)
+        self.age_modification_button.setEnabled(True)
         self.calculate_button.setEnabled(False)
         self.description_button.setEnabled(True)
 
@@ -984,6 +1051,9 @@ class Phase1UI(BasePhaseUI):
     def _on_description_clicked(self):
         print("Developing")
 
+    def _on_age_modification(self):
+        self._perform_age_calculation()
+
     def _perform_age_calculation(self):
         age = int(self.age.get_value())
         modifications = []
@@ -1001,6 +1071,38 @@ class Phase1UI(BasePhaseUI):
         else:
             edu_improvement_count = 4
 
+        if age < 20:
+            base_reduction = 0
+            app_reduction = 0
+            edu_reduction = 5
+        elif age < 40:
+            base_reduction = 0
+            app_reduction = 0
+            edu_reduction = 0
+        elif age < 50:
+            base_reduction = 5
+            app_reduction = 5
+            edu_reduction = 0
+        elif age < 60:
+            base_reduction = 10
+            app_reduction = 10
+            edu_reduction = 0
+        elif age < 70:
+            base_reduction = 20
+            app_reduction = 15
+            edu_reduction = 0
+        elif age < 80:
+            base_reduction = 40
+            app_reduction = 20
+            edu_reduction = 0
+        else:
+            base_reduction = 80
+            app_reduction = 25
+            edu_reduction = 0
+
+        if base_reduction > 0:
+            self._handle_physical_reduction(base_reduction, modifications)
+
         current_edu = int(self.stat_entries['EDU'].get_value())
         total_improvement, improvement_details = self._perform_edu_improvements(edu_improvement_count, current_edu)
 
@@ -1010,23 +1112,17 @@ class Phase1UI(BasePhaseUI):
             modifications.extend(improvement_details)
             self.stat_entries['EDU'].set_value(str(new_edu))
 
-        if age >= 40:
-            base_reduction = 5 * ((min(age, 70) - 40) // 10)
-            if base_reduction > 0:
-                self._handle_physical_reduction(base_reduction, modifications)
+        current_app = int(self.stat_entries['APP'].get_value())
+        new_app = max(1, current_app - app_reduction)
+        if new_app != current_app:
+            modifications.append(f"APP reduced from {current_app} to {new_app}")
+            self.stat_entries['APP'].set_value(str(new_app))
 
-            if age >= 70:
-                current_app = int(self.stat_entries['APP'].get_value())
-                new_app = max(1, current_app - 10)
-                if new_app != current_app:
-                    modifications.append(f"APP reduced from {current_app} to {new_app}")
-                    self.stat_entries['APP'].set_value(str(new_app))
-
-                self._handle_physical_reduction(15, modifications)
-
-        if not self.config.allow_mixed_points:
-            pow_val = int(self.stat_entries['POW'].get_value())
-            self.stat_entries['LUK'].set_value(str(pow_val * 5))
+        current_edu = int(self.stat_entries['EDU'].get_value())
+        new_edu = max(1, current_edu - edu_reduction)
+        if new_edu != current_edu:
+            modifications.append(f"EDU reduced from {current_edu} to {new_edu}")
+            self.stat_entries['EDU'].set_value(str(new_edu))
             
         if modifications:
             self.main_window.app.show_warning(
@@ -1058,70 +1154,85 @@ class Phase1UI(BasePhaseUI):
             for stat in physical_stats
         }
 
-        dialog = AgeReductionDialog(self, total_reduction, current_stats)
-        success, reductions = dialog.get_input()
+        confirmed, result = AgeReductionDialog.get_input(
+            self,
+            total_reduction=total_reduction,
+            current_stats=current_stats
+        )
 
-        if success:
-            for stat, reduction in reductions.items():
-                old_val = current_stats[stat]
-                new_val = old_val - reduction
-                if new_val != old_val:
-                    modifications.append(f"{stat} reduced from {old_val} to {new_val}")
-                    self.stat_entries[stat].set_value(str(new_val))
+        print(confirmed, result)
+
+        if not confirmed:
+            return
+
+        str_deduction = result.get('STR', 0)
+        con_deduction = result.get('CON', 0)
+        dex_deduction = result.get('DEX', 0)
+
+        self.stat_entries['STR'].set_value(str(current_stats['STR'] - str_deduction))
+        self.stat_entries['CON'].set_value(str(current_stats['CON'] - con_deduction))
+        self.stat_entries['DEX'].set_value(str(current_stats['DEX'] - dex_deduction))
+        
+        if str_deduction != 0:
+            modifications.append(f"STR reduced {str_deduction} points.")
+        if con_deduction != 0:
+            modifications.append(f"STR reduced {con_deduction} points.")
+        if dex_deduction != 0:
+            modifications.append(f"STR reduced {dex_deduction} points.")
+
+        self.age_modification_button.setEnabled(False)
+        self.next_button.setEnabled(True)
 
     def _validate_all_fields(self) -> bool:
-        data = {
-            'metadata': {
-                'player_name': self.player_name.get_value(),
-                'campaign_date': self.campaign_date.get_value(),
-                'era': self.era.get_value()
-            },
-            'personal_info': {
-                'name': self.char_name.get_value(),
-                'age': self.age.get_value(),
-                'gender': self.gender.get_value(),
-                'occupation': self.occupation.get_value(),
-                'nationality': self.nationality.get_value(),
-                'residence': self.residence.get_value(),
-                'birthplace': self.birthplace.get_value()
-            }
+        error_messages = []
+        
+        field_mappings = {
+            'player_name': self.player_name.get_value(),
+            'campaign_date': self.campaign_date.get_value(),
+            'era': self.era.get_value(),
+            'char_name': self.char_name.get_value(),
+            'age': self.age.get_value(),
+            'gender': self.gender.get_value(),
+            'occupation': self.occupation.get_value(),
+            'nationality': self.nationality.get_value(),
+            'residence': self.residence.get_value(),
+            'birthplace': self.birthplace.get_value()
         }
 
+        for field_name, value in field_mappings.items():
+            is_valid, message = self.validator.validate_field(field_name, value)
+            if not is_valid:
+                error_messages.append(f"{message}")
+
         if self.config.is_points_mode():
-            data['basic_stats'] = {
-                'strength': self.stat_entries.get('STR', TFValueEntry("STR:", value_size=40)).get_value() or "0",
-                'constitution': self.stat_entries.get('CON', TFValueEntry("CON:", value_size=40)).get_value() or "0",
-                'size': self.stat_entries.get('SIZ', TFValueEntry("SIZ:", value_size=40)).get_value() or "0",
-                'dexterity': self.stat_entries.get('DEX', TFValueEntry("DEX:", value_size=40)).get_value() or "0",
-                'appearance': self.stat_entries.get('APP', TFValueEntry("APP:", value_size=40)).get_value() or "0",
-                'intelligence': self.stat_entries.get('INT', TFValueEntry("INT:", value_size=40)).get_value() or "0",
-                'power': self.stat_entries.get('POW', TFValueEntry("POW:", value_size=40)).get_value() or "0",
-                'education': self.stat_entries.get('EDU', TFValueEntry("EDU:", value_size=40)).get_value() or "0"
-            }
-
-            if self.config.allow_custom_luck:
-                data['basic_stats']['luck'] = self.stat_entries['LUK'].get_value()
-
-            if not self.next_button.isEnabled() and self.remaining_points != 0:
-                self._show_validation_error(
-                    f"Points allocation must be exact. "
-                    f"Currently {abs(self.remaining_points)} points "
-                    f"{'over' if self.remaining_points < 0 else 'remaining'}"
-                )
-                return False
-        else:
-            if self.roll_button.isEnabled():
-                self._show_validation_error("Please roll for stats before calculating")
-                return False
-            if 'STR' not in self.stat_entries:
-                self._show_validation_error("Please complete rolling and selecting stats before calculating")
-                return False
-
-        errors = self.validator.validate_dict(data, is_new=True)
-        if errors:
-            self._show_validation_error("\n".join(errors))
-            return False
+            stats_values = {}
+            for stat in ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU']:
+                value = self.stat_entries[stat].get_value() or '0'
+                is_valid, message = self.validator.validate_field(stat, value)
+                if not is_valid:
+                    error_messages.append(message)
+                else:
+                    stats_values[stat] = int(value)
             
+            if self.config.allow_custom_luck:
+                luck_value = self.stat_entries['LUK'].get_value() or '0'
+                is_valid, message = self.validator.validate_field('LUK', luck_value)
+                if not is_valid:
+                    error_messages.append(message)
+            
+            if not error_messages and stats_values:
+                is_valid, message = self.validator.validate_field('check_stats_total', stats_values)
+                if not is_valid:
+                    error_messages.append(message)
+        else:
+            is_valid, message = self.validator.validate_field('check_roll_complete', None)
+            if not is_valid:
+                error_messages.append(message)
+
+        if error_messages:
+            self._show_validation_error('\n'.join(error_messages))
+            return False
+        
         return True
 
     def _lock_fields(self):
@@ -1235,6 +1346,7 @@ class Phase1UI(BasePhaseUI):
         self.exchange_button.setEnabled(False)
         self.next_button.setEnabled(False)
         self.description_button.setEnabled(False)
+        self.age_modification_button.setEnabled(False)
 
         self.main_window.set_phase_status(self.phase, PhaseStatus.NOT_START)
 
@@ -1344,111 +1456,6 @@ class StatExchangeDialog(TFComputingDialog):
         return tuple(selected)
 
 
-class AgeReductionDialog(TFComputingDialog):
-    def __init__(self, parent, total_reduction: int, current_stats: dict):
-        self.total_reduction = total_reduction
-        self.current_stats = current_stats
-        self.stat_entries = {}
-        self.remaining_label = None
-        super().__init__(f"Reduce Stats by {total_reduction} Points", parent)
-        self._setup_validation_rules()
-        self.setup_content()
-
-
-    def _setup_validation_rules(self):
-        rules = {}
-        for stat in self.current_stats.keys():
-            rules[f'reduction_{stat}'] = TFValidationRule(
-                type_=int,
-                required=True,
-                min_val=0,
-                max_val=self.total_reduction,
-                error_messages={
-                    'required': f'{stat} reduction is required',
-                    'min': f'{stat} reduction cannot be negative',
-                    'max': f'{stat} reduction cannot exceed {self.total_reduction}'
-                }
-            )
-
-        self.validator.add_rules(rules)
-
-        self.validator.add_custom_validator(
-            'total_reduction',
-            lambda values: (
-                sum(int(v) for v in values) == self.total_reduction,
-                f"Total reduction must equal exactly {self.total_reduction}"
-            )
-        )
-
-        self.validator.add_custom_validator(
-            'final_values',
-            lambda stat, reduction: (
-                int(self.current_stats[stat]) - int(reduction) >= 1,
-                f"Final {stat} value cannot be less than 1"
-            )
-        )
-
-    def setup_content(self):
-        layout = QVBoxLayout(self.content_frame)
-        layout.setContentsMargins(10, 10, 10, 10)
-
-        instruction = self.create_label(
-            f"Due to age, you must reduce your stats by {self.total_reduction} points total.",
-            bold=True
-        )
-        layout.addWidget(instruction)
-
-        self.remaining_label = self.create_label(
-            f"Remaining points to allocate: {self.total_reduction}",
-            bold=True
-        )
-        layout.addWidget(self.remaining_label)
-
-        for stat in self.current_stats.keys():
-            entry = self.create_value_entry(
-                f"{stat} (Current: {self.current_stats[stat]}):",
-                number_only=True,
-                label_size=200,
-                value_size=50
-            )
-            entry.set_value("0")
-            entry.value_field.textChanged.connect(self._on_value_changed)
-            self.stat_entries[stat] = entry
-            layout.addWidget(entry)
-
-        layout.addStretch()
-
-        self.set_dialog_size(400, 250)
-
-    def _on_value_changed(self):
-        try:
-            total = sum(int(entry.get_value() or 0) for entry in self.stat_entries.values())
-            remaining = self.total_reduction - total
-            self.remaining_label.setText(f"Remaining points to allocate: {remaining}")
-        except ValueError:
-            pass
-
-    def get_field_values(self) -> dict:
-        return {
-            f'reduction_{stat}': entry.get_value() or "0"
-            for stat, entry in self.stat_entries.items()
-        }
-
-    def process_validated_data(self, data: dict) -> dict:
-        reductions = [int(val) for val in data.values()]
-        if not self.validator.validate_field('total_reduction', reductions)[0]:
-            raise ValueError(f"Total reduction must equal exactly {self.total_reduction}")
-
-        result = {}
-        for stat in ['STR', 'CON', 'DEX']:
-            reduction = int(data[f'reduction_{stat}'])
-            if not self.validator.validate_field('final_values', (stat, reduction))[0]:
-                raise ValueError(f"Final {stat} value cannot be less than 1")
-            result[stat] = reduction
-
-        return result
-
-
 class StatRadarChart(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1553,3 +1560,127 @@ class StatRadarChart(QWidget):
                 int(label_y + 5), 
                 text
             )
+
+
+class AgeReductionDialog(TFComputingDialog):
+    def __init__(self, parent, total_reduction: int, current_stats: dict):
+        self.total_reduction = total_reduction
+        self.current_stats = current_stats
+        self.stat_entries = {}
+        self.remaining_label = None
+
+        button_config = [
+            {"text": "OK", "callback": self._on_ok_clicked}
+        ]
+        super().__init__(f"Reduce Stats by {total_reduction} Points", parent, button_config=button_config)
+        self._setup_validation_rules()
+        self.setup_content()
+
+
+    def _setup_validation_rules(self):
+        rules = {}
+        for stat in self.current_stats.keys():
+            rules[f'reduction_{stat}'] = TFValidationRule(
+                type_=int,
+                required=True,
+                min_val=0,
+                max_val=self.total_reduction,
+                error_messages={
+                    'required': f'{stat} reduction is required',
+                    'min': f'{stat} reduction cannot be negative',
+                    'max': f'{stat} reduction cannot exceed {self.total_reduction}'
+                }
+            )
+        rules['total_reduction'] = TFValidationRule(custom='total_reduction')
+        rules['final_values'] = TFValidationRule(custom='final_values')
+
+        self.validator.add_rules(rules)
+
+        self.validator.add_custom_validator(
+            'total_reduction',
+            lambda values: (
+                sum(values) == self.total_reduction,
+                f"Total reduction must equal exactly {self.total_reduction}"
+            )
+        )
+
+        self.validator.add_custom_validator(
+            'final_values',
+            lambda value: (
+                self.current_stats[value[0]] - value[1] >= 1,
+                f"Final {stat} value cannot be less than 1"
+            )
+        )
+
+    def setup_content(self):
+        layout = QVBoxLayout(self.content_frame)
+        layout.setContentsMargins(10, 10, 10, 10)
+
+        instruction = self.create_label(
+            f"Due to age, you must reduce your stats by {self.total_reduction} points total.",
+            bold=True
+        )
+        layout.addWidget(instruction)
+
+        self.remaining_label = self.create_label(
+            f"Remaining points to allocate: {self.total_reduction}",
+            bold=True
+        )
+        layout.addWidget(self.remaining_label)
+
+        for stat in self.current_stats.keys():
+            entry = self.create_value_entry(
+                f"{stat} (Current: {self.current_stats[stat]}):",
+                number_only=True,
+                label_size=200,
+                value_size=50
+            )
+            entry.set_value("0")
+            entry.value_field.textChanged.connect(self._on_value_changed)
+            self.stat_entries[stat] = entry
+            layout.addWidget(entry)
+
+        layout.addStretch()
+
+        self.set_dialog_size(400, 250)
+
+    def _on_value_changed(self):
+        total = sum(int(entry.get_value() or 0) for entry in self.stat_entries.values())
+        remaining = self.total_reduction - total
+        self.remaining_label.setText(f"Remaining points to allocate: {remaining}")
+
+    def get_field_values(self) -> dict:
+        basic_values = {
+            f'reduction_{stat}': entry.get_value() or "0"
+            for stat, entry in self.stat_entries.items()
+        }
+        
+        reductions = [int(basic_values[f'reduction_{stat}']) for stat in self.current_stats.keys()]
+        basic_values['reductions_list'] = reductions
+        
+        basic_values['final_values_list'] = [
+            (stat, int(basic_values[f'reduction_{stat}']))
+            for stat in self.current_stats.keys()
+        ]
+            
+        return basic_values
+
+    def process_validated_data(self, data: dict) -> dict:
+        reductions = [int(data[f'reduction_{stat}']) for stat in self.current_stats.keys()]
+        if not self.validator.validate_field('total_reduction', reductions)[0]:
+            raise ValueError(f"Total reduction must equal exactly {self.total_reduction}")
+
+        result = {}
+        for stat in self.current_stats.keys():
+            reduction = int(data[f'reduction_{stat}'])
+            if not self.validator.validate_field('final_values', (stat, reduction))[0]:
+                raise ValueError(f"Final {stat} value cannot be less than 1")
+            result[stat] = reduction
+
+        return result
+
+    @classmethod
+    def get_input(cls, parent, total_reduction: int, current_stats: dict) -> tuple[bool, dict]:
+        dialog = cls(parent, total_reduction, current_stats)
+        confirmed = dialog.exec()
+        return confirmed == 1, dialog.get_result() if confirmed == 1 else None

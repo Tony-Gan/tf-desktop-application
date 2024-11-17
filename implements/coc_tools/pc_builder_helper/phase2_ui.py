@@ -61,7 +61,11 @@ class SkillEntry(QFrame):
         self.name_label.setFixedWidth(115) 
 
         if skill.is_occupation:
-            self.name_label.setStyleSheet("color: blue;")
+            self.name_label.setStyleSheet("color: #3498DB;")
+        elif self.skill.interest_point > 0:
+            self.name_label.setStyleSheet("color: #2ECC71;")
+        else:
+            self.name_label.setStyleSheet("")
 
         occupation_int = occupation_points or 0
         self.occupation_points = TFNumberReceiver(
@@ -87,6 +91,7 @@ class SkillEntry(QFrame):
         )
         self.interest_points.setStyleSheet("padding: 0;")
         self.occupation_points.setMaxLength(2)
+        self.interest_points.textChanged.connect(self._update_label_color)
 
         self.default_value = TFNumberReceiver(
             text=str(skill.default_point),
@@ -147,10 +152,23 @@ class SkillEntry(QFrame):
             'interest_points': int(self.interest_points.text() or 0),
             'total': int(self.total.text())
         }
+    
+    def _update_label_color(self):
+        if self.skill.is_occupation:
+            self.name_label.setStyleSheet("color: #3498DB;")
+        elif int(self.interest_points.text() or 0) > 0:
+            self.name_label.setStyleSheet("color: #2ECC71;")
+        else:
+            self.name_label.setStyleSheet("")
 
     def reset(self):
         self.occupation_points.setText("0")
         self.interest_points.setText("0")
+        self._update_total()
+        if self.skill.is_occupation:
+            self.name_label.setStyleSheet("color: #3498DB;")
+        else:
+            self.name_label.setStyleSheet("")
         self._update_total()
 
 
@@ -185,6 +203,10 @@ class PointsGroup(QGroupBox):
             enabled=False,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
+
+        self._update_points_color(self.occupation_points_entry)
+        self._update_points_color(self.interest_points_entry)
+
         self.occupation_point_limit_entry = TFValueEntry(
             label_text="Occupation Points Limit:",
             value_text=str(self.parent.config.occupation_skill_limit),
@@ -215,6 +237,18 @@ class PointsGroup(QGroupBox):
         self.layout.addWidget(self.occupation_point_limit_entry)
         self.layout.addWidget(self.interest_point_limit_entry)
         self.layout.addWidget(self.mix_points_entry)
+
+    def _update_points_color(self, entry: TFValueEntry):
+        try:
+            value = int(entry.get_value())
+            if value > 0:
+                entry.value_field.setStyleSheet("color: #3498DB;")
+            elif value < 0:
+                entry.value_field.setStyleSheet("color: #FF6B6B;")
+            else:
+                entry.value_field.setStyleSheet("color: #2ECC71;")
+        except (ValueError, TypeError):
+            entry.value_field.setStyleSheet("")
 
 
 class InfoCell(QHBoxLayout):
@@ -267,16 +301,24 @@ class InfoGroup(QGroupBox):
         self.parent = parent
 
         self.setObjectName("info_group")
-        self.layout = QGridLayout(self)
-        self.layout.setContentsMargins(10, 10, 10, 10)
-        self.layout.setSpacing(10)
+        
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(5, 5, 5, 5)
+        self.layout.setSpacing(5)
 
         self._pc_data = pc_data
         self._occupation_name = occupation_name
         self.info_cells = []
+        
         self._setup_content()
+        self._setup_legend()
 
     def _setup_content(self):
+        content_frame = QFrame()
+        grid_layout = QGridLayout(content_frame)
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        grid_layout.setSpacing(5)
+
         occupation = next((occ for occ in self.parent.occupation_list if occ.name == self._occupation_name), None)
         if not occupation:
             return
@@ -308,7 +350,7 @@ class InfoGroup(QGroupBox):
                 if target_skill:
                     target_skill.is_occupation = True
 
-            self.layout.addLayout(cell, row, col)
+            grid_layout.addLayout(cell, row, col)
             self.info_cells.append(cell)
 
             col += 1
@@ -319,18 +361,41 @@ class InfoGroup(QGroupBox):
         credit_min = occupation.get_credit_rating_min()
         credit_max = occupation.get_credit_rating_max()
         credit_cell = InfoCell(f"Credit Rating ({credit_min} - {credit_max})")
-        self.layout.addLayout(credit_cell, row, col)
+        grid_layout.addLayout(credit_cell, row, col)
         self.info_cells.append(credit_cell)
 
         col += 1
         while col < 3:
             empty_cell = InfoCell("")
-            self.layout.addLayout(empty_cell, row, col)
+            grid_layout.addLayout(empty_cell, row, col)
             self.info_cells.append(empty_cell)
             col += 1
             if col == 3 and row < 2:
                 col = 0
                 row += 1
+
+        self.layout.addWidget(content_frame, 3)
+
+    def _setup_legend(self):
+        legend_frame = QFrame()
+        legend_layout = QVBoxLayout(legend_frame)
+        legend_layout.setContentsMargins(5, 5, 5, 5)
+        legend_layout.setSpacing(5)
+        
+        descriptions = [
+            "Each skill row consists of four input boxes from left to right:",
+            "• Occ (Occupation Points): Can only be allocated to occupation skills (shown in blue)",
+            "• Int (Interest Points): Can be allocated to any skills to improve them",
+            "• Base (Base Value): The initial value of the skill (cannot be modified)",
+            "• Total: The sum of Base + Occupation + Interest points (automatically calculated)",
+        ]
+        
+        for text in descriptions:
+            label = QLabel(text)
+            label.setFont(TEXT_FONT)
+            legend_layout.addWidget(label)
+
+        self.layout.addWidget(legend_frame, 1)
 
     def _on_skill_select(self, target_cell: InfoCell):
         dialog = None
@@ -581,10 +646,26 @@ class Phase2UI(BasePhaseUI):
                 return False, "Remaining points cannot be negative"
             return True, ""
         
+        def validate_credit_rating(skill):
+            if skill.name != 'credit_rating':
+                return True, ""
+            occupation = next(
+                (occ for occ in self.occupation_list if occ.name == self.main_window.pc_data['personal_info']['occupation']),
+                None
+            )
+            min_rating = occupation.get_credit_rating_min()
+            max_rating = occupation.get_credit_rating_max()
+            
+            if not (min_rating <= skill.total_point <= max_rating):
+                return False, f"Credit Rating must be between {min_rating} and {max_rating} for {occupation.name}"
+                
+            return True, ""
+        
         self.validator.add_custom_validator('occupation_skill_limit', validate_occupation_skill)
         self.validator.add_custom_validator('interest_skill_limit', validate_interest_skill)
         self.validator.add_custom_validator('mixed_points', validate_mixed_points)
         self.validator.add_custom_validator('remaining_points', validate_remaining_points)
+        self.validator.add_custom_validator('credit_rating_range', validate_credit_rating)
 
     def _on_occupation_list_clicked(self):
         print("[Phase2UI] on_occupation_list_clicked called.")
@@ -636,13 +717,13 @@ class Phase2UI(BasePhaseUI):
             if not is_valid:
                 error_messages.append(message)
 
+            is_valid, message = self.validator._custom_validators['credit_rating_range'](skill)
+            if not is_valid:
+                error_messages.append(message)
+
         if error_messages:
             error_message = "\n".join(error_messages)
-            self.main_window.app.show_warning(
-                "Validation Error",
-                error_message,
-                buttons=["OK"]
-            )
+            self._show_validation_error(error_message)
             return False
         
         self.check_button.setEnabled(False)
@@ -650,12 +731,22 @@ class Phase2UI(BasePhaseUI):
 
         self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETED)
         return True
+    
+    def _show_validation_error(self, message: str):
+        self.main_window.app.show_warning(
+            "Validation Error",
+            message,
+            buttons=["OK"]
+        )
 
     def _on_previous_clicked(self):
         self.main_window._on_phase_selected(PCBuilderPhase.PHASE1)
 
     def _reset_content(self):
         super()._reset_content()
+
+        if 'skills' in self.main_window.pc_data:
+            del self.main_window.pc_data['skills']
 
         for skill in self.skills:
             skill.occupation_point = 0
@@ -670,7 +761,6 @@ class Phase2UI(BasePhaseUI):
             for cell in self.info_group.info_cells:
                 if cell.button and cell.button.text() == "Switch":
                     cell.update_display(cell.initial_text, "Select")
-            self.info_group._setup_content()
 
         self.update_points_display()
         
@@ -686,14 +776,31 @@ class Phase2UI(BasePhaseUI):
         super().on_enter()
 
     def on_exit(self):
-        """Called when the phase becomes inactive"""
-        pass
+        if 'skills' not in self.main_window.pc_data:
+            self.main_window.pc_data['skills'] = {}
+
+        skills_data = {}
+        
+        special_skills = {'language_own', 'dodge', 'credit_rating'}
+        
+        for skill in self.skills:
+            if skill.super_name:
+                skill_key = f"{skill.super_name}:{skill.name}"
+            else:
+                skill_key = skill.name
+                
+            if skill.name in special_skills or skill.total_point > skill.default_point:
+                skills_data[skill_key] = skill.total_point
+
+        self.main_window.pc_data['skills'] = skills_data
 
     def refresh_skill_display(self):
         for skill_entry in self.skill_group.findChildren(SkillEntry):
             skill_entry.occupation_points.setEnabled(skill_entry.skill.is_occupation)
             if skill_entry.skill.is_occupation:
-                skill_entry.name_label.setStyleSheet("color: blue;")
+                skill_entry.name_label.setStyleSheet("color: #3498DB;")
+            elif skill_entry.skill.interest_point > 0:
+                skill_entry.name_label.setStyleSheet("color: #2ECC71;")
             else:
                 skill_entry.name_label.setStyleSheet("")
 
@@ -710,6 +817,9 @@ class Phase2UI(BasePhaseUI):
         remaining = self.calculate_remaining_points()
         self.points_group.occupation_points_entry.set_value(str(remaining['occupation']))
         self.points_group.interest_points_entry.set_value(str(remaining['interest']))
+
+        self.points_group._update_points_color(self.points_group.occupation_points_entry)
+        self.points_group._update_points_color(self.points_group.interest_points_entry)
 
     def reset_completion_status(self):
         if self.main_window.get_phase_status(self.phase) == PhaseStatus.NOT_START:

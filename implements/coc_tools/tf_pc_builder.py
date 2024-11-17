@@ -202,26 +202,20 @@ class TFPcBuilder(TFDraggableWindow):
 
     def _reset_progress(self):
         self.pc_data.clear()
-
         self.phase_status = {phase: PhaseStatus.NOT_START for phase in PCBuilderPhase}
         self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
 
         for phase_ui in list(self.phase_uis.values()):
             if not sip.isdeleted(phase_ui):
-                phase_ui._reset_content()
+                phase_ui.deleteLater()
+        self.phase_uis.clear()
 
-        if (self.current_phase != PCBuilderPhase.PHASE1 and
-                PCBuilderPhase.PHASE1 in self.phase_uis and
-                not sip.isdeleted(self.phase_uis[PCBuilderPhase.PHASE1])):
-            self.current_phase = PCBuilderPhase.PHASE1
-            self.stacked_widget.setCurrentWidget(self.phase_uis[PCBuilderPhase.PHASE1])
+        self.current_phase = PCBuilderPhase.PHASE1
+        initial_phase = self._load_phase(PCBuilderPhase.PHASE1)
+        self.stacked_widget.setCurrentWidget(initial_phase)
+        initial_phase.on_enter()
 
         self._update_progress_display()
-
-        if hasattr(self, 'calculate_button'):
-            self.calculate_button.setEnabled(True)
-        if hasattr(self, 'rule_settings_action'):
-            self.rule_settings_action.setEnabled(True)
 
     def closeEvent(self, event):
         self.closed.emit(self)

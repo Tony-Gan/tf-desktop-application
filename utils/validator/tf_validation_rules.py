@@ -67,15 +67,12 @@ class TFValidationRule:
             (is_valid, error_message): Validation result and error message
         """
         # if is_new and self.required and not value:
-        if self.required and not value:
+        if self.required and (value is None or value == ''):
             return False, self.error_messages['required']
-        
-        if not value and not self.required:
+        if (value is None or value == '') and not self.required:
             return True, ""
-        
-        if not value:
+        if value is None or value == '':
             return True, ""
-        
         try:
             value = self.type_(value)
         except (ValueError, TypeError):

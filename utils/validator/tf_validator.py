@@ -93,25 +93,29 @@ class TFValidator:
             List[str]: List of error messages. Empty list if all validations pass.
         """
         errors = []
-        
-        for field_name, rule in self._rules.items():
-            if '.' not in field_name:
-                continue
-                
-            section, key = field_name.split('.', 1)
-            if section not in data:
-                continue
 
-            if section == 'skills' and key == '_any_':
-                for skill_name, value in data[section].items():
-                    is_valid, message = rule.validate(value, is_new)
-                    if not is_valid:
-                        errors.append(f"Skill '{skill_name}': {message}")
-                continue
-                
-            value = data[section].get(key)
+        def get_nested_value(d: Dict, path: str):
+            parts = path.split('.')
+            current = d
+            for part in parts:
+                if part not in current:
+                    return None
+                current = current[part]
+            return current
+
+        for field_name, rule in self._rules.items():
+            value = get_nested_value(data, field_name) if '.' in field_name else data.get(field_name)
+            
             is_valid, message = rule.validate(value, is_new)
             if not is_valid:
                 errors.append(f"Field '{field_name}': {message}")
-        
+                continue
+                
+            if is_valid and rule.custom:
+                validator = self._custom_validators.get(rule.custom)
+                if validator:
+                    is_valid, message = validator(value)
+                    if not is_valid:
+                        errors.append(f"Field '{field_name}': {message}")
+                    
         return errors
