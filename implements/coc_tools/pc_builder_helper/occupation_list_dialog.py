@@ -19,14 +19,22 @@ class OccupationListDialog(TFComputingDialog):
     def process_validated_data(self, data):
         return None
     
+class OccupationListDialog(TFComputingDialog):
+    def __init__(self, parent, occupation_list):
+        self.occupation_list = occupation_list
+        button_config = [{"text": "OK", "role": "accept"}]
+        super().__init__("Occupation List", parent, button_config=button_config)
+        self.setup_content()
+
     def setup_content(self):
         scroll_area, container, layout = self.create_scroll_area()
         
         categories: Dict[str, List] = {}
         for occupation in self.occupation_list:
-            if occupation.category not in categories:
-                categories[occupation.category] = []
-            categories[occupation.category].append(occupation)
+            primary_category = occupation.category[0] if isinstance(occupation.category, list) else occupation.category
+            if primary_category not in categories:
+                categories[primary_category] = []
+            categories[primary_category].append(occupation)
         
         sorted_categories = sorted(categories.keys())
         
@@ -47,6 +55,11 @@ class OccupationListDialog(TFComputingDialog):
                 
                 name_label = self.create_label(occupation.name, bold=True)
                 occ_layout.addWidget(name_label)
+                
+                if isinstance(occupation.category, list) and len(occupation.category) > 1:
+                    categories_text = f"Categories: {', '.join(occupation.category)}"
+                    categories_label = self.create_label(categories_text)
+                    occ_layout.addWidget(categories_label)
                 
                 formula_text = f"Skill Points: {occupation.format_formula_for_display()}"
                 formula_label = self.create_label(formula_text)

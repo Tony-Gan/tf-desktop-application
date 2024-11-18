@@ -108,6 +108,7 @@ class TFOptionEntry(QWidget):
     def __init__(self, label_text: str = "", options: Union[List[str], Dict[str, List[str]]] = None,
                 current_value: str = "", label_size: int = 80, value_size: int = 36, height: int = 24,
                 custom_label_font: Optional[QFont] = None, custom_edit_font: Optional[QFont] = None,
+                alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
                 label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
                 object_name: Optional[str] = None, special_edit: Optional[Callable[[], Optional[str]]] = None,
                 extra_value_width: int = None, filter: bool = False, parent: Optional[QWidget] = None) -> None:
@@ -117,11 +118,12 @@ class TFOptionEntry(QWidget):
         self.extra_value_width = extra_value_width
         self.filter_enabled = filter
         self._setup_ui(label_text, options or [], current_value, label_size, value_size, height,
-                    custom_label_font, custom_edit_font, label_alignment, object_name)
+                    custom_label_font, custom_edit_font, alignment, label_alignment, object_name)
 
     def _setup_ui(self, label_text: str, options: List[str], current_value: str,
                  label_size: int, value_size: int, height: int,
-                 custom_label_font: Optional[QFont], custom_edit_font: Optional[QFont], label_alignment: Qt.AlignmentFlag,
+                 custom_label_font: Optional[QFont], custom_edit_font: Optional[QFont], alignment,
+                 label_alignment: Qt.AlignmentFlag,
                  object_name: Optional[str]) -> None:
         self.setFixedHeight(height)
         self.layout = QHBoxLayout(self)

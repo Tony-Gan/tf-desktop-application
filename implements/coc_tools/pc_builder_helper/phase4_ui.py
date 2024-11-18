@@ -11,9 +11,6 @@ class Phase4UI(BasePhaseUI):
         self.config = main_window.config
         self.main_window = main_window
 
-        self.check_button = None
-        self.previous_button = None
-
         super().__init__(PCBuilderPhase.PHASE4, main_window, parent)
 
         self.validator = TFValidator()
@@ -25,17 +22,17 @@ class Phase4UI(BasePhaseUI):
         content_layout.setSpacing(10)
 
     def _setup_phase_buttons(self, button_layout):
-        self.occupation_list_button = TFBaseButton(
-            "Occupation List",
+        self.complete_button = TFBaseButton(
+            "Roll",
             self,
             height=30,
-            on_clicked=self._on_occupation_list_clicked
+            on_clicked=self.complete_button
         )
-        self.check_button = TFBaseButton(
-            "Check",
+        self.complete_button = TFBaseButton(
+            "Complete",
             self,
             height=30,
-            on_clicked=self._on_check_clicked
+            on_clicked=self.complete_button
         )
         self.previous_button = TFPreviousButton(
             self,
@@ -43,7 +40,7 @@ class Phase4UI(BasePhaseUI):
             on_clicked=self._on_previous_clicked
         )
 
-        button_layout.addWidget(self.check_button)
+        button_layout.addWidget(self.complete_button)
         button_layout.addWidget(self.previous_button)
 
     def _setup_validation_rules(self):
@@ -51,9 +48,6 @@ class Phase4UI(BasePhaseUI):
 
     def _on_occupation_list_clicked(self):
         print("[Phase4UI] on_occupation_list_clicked called.")
-
-    def _on_config_updated(self):
-        print("[Phase4UI] _on_config_updated called.")
 
     def _on_check_clicked(self):
         print("[Phase4UI] _on_check_clicked called.")

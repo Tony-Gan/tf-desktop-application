@@ -280,7 +280,10 @@ class InfoCell(QHBoxLayout):
 
     @staticmethod
     def format_skill_name(skill: str) -> str:
-        if ':' in skill:
+        if '|' in skill:
+            skills = [s.replace('_', ' ').title() for s in skill.split('|')]
+            return ' / '.join(skills)
+        elif ':' in skill:
             parent, child = skill.split(':')
             parent = parent.replace('_', ' ').title()
             if 'any' in child.lower():
@@ -330,7 +333,7 @@ class InfoGroup(QGroupBox):
         for skill in occ_skills:
             skill_text = InfoCell.format_skill_name(skill)
 
-            if 'any' in skill.lower():
+            if 'any' in skill.lower() or '|' in skill:
                 cell = InfoCell(
                     text=skill_text,
                     on_button_clicked=self._on_skill_select
@@ -409,7 +412,9 @@ class InfoGroup(QGroupBox):
 
         skill = target_cell.initial_text
 
-        if "interpersonal skill" == skill.lower():
+        if '/' in skill:
+            dialog = MultiOptionSkillDialog(skill, parent_ui=self.parent)
+        elif "interpersonal skill" == skill.lower():
             dialog = InterpersonalSkillDialog(parent_ui=self.parent)
         elif skill.lower() in ["language", "fighting", "firearm", "science", "art", "pilot", "survival"]:
             skill_type = skill.split(":")[0]
@@ -774,7 +779,6 @@ class Phase2UI(BasePhaseUI):
         self.main_window.set_phase_status(self.phase, PhaseStatus.NOT_START)
 
     def on_enter(self):
-        """Called when the phase becomes active"""
         super().on_enter()
 
     def on_exit(self):
@@ -1133,6 +1137,61 @@ class AnySkillDialog(BaseSkillSelectDialog):
 
         self.content_frame.setLayout(QVBoxLayout())
         self.content_frame.layout().addWidget(scroll_area)
+
+
+class MultiOptionSkillDialog(BaseSkillSelectDialog):
+    def __init__(self, skills: str, parent_ui: 'Phase2UI'):
+        self.skill_options = skills.split(' / ')
+        super().__init__("Select One Skill", parent_ui)
+
+    def setup_content(self):
+        layout = QGridLayout(self.content_frame)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
+
+        button_group = QButtonGroup(self)
+        row = col = 0
+
+        for skill_option in self.skill_options:
+            skill_name = skill_option.strip().lower().replace(' ', '_')
+
+            if ':any' in skill_name:
+                skill_type = skill_name.split(':')[0]
+                type_skills = [s for s in self.parent_ui.skills if s.super_name == skill_type]
+                
+                for skill in sorted(type_skills, key=lambda x: x.name):
+                    radio = QRadioButton(skill.display_name)
+                    radio.setFont(self.create_font())
+                    radio.clicked.connect(lambda checked, s=skill: self._on_radio_button_clicked(s))
+                    
+                    self.radio_buttons[skill.name] = radio
+                    button_group.addButton(radio)
+                    layout.addWidget(radio, row, col)
+                    
+                    col += 1
+                    if col == 4:
+                        col = 0 
+                        row += 1
+            else:
+                skill = next(
+                    (s for s in self.parent_ui.skills 
+                        if s.name == skill_name or
+                        (s.super_name and f"{s.super_name}:{s.name}" == skill_name)),
+                    None
+                )
+                if skill:
+                    radio = QRadioButton(skill.display_name)
+                    radio.setFont(self.create_font())
+                    radio.clicked.connect(lambda checked, s=skill: self._on_radio_button_clicked(s))
+                    
+                    self.radio_buttons[skill.name] = radio
+                    button_group.addButton(radio)
+                    layout.addWidget(radio, row, col)
+                    
+                    col += 1
+                    if col == 4:
+                        col = 0
+                        row += 1
 
 
 class NewSkillDialog(TFComputingDialog):

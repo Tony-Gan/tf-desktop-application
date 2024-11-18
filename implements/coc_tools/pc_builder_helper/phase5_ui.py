@@ -53,9 +53,6 @@ class Phase5UI(BasePhaseUI):
     def _on_occupation_list_clicked(self):
         print("[Phase5UI] on_occupation_list_clicked called.")
 
-    def _on_config_updated(self):
-        print("[Phase5UI] _on_config_updated called.")
-
     def _on_check_clicked(self):
         print("[Phase5UI] _on_check_clicked called.")
 

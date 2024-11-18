@@ -1,114 +1,170 @@
 [
     {
-        "name": "AAAAAA",
+        "name": "Accountant",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "history,art:any,language:any,art:writing,psychology,interpersonal_skill:any,any,any",
-        "category": "Academic",
-        "credit_rating": "10-40"
+        "occupation_skills": "accounting,law,library_use,listen,persuade,spot_hidden,any,any",
+        "category": ["Business", "Science & Technology", "Academic"],
+        "credit_rating": "30-70"
     },
     {
-        "name": "Historian",
+        "name": "Acrobat",
+        "skill_points_formula": "EDU*2+DEX*2",
+        "occupation_skills": "climb,dodge,jump,throw,spot_hidden,swim,any,any",
+        "category": ["Sports & Athletics", "Adventurer", "Service Industry"],
+        "credit_rating": "9-20"
+    },    
+    {
+        "name": "Artist",
+        "skill_points_formula": "EDU*2+MAX(DEX,POW)*2",
+        "occupation_skills": "art:any,history|natural_world,interpersonal_skill:any,language:any,psychology,spot_hidden,interpersonal_skill:any,interpersonal_skill:any", 
+        "category": ["Occult & Mystic", "Service Industry", "Academic"],
+        "credit_rating": "9-50"
+    },
+    {
+        "name": "Asylum Attendant",
+        "skill_points_formula": "EDU*2+MAX(STR*2,DEX*2)",
+        "occupation_skills": "dodge,fighting:brawl,first_aid,interpersonal_skill:any,interpersonal_skill:any,listen,psychology,stealth",
+        "category": ["Service Industry", "Labor", "Police & Military"],
+        "credit_rating": "8-20"
+    },
+    {
+        "name": "Athlete",
+        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "occupation_skills": "climb,jump,fighting:brawl,ride,interpersonal_skill:any,swin,throw,any",
+        "category": ["Sports & Athletics", "Adventurer", "Service Industry"],
+        "credit_rating": "9-70"
+    },
+    {
+        "name": "Agency Detective",
+        "skill_points_formula": "EDU*2+MAX(STR*2,DEX*2)",
+        "occupation_skills": "interpersonal_skill:any,fighting:brawl,firearms:any,law,library_use,psychology,stealth,track",
+        "category": ["Police & Military", "Business", "Adventurer"],
+        "credit_rating": "20-45"
+    },
+    {
+        "name": "Alienist [Classic]",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "history,library_use,language:any,art:writing,psychology",
-        "category": "Academic",
+        "occupation_skills": "law,listen,medicine,language:any,psychoanalysis,psychology,science:biology,science:chemistry",
+        "category": ["Academic", "Science & Technology", "Occult & Mystic"],
+        "credit_rating": "10-60"
+    },
+    {
+        "name": "Animal Trainer",
+        "skill_points_formula": "EDU*2+MAX(APP*2,POW*2)",
+        "occupation_skills": "jump,listen,natural_world,psychology,science:zoology,stealth,track",
+        "category": ["Service Industry", "Adventurer", "Academic"],
         "credit_rating": "10-40"
     },
     {
-        "name": "Art Dealer",
-        "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "appraise,art:any,psychology,persuade,language:any",
-        "category": "Business",
-        "credit_rating": "20-70"
+        "name": "Antiquarian [Lovecraftian]",
+        "skill_points_formula": "EDU*4",
+        "occupation_skills": "appraise,art:any,history,library_use,language:any,interpersonal_skill:any,spot_hidden,any",
+        "category": ["Academic", "Occult & Mystic", "Business"],
+        "credit_rating": "30-70"
     },
     {
-        "name": "Banker",
-        "skill_points_formula": "EDU*4+APP*1",
-        "occupation_skills": "accounting,persuade,psychology,law,language:any",
-        "category": "Business",
-        "credit_rating": "30-80"
+        "name": "Antique Dealer",
+        "skill_points_formula": "EDU*4",
+        "occupation_skills": "accounting,appraise,drive_auto,interpersonal_skill:any,interpersonal_skill:any,history,library_use,navigate",
+        "category": ["Business", "Academic", "Criminal"],
+        "credit_rating": "30-50"
     },
     {
-        "name": "Chef",
-        "skill_points_formula": "EDU*2+DEX*2",
-        "occupation_skills": "art:cooking,psychology,persuade,natural_world,spot_hidden",
-        "category": "Service Industry",
+        "name": "Archaeologist [Lovecraftian]",
+        "skill_points_formula": "EDU*4",
+        "occupation_skills": "appraise,archaeology,history,language:any,library_use,spot_hidden,mechanical_repair,navigate|science:any",
+        "category": ["Academic", "Adventurer", "Science & Technology"],
+        "credit_rating": "10-40"
+    },
+    {
+        "name": "Architect",
+        "skill_points_formula": "EDU*4",
+        "occupation_skills": "accounting,art:technical_drawing,law,language_own,computer_use|library_use,persuade,psychology,science:mathematics",
+        "category": ["Science & Technology", "Business", "Academic"],
+        "credit_rating": "30-70"
+    },
+    {
+        "name": "Author [Lovecraftian]",
+        "skill_points_formula": "EDU*4",
+        "occupation_skills": "art:literature,history,library_use,natural_world|occult,language:any,language_own,psychology,any",
+        "category": ["Academic", "Occult & Mystic", "Service Industry"],
         "credit_rating": "9-30"
-    },
-    {
-        "name": "Professional Athlete",
-        "skill_points_formula": "DEX*3+STR*1",
-        "occupation_skills": "climb,swim,jump,fighting:brawl,ride,psychology",
-        "category": "Sports & Athletics",
-        "credit_rating": "10-50"
-    },
-    {
-        "name": "Smuggler",
-        "skill_points_formula": "DEX*2+INT*2",
-        "occupation_skills": "stealth,fast_talk,appraise,navigate,pilot,spot_hidden",
-        "category": "Criminal",
-        "credit_rating": "5-30"
-    },
-    {
-        "name": "Railroad Worker",
-        "skill_points_formula": "EDU*2+STR*2",
-        "occupation_skills": "mechanical_repair,drive_auto,spot_hidden,climb,first_aid,psychology",
-        "category": "Labor",
-        "credit_rating": "5-20"
-    },
-    {
-        "name": "Occultist",
-        "skill_points_formula": "EDU*3+POW*1",
-        "occupation_skills": "occult,history,language:any,library_use,psychology,art:any",
-        "category": "Occult & Mystic",
-        "credit_rating": "10-40"
-    },
-    {
-        "name": "Medium",
-        "skill_points_formula": "POW*3+APP*1",
-        "occupation_skills": "occult,psychology,persuade,fast_talk,interpersonal_skill:any,spot_hidden",
-        "category": "Occult & Mystic",
-        "credit_rating": "9-40"
-    },
-    {
-        "name": "Sailor",
-        "skill_points_formula": "EDU*2+STR*2",
-        "occupation_skills": "pilot:navigation,climb,swim,first_aid,fighting:brawl,spot_hidden",
-        "category": "Transport",
-        "credit_rating": "10-40"
-    },
-    {
-        "name": "Mechanic",
-        "skill_points_formula": "EDU*2+DEX*2",
-        "occupation_skills": "mechanical_repair,drive_auto,engineering,spot_hidden,physics,psychology",
-        "category": "Science & Technology",
-        "credit_rating": "9-30"
-    },
-    {
-        "name": "Fortune Teller",
-        "skill_points_formula": "APP*2+POW*2",
-        "occupation_skills": "occult,psychology,persuade,charm,fast_talk,art:any",
-        "category": "Service Industry",
-        "credit_rating": "5-30"
-    },
-    {
-        "name": "Soldier of Fortune",
-        "skill_points_formula": "EDU*2+MAX(STR,DEX,CON)*2",
-        "occupation_skills": "fighting:brawl,fighting:firearms,first_aid,stealth,navigate,interpersonal_skill:any",
-        "category": "Adventurer",
-        "credit_rating": "9-40"
     },
     {
         "name": "Bartender",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "charm,fast_talk,psychology,listen,spot_hidden",
-        "category": "Service Industry",
-        "credit_rating": "10-40"
+        "occupation_skills": "accounting,interpersonal_skill:any,interpersonal_skill:any,fighting:brawl,listen,psychology,spot_hidden,any",
+        "category": ["Service Industry", "Business", "Criminal"],
+        "credit_rating": "8-25"
     },
     {
-        "name": "Detective",
-        "skill_points_formula": "EDU*2+INT*2",
-        "occupation_skills": "law,psychology,spot_hidden,library_use,stealth,fighting:brawl",
-        "category": "Police & Military",
+        "name": "Big Game Hunter",
+        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "occupation_skills": "firearms:any,listen|spot_hidden,natural_world,navigate,language:any|survival:any,science:biology|science:botany,stealth,track",
+        "category": ["Adventurer", "Sports & Athletics", "Criminal"],
         "credit_rating": "20-50"
+    },
+    {
+        "name": "Book Dealer",
+        "skill_points_formula": "EDU*4",
+        "occupation_skills": "accounting,appraise,drive_auto,history,library_use,language_own,language:any,interpersonal_skill:any",
+        "category": ["Business", "Academic", "Service Industry"],
+        "credit_rating": "20-40"
+    },
+    {
+        "name": "Bounty Hunter",
+        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "occupation_skills": "drive_auto,electronics|electrical_repair,fighting:any|firearms:any,interpersonal_skill:any,law,psychology,track,stealth",
+        "category": ["Police & Military", "Adventurer", "Criminal"],
+        "credit_rating": "9-30"
+    },
+    {
+        "name": "Boxer/Wrestler",
+        "skill_points_formula": "EDU*2+STR*2",
+        "occupation_skills": "dodge,fighting:brawl,intimidate,jump,psychology,spot_hidden,any,any",
+        "category": ["Sports & Athletics", "Adventurer", "Service Industry"],
+        "credit_rating": "9-60"
+    },
+    {
+        "name": "Butler/Valet/Maid",
+        "skill_points_formula": "EDU*4",
+        "occupation_skills": "accounting|appraise,art:any,first_aid,listen,language:any,psychology,spot_hidden,any,any",
+        "category": ["Service Industry", "Business", "Labor"],
+        "credit_rating": "9-40"
+    },
+    {
+        "name": "Clergy, Member of the",
+        "skill_points_formula": "EDU*4",
+        "occupation_skills": "accounting,history,library_use,listen,language:any,interpersonal_skill:any,psychology,any",
+        "category": ["Occult & Mystic", "Academic", "Service Industry"],
+        "credit_rating": "9-60"
+    },
+    {
+        "name": "Computer Programmer/Technician",
+        "skill_points_formula": "EDU*4",
+        "occupation_skills": "computer_use,electrical_repair,electronics,library_use,science:mathematics,spot_hidden,any,any",
+        "category": ["Science & Technology", "Business", "Academic"],
+        "credit_rating": "10-70"
+    },
+    {
+        "name": "Film Star",
+        "skill_points_formula": "EDU*2+APP*2",
+        "occupation_skills": "art:acting,disguise,drive_auto,interpersonal_skill:any,interpersonal_skill:any,psychology,any,any",
+        "category": ["Service Industry", "Occult & Mystic", "Business"],
+        "credit_rating": "20-90"
+    },
+    {
+        "name": "Hacker",
+        "skill_points_formula": "EDU*4",
+        "occupation_skills": "computer_use,electrical_repair,electronics,library_use,spot_hidden,interpersonal_skill:any,any,any",
+        "category": ["Science & Technology", "Criminal", "Adventurer"],
+        "credit_rating": "10-70"
+    },
+    {
+        "name": "Stage Actor",
+        "skill_points_formula": "EDU*2+APP*2",
+        "occupation_skills": "art:acting,disguise,fighting:any,history,interpersonal_skill:any,interpersonal_skill:any,psychology,any",
+        "category": ["Service Industry", "Occult & Mystic", "Adventurer"],
+        "credit_rating": "9-40"
     }
 ]

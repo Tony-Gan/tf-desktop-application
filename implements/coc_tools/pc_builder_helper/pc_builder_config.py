@@ -53,7 +53,7 @@ class PCBuilderConfig:
                 'stat_lower_limit': self.stat_lower_limit,
                 'allow_custom_luck': self.allow_custom_luck
             }
-        else:  # destiny mode
+        else:
             return {
                 'dice_count': self.dice_count
             }

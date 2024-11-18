@@ -347,6 +347,8 @@ class Phase1UI(BasePhaseUI):
             value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
+        self.era.value_field.setEditable(False)
+        self.era.set_value("Modern")
         
         layout.addWidget(self.player_name)
         layout.addWidget(self.campaign_date)
@@ -393,6 +395,7 @@ class Phase1UI(BasePhaseUI):
             value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
+        self.gender.value_field.setEditable(False)
         
         occupation_options = ["None"] + sorted([occ.name for occ in self.occupation_list])
         self.occupation = TFOptionEntry(
@@ -401,8 +404,9 @@ class Phase1UI(BasePhaseUI):
             label_size=130, 
             value_size=150,
             alignment=Qt.AlignmentFlag.AlignLeft,
-            extra_value_width=40
+            extra_value_width=60
         )
+        self.occupation.value_field.setEditable(False)
         
         self.skill_points_formula = TFValueEntry(
             "Skill Points:",

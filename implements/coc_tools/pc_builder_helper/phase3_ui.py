@@ -2,27 +2,27 @@ import re
 import json
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QVBoxLayout, QFrame, QHBoxLayout, QWidget, QGridLayout, QGroupBox, QScrollArea
+from PyQt6.QtWidgets import (QVBoxLayout, QFrame, QHBoxLayout, QWidget, QLabel,
+                             QGridLayout, QGroupBox, QScrollArea, QLineEdit)
 
 from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
 from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
+from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_value_entry import TFValueEntry
+from ui.components.tf_computing_dialog import TFComputingDialog
+from ui.components.tf_separator import TFSeparator
 from utils.validator.tf_validator import TFValidator
 from utils.helper import resource_path
 
-"""
-armour部分替换为战技。首先是选择一个基本Move，默认为徒手攻击，没什么特别的战技。徒手攻击可以换成别的，就会有额外战技
-显示对应的伤害，战技全都为文本显示，要看具体的需要按下方按钮。
-"""
-
 LABEL_FONT = QFont("Inconsolata SemiCondensed")
 LABEL_FONT.setPointSize(10)
+
 
 class Penetration(Enum):
     YES = "Yes"
@@ -248,10 +248,17 @@ class WeaponType:
                 f"Ammo: {self.ammo if self.ammo else 'N/A'}\n"
                 f"Malfunction: {self.malfunction if self.malfunction else 'N/A'}\n"
                 f"Category: {self.category.value}\n")
+    
+
+@dataclass
+class CombatSkill:
+    name: str
+    damage: str
+    techniques: Dict[str, str]
 
 
 class WeaponGroup(QGroupBox):
-    MAX_WEAPONS = 3
+    MAX_WEAPONS = 5
 
     def __init__(self, parent:'Phase3UI'):
         super().__init__("Weapons", parent)
@@ -320,8 +327,9 @@ class WeaponGroup(QGroupBox):
         current_count = len(self.weapon_entries)
         self.add_button.setEnabled(current_count < self.MAX_WEAPONS)
         self.delete_button.setEnabled(current_count > 0)
+        self.parent.adjust_status()
 
-    def clear_all_weapons(self):
+    def reset(self):
         while self.weapon_entries:
             self._delete_weapon()
 
@@ -399,7 +407,7 @@ class WeaponEntry(QFrame):
             custom_edit_font=LABEL_FONT,
             alignment=Qt.AlignmentFlag.AlignLeft,
             label_size=40,
-            value_size=80,
+            value_size=70,
             height=30,
             object_name="weapon_damage"
         )
@@ -497,6 +505,21 @@ class WeaponEntry(QFrame):
         self.layout.setColumnStretch(3, 1)
         self.layout.setColumnStretch(4, 1)
 
+        self.name_entry.value_field.textChanged.connect(self._on_value_changed)
+        self.category_selector.value_field.currentTextChanged.connect(self._on_value_changed)
+        self.type_selector.value_field.currentTextChanged.connect(self._on_value_changed)
+        self.skill_entry.value_field.textChanged.connect(self._on_value_changed)
+        self.damage_entry.value_field.textChanged.connect(self._on_value_changed)
+        self.range_entry.value_field.textChanged.connect(self._on_value_changed)
+        self.penetration_entry.value_field.textChanged.connect(self._on_value_changed)
+        self.rof_entry.value_field.textChanged.connect(self._on_value_changed)
+        self.ammo_entry.value_field.textChanged.connect(self._on_value_changed)
+        self.malfunction_entry.value_field.textChanged.connect(self._on_value_changed)
+
+    def _on_value_changed(self):
+        if isinstance(self.parent, WeaponGroup) and isinstance(self.parent.parent, Phase3UI):
+            self.parent.parent.adjust_status()
+
     def _on_category_changed(self, category: str):
         if category == "None":
             self.type_selector.setEnabled(False)
@@ -555,12 +578,100 @@ class WeaponEntry(QFrame):
             self.expand_button.setText("Collapse")
 
 
+class CombatSkillGroup(QGroupBox):
+    def __init__(self, parent:'Phase3UI'):
+        super().__init__("Combat Skills", parent)
+        self.parent = parent
+        self.setObjectName("section_frame")
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(5, 5, 5, 5)
+        self.layout.setSpacing(5)
+
+        self.skills = ["None"] + [cs.name for cs in self.parent.combat_skills]
+
+        self._setup_content()
+
+    def _setup_content(self):
+        upper_layout = QHBoxLayout()
+        self.combat_skill_selector = TFOptionEntry(
+            label_text="Combat Skill",
+            custom_label_font=LABEL_FONT,
+            custom_edit_font=LABEL_FONT,
+            options=self.skills,
+            current_value="None",
+            label_size=80,
+            value_size=120,
+            height=30,
+            object_name="coverage_selector"
+        )
+        self.combat_skill_selector.value_field.setEditable(True)
+
+        self.damage_entry = TFValueEntry(
+            label_text="Damage",
+            custom_label_font=LABEL_FONT,
+            custom_edit_font=LABEL_FONT,
+            alignment=Qt.AlignmentFlag.AlignLeft,
+            label_size=50,
+            value_size=50,
+            height=30,
+            object_name="damage"
+        )
+        self.damage_entry.value_field.setText("1D3+DB")
+
+        self.combat_skill_entry = TFValueEntry(
+            label_text="Skills",
+            custom_label_font=LABEL_FONT,
+            custom_edit_font=LABEL_FONT,
+            alignment=Qt.AlignmentFlag.AlignLeft,
+            label_size=80,
+            value_size=180,
+            height=30,
+            object_name="name"
+        )
+        self.combat_skill_entry.value_field.setText("N/A")
+
+        self.combat_skill_selector.value_field.currentTextChanged.connect(self._on_combat_skill_changed)
+
+        upper_layout.addWidget(self.combat_skill_selector)
+        upper_layout.addWidget(self.damage_entry)
+        self.layout.addLayout(upper_layout)
+        self.layout.addWidget(self.combat_skill_entry)
+
+        self.combat_skill_selector.value_field.currentTextChanged.connect(
+            lambda: self.parent.adjust_status())
+        self.damage_entry.value_field.textChanged.connect(
+            lambda: self.parent.adjust_status())
+        self.combat_skill_entry.value_field.textChanged.connect(
+            lambda: self.parent.adjust_status())
+
+    def _on_combat_skill_changed(self, combat_skill: str):
+        if combat_skill == "None":
+            self.combat_skill_entry.value_field.setText("N/A")
+            self.damage_entry.value_field.setText("1D3")
+            return
+
+        selected_skill = next((cs for cs in self.parent.combat_skills if cs.name == combat_skill), None)
+        if selected_skill:
+            techniques_keys = ", ".join(selected_skill.techniques.keys())
+            self.combat_skill_entry.value_field.setText(techniques_keys)
+            self.damage_entry.value_field.setText(selected_skill.damage)
+        else:
+            self.combat_skill_entry.value_field.setText("N/A")
+            self.damage_entry.value_field.setText("1D3")
+
+    def reset(self):
+        self.combat_skill_selector.value_field.setCurrentText("None")
+
+        self.combat_skill_entry.value_field.setText("N/A")
+        self.damage_entry.value_field.setText("1D3")
+
+
 class ArmourGroup(QGroupBox):
     def __init__(self, parent:'Phase3UI'):
         super().__init__("Armour", parent)
         self.parent = parent
         self.setObjectName("section_frame")
-        self.layout = QHBoxLayout(self)
+        self.layout = QGridLayout(self)
         self.layout.setContentsMargins(5, 5, 5, 5)
         self.layout.setSpacing(5)
 
@@ -572,42 +683,75 @@ class ArmourGroup(QGroupBox):
             custom_label_font=LABEL_FONT,
             custom_edit_font=LABEL_FONT,
             alignment=Qt.AlignmentFlag.AlignLeft,
-            label_size=40,
-            value_size=80,
+            label_size=60,
+            value_size=90,
             height=30,
             object_name="name"
         )
+        self.name_entry.value_field.setText("N/A")
 
         self.type_entry = TFValueEntry(
-            label_text="Armour Type",
+            label_text="Type",
             custom_label_font=LABEL_FONT,
             custom_edit_font=LABEL_FONT,
             alignment=Qt.AlignmentFlag.AlignLeft,
-            label_size=40,
-            value_size=80,
+            label_size=60,
+            value_size=90,
             height=30,
             object_name="armour_type"
         )
+        self.type_entry.value_field.setText("N/A")
 
         self.points_entry = TFValueEntry(
             label_text="Points",
             custom_label_font=LABEL_FONT,
             custom_edit_font=LABEL_FONT,
             alignment=Qt.AlignmentFlag.AlignLeft,
-            label_size=40,
-            value_size=80,
+            label_size=60,
+            value_size=90,
             height=30,
             object_name="points"
         )
+        self.points_entry.value_field.setText("N/A")
 
-        self.layout.addWidget(self.name_entry)
-        self.layout.addWidget(self.type_entry)
-        self.layout.addWidget(self.points_entry)
+        self.coverage_selector = TFOptionEntry(
+            label_text="Coverage",
+            custom_label_font=LABEL_FONT,
+            custom_edit_font=LABEL_FONT,
+            options=["None", "Head", "Torso", "Upper Arm", "Lower Arm", "Thighs", "Lower Legs", "Hands", "Feet", "Neck", "Groin"],
+            current_value="None",
+            label_size=60,
+            value_size=90,
+            height=30,
+            object_name="coverage_selector",
+        )
+        self.coverage_selector.value_field.setEditable(True)
+
+        self.layout.addWidget(self.name_entry, 0, 0)
+        self.layout.addWidget(self.type_entry, 0, 1)
+        self.layout.addWidget(self.points_entry, 1, 0)
+        self.layout.addWidget(self.coverage_selector, 1, 1)
+
+        self.name_entry.value_field.textChanged.connect(
+            lambda: self.parent.adjust_status())
+        self.type_entry.value_field.textChanged.connect(
+            lambda: self.parent.adjust_status())
+        self.points_entry.value_field.textChanged.connect(
+            lambda: self.parent.adjust_status())
+        self.coverage_selector.value_field.currentTextChanged.connect(
+            lambda: self.parent.adjust_status())
+
+    def reset(self):
+        self.name_entry.value_field.setText("N/A")
+        self.type_entry.value_field.setText("N/A")
+        self.points_entry.value_field.setText("N/A")
+
+        self.coverage_selector.value_field.setCurrentText("None")
 
 
-class LowerGroup(QFrame):
+class CreditGroup(QGroupBox):
     def __init__(self, parent:'Phase3UI'):
-        super().__init__(parent)
+        super().__init__("Credits", parent)
         self.parent = parent
         self.setObjectName("section_frame")
         self.layout = QVBoxLayout(self)
@@ -617,7 +761,379 @@ class LowerGroup(QFrame):
         self._setup_content()
 
     def _setup_content(self):
-        pass
+        self.cash_entry = TFValueEntry(
+            label_text="Cash",
+            custom_label_font=LABEL_FONT,
+            custom_edit_font=LABEL_FONT,
+            alignment=Qt.AlignmentFlag.AlignLeft,
+            label_size=60,
+            value_size=80,
+            height=30,
+            object_name="cash",
+            enabled=False
+        )
+
+        self.deposit_entry = TFValueEntry(
+            label_text="Deposit",
+            custom_label_font=LABEL_FONT,
+            custom_edit_font=LABEL_FONT,
+            alignment=Qt.AlignmentFlag.AlignLeft,
+            label_size=60,
+            value_size=80,
+            height=30,
+            object_name="deposit",
+            enabled=False
+        )
+        credit_rate = self.parent.main_window.pc_data.get('skills', {}).get('credit_rate', 25)
+        era = self.parent.main_window.pc_data.get('metadata', {}).get('era', 'Modern')
+        cash, deposit = self._calculate_credits(credit_rate, era)
+
+        self.cash_entry.value_field.setText("${:,}".format(cash))
+        self.deposit_entry.value_field.setText("${:,}".format(deposit))
+
+        self.layout.addWidget(self.cash_entry)
+        self.layout.addWidget(self.deposit_entry)
+
+    def _calculate_credits(self, credit_rate: int, era: str) -> tuple[int, int]:
+        era_multipliers = {
+            "Medieval": (0.5, 5),
+            "1890s": (1, 10),
+            "1920s": (2, 20),
+            "Modern": (20, 200),
+            "Near Future": (50, 500),
+            "Future": (100, 1000)
+        }
+
+        cash_multiplier, deposit_multiplier = era_multipliers.get(era, (20, 200))
+
+        if credit_rate == 0:
+            cash = 0.5 * cash_multiplier
+            deposit = 0
+        elif 1 <= credit_rate <= 9:
+            cash = credit_rate * 1 * cash_multiplier
+            deposit = credit_rate * 10 * deposit_multiplier
+        elif 10 <= credit_rate <= 49:
+            cash = credit_rate * 2 * cash_multiplier
+            deposit = credit_rate * 50 * deposit_multiplier
+        elif 50 <= credit_rate <= 89:
+            cash = credit_rate * 5 * cash_multiplier
+            deposit = credit_rate * 500 * deposit_multiplier
+        elif 90 <= credit_rate <= 98:
+            cash = credit_rate * 20 * cash_multiplier
+            deposit = credit_rate * 2000 * deposit_multiplier
+        elif credit_rate == 99:
+            cash = 1_000_000
+            deposit = 100_000_000
+        else:
+            cash = 1_000_000
+            deposit = 100_000_000
+
+        return cash, deposit
+    
+    def reset(self):
+        credit_rate = self.parent.main_window.pc_data.get('skills', {}).get('credit_rate', 25)
+        era = self.parent.main_window.pc_data.get('metadata', {}).get('era', 'Modern')
+
+        cash, deposit = self._calculate_credits(credit_rate, era)
+
+        self.cash_entry.value_field.setText("${:,}".format(cash))
+        self.deposit_entry.value_field.setText("${:,}".format(deposit))
+
+
+class ItemBaseGroup(QGroupBox):
+    def __init__(self, parent=None, title=None):
+        super().__init__(title, parent)
+        self.parent = parent
+        self.setObjectName("section_frame")
+
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(5, 5, 5, 5)
+        self.main_layout.setSpacing(5)
+
+        self.content_widget = QWidget()
+        self.content_widget.setStyleSheet("""
+            QWidget {
+                border: 1px solid rgba(224, 224, 224, 0.01);
+            }
+            QLineEdit {
+                border: 1px solid rgba(204, 204, 204, 0.01);
+            }
+            QLabel {
+                border: 1px solid rgba(224, 224, 224, 0.01);
+            }
+        """)
+        
+        self.content_vertical_layout = QVBoxLayout(self.content_widget)
+        self.content_vertical_layout.setContentsMargins(0, 0, 0, 0)
+        self.content_vertical_layout.setSpacing(0)
+        
+        self.grid_widget = QWidget()
+        self.content_layout = QGridLayout(self.grid_widget)
+        self.content_layout.setContentsMargins(0, 0, 0, 0)
+        self.content_layout.setSpacing(1)
+        
+        self.content_vertical_layout.addWidget(self.grid_widget)
+        self.content_vertical_layout.addStretch(1)
+
+        self.items = []
+        self.current_row = 0
+        self.COLS_PER_ROW = 3
+        
+        self.placeholder_widgets = []
+        
+        self._setup_content()
+        self._setup_first_row()
+
+    def _setup_content(self):
+        self.button_container = QWidget()
+        self.button_layout = QHBoxLayout(self.button_container)
+        self.button_layout.setContentsMargins(0, 0, 0, 0)
+        self.button_layout.setSpacing(5)
+
+        self.add_button = TFBaseButton(
+            "Add Item",
+            width=100,
+            height=30,
+            enabled=True,
+            object_name="add_item_button",
+            tooltip="Add a new item",
+            on_clicked=self._add_item
+        )
+
+        self.delete_button = TFBaseButton(
+            "Delete Item",
+            width=100,
+            height=30,
+            enabled=False,
+            object_name="delete_item_button",
+            tooltip="Delete the last item",
+            on_clicked=self._delete_item
+        )
+
+        self.button_layout.addWidget(self.add_button)
+        self.button_layout.addWidget(self.delete_button)
+        self.button_layout.addStretch()
+
+        self.main_layout.addWidget(self.content_widget, 1)
+        self.main_layout.addWidget(self.button_container, 0)
+
+    def _setup_first_row(self):
+        for col in range(self.COLS_PER_ROW):
+            placeholder = QWidget()
+            placeholder.setFixedHeight(24)
+            self.content_layout.addWidget(placeholder, 0, col)
+            self.placeholder_widgets.append((placeholder, 0, col))
+
+    def _add_item(self):
+        unconfirmed_line_edit = None
+        for widget, row, col in self.items:
+            if isinstance(widget, QLineEdit):
+                unconfirmed_line_edit = (widget, row, col)
+                break
+        
+        if unconfirmed_line_edit:
+            line_edit, row, col = unconfirmed_line_edit
+            text = line_edit.text().strip()
+            if not text:
+                self.content_layout.removeWidget(line_edit)
+                line_edit.deleteLater()
+                self.items.remove(unconfirmed_line_edit)
+            else:
+                self._convert_to_label(line_edit, row, col)
+
+        next_pos = len(self.items)
+        row = next_pos // self.COLS_PER_ROW
+        col = next_pos % self.COLS_PER_ROW
+
+        if col == 0 and row == len(self.placeholder_widgets) // self.COLS_PER_ROW:
+            for c in range(self.COLS_PER_ROW):
+                placeholder = QWidget()
+                placeholder.setFixedHeight(24)
+                self.content_layout.addWidget(placeholder, row, c)
+                self.placeholder_widgets.append((placeholder, row, c))
+
+        line_edit = QLineEdit()
+        line_edit.setFont(LABEL_FONT)
+        line_edit.setFixedHeight(24)
+        line_edit.setFixedWidth(131)
+        
+        for widget, r, c in self.placeholder_widgets:
+            if r == row and c == col:
+                widget.hide()
+                break
+
+        self.content_layout.addWidget(line_edit, row, col)
+        self.items.append((line_edit, row, col))
+        
+        line_edit.editingFinished.connect(lambda: self._convert_to_label(line_edit, row, col))
+        line_edit.focusOutEvent = lambda e: self._convert_to_label(line_edit, row, col)
+        
+        line_edit.setFocus()
+        self.delete_button.setEnabled(True)
+        self.parent.parent.adjust_status()
+        self.delete_button.setEnabled(bool(self.items))
+
+    def _convert_to_label(self, line_edit, row, col):
+        if not line_edit.isVisible():
+            return
+            
+        text = line_edit.text().strip()
+        if text:
+            label = QLabel(text)
+            label.setFont(LABEL_FONT)
+            label.setFixedHeight(24)
+            
+            label.mousePressEvent = lambda e: self._on_label_clicked(label, row, col)
+            
+            self.content_layout.removeWidget(line_edit)
+            line_edit.deleteLater()
+            self.content_layout.addWidget(label, row, col)
+            
+            for i, (widget, r, c) in enumerate(self.items):
+                if widget == line_edit:
+                    self.items[i] = (label, row, col)
+                    break
+
+            if isinstance(self.parent, LowerGroup) and isinstance(self.parent.parent, Phase3UI):
+                self.parent.parent.adjust_status()
+
+    def _on_label_clicked(self, label, row, col):
+        unconfirmed_line_edit = None
+        for widget, r, c in self.items:
+            if isinstance(widget, QLineEdit):
+                unconfirmed_line_edit = (widget, r, c)
+                break
+        
+        if unconfirmed_line_edit:
+            line_edit, r, c = unconfirmed_line_edit
+            text = line_edit.text().strip()
+            if text:
+                self._convert_to_label(line_edit, r, c)
+            else:
+                self.content_layout.removeWidget(line_edit)
+                line_edit.deleteLater()
+                self.items.remove(unconfirmed_line_edit)
+
+        line_edit = QLineEdit(label.text())
+        line_edit.setFont(LABEL_FONT)
+        line_edit.setFixedHeight(24)
+        line_edit.setFixedWidth(100)
+        
+        line_edit.editingFinished.connect(lambda: self._convert_to_label(line_edit, row, col))
+        line_edit.focusOutEvent = lambda e: self._convert_to_label(line_edit, row, col)
+        
+        self.content_layout.removeWidget(label)
+        label.deleteLater()
+        self.content_layout.addWidget(line_edit, row, col)
+        
+        for i, (widget, r, c) in enumerate(self.items):
+            if widget == label:
+                self.items[i] = (line_edit, row, col)
+                break
+        
+        line_edit.setFocus()
+        line_edit.selectAll()
+
+    def _delete_item(self):
+        confirmed_items = [(w, r, c) for w, r, c in self.items if isinstance(w, QLabel)]
+        if not confirmed_items:
+            return
+            
+        confirmed, items_to_delete = DeleteItemDialog.get_input(self, items=self.items)
+        if not confirmed or not items_to_delete:
+            return
+            
+        for text in items_to_delete:
+            for widget, row, col in self.items[:]:
+                if isinstance(widget, QLabel) and widget.text() == text:
+                    self.content_layout.removeWidget(widget)
+                    widget.deleteLater()
+                    self.items.remove((widget, row, col))
+        
+        remaining_items = [(w, r, c) for w, r, c in self.items]
+        self.items.clear() 
+        
+        for p_widget, _, _ in self.placeholder_widgets:
+            p_widget.hide()
+        
+        for i, (widget, _, _) in enumerate(remaining_items):
+            new_row = i // self.COLS_PER_ROW
+            new_col = i % self.COLS_PER_ROW
+            
+            self.content_layout.addWidget(widget, new_row, new_col)
+            self.items.append((widget, new_row, new_col))
+            
+            if new_col == 0 and new_row >= len(self.placeholder_widgets) // self.COLS_PER_ROW:
+                for c in range(self.COLS_PER_ROW):
+                    if not any(p_row == new_row and p_col == c for _, p_row, p_col in self.placeholder_widgets):
+                        placeholder = QWidget()
+                        placeholder.setFixedHeight(24)
+                        self.content_layout.addWidget(placeholder, new_row, c)
+                        self.placeholder_widgets.append((placeholder, new_row, c))
+                        placeholder.hide()
+        
+        last_pos = len(self.items)
+        last_row = last_pos // self.COLS_PER_ROW
+        last_col = last_pos % self.COLS_PER_ROW
+        
+        for p_widget, p_row, p_col in self.placeholder_widgets:
+            if p_row == last_row and p_col >= last_col:
+                p_widget.show()
+        
+        if not self.items:
+            self.delete_button.setEnabled(False)
+        
+        if isinstance(self.parent, LowerGroup) and isinstance(self.parent.parent, Phase3UI):
+            self.parent.parent.adjust_status()
+
+    def reset(self):
+        for widget, _, _ in self.items:
+            self.content_layout.removeWidget(widget)
+            widget.deleteLater()
+        
+        for widget, _, _ in self.placeholder_widgets:
+            self.content_layout.removeWidget(widget)
+            widget.deleteLater()
+        
+        self.items.clear()
+        self.placeholder_widgets.clear()
+        
+        self._setup_first_row()
+        
+        self.delete_button.setEnabled(False)
+
+
+class ItemGroup(ItemBaseGroup):
+    def __init__(self, parent=None):
+        super().__init__(parent, title="Items")
+        self.add_button.setText("Add Item")
+        self.delete_button.setText("Delete Item")
+
+
+class DepositGroup(ItemBaseGroup):
+    def __init__(self, parent=None):
+        super().__init__(parent, title="Deposits")
+        self.add_button.setText("Add Deposit")
+        self.delete_button.setText("Delete Deposit")
+
+
+class LowerGroup(QFrame):
+    def __init__(self, parent:'Phase3UI'):
+        super().__init__(parent)
+        self.parent = parent
+        self.setObjectName("section_frame")
+        self.layout = QHBoxLayout(self)
+        self.layout.setContentsMargins(5, 5, 5, 5)
+        self.layout.setSpacing(5)
+
+        self._setup_content()
+
+    def _setup_content(self):
+        self.item_group = ItemGroup(self)
+        self.deposit_group = DepositGroup(self)
+
+        self.layout.addWidget(self.item_group, 1)
+        self.layout.addWidget(self.deposit_group, 1)
 
 
 class Phase3UI(BasePhaseUI):
@@ -625,15 +1141,11 @@ class Phase3UI(BasePhaseUI):
         self.config = main_window.config
         self.main_window = main_window
 
-        self.check_button = None
-        self.previous_button = None
+        self.weapon_types = self._load_weapon_types_from_json(resource_path("implements/coc_tools/pc_builder_helper/weapon_types.json"))
+        self.combat_skills = self._load_combat_skills_from_json(resource_path("implements/coc_tools/pc_builder_helper/combat_skills.json"))
+        self.weapon_scroll_area = None
 
         super().__init__(PCBuilderPhase.PHASE3, main_window, parent)
-
-        self.weapon_types = self._load_weapon_types_from_json(resource_path("implements/coc_tools/pc_builder_helper/weapon_types.json"))
-        self.weapon_scroll_area = None
-        self.armour_scroll_area = None
-        self.lower_scroll_area = None
 
         self.validator = TFValidator()
         self._setup_validation_rules()
@@ -649,31 +1161,47 @@ class Phase3UI(BasePhaseUI):
         self.weapon_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.weapon_scroll.setFrameShape(QFrame.Shape.NoFrame)
 
-        self.armour_scroll = QScrollArea()
-        self.armour_scroll.setWidgetResizable(True)
-        self.armour_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.armour_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.armour_scroll.setFrameShape(QFrame.Shape.NoFrame)
-
         self.weapon_group = WeaponGroup(self)
+        self.weapon_scroll.setWidget(self.weapon_group)
+
         self.armour_group = ArmourGroup(self)
+        self.combat_skill_group = CombatSkillGroup(self)
+        self.credit_group = CreditGroup(self)
+
+        self.mid_group = QFrame(self)
+        self.mid_group.layout = QHBoxLayout(self.mid_group)
+        self.mid_group.layout.setContentsMargins(0, 0, 0, 0)
+
+        self.mid_group.layout.addWidget(self.armour_group, 3)
+        self.mid_group.layout.addWidget(self.combat_skill_group, 3)
+        self.mid_group.layout.addWidget(self.credit_group, 1)
+
         self.lower_group = LowerGroup(self)
 
-        self.weapon_scroll.setWidget(self.weapon_group)
-        self.armour_scroll.setWidget(self.armour_group)
-
-        content_layout.addWidget(self.weapon_scroll, 4)
-        content_layout.addWidget(self.armour_scroll, 1)
-        content_layout.addWidget(self.lower_group, 5)
+        content_layout.addWidget(self.weapon_scroll, 2)
+        content_layout.addWidget(self.mid_group, 1)
+        content_layout.addWidget(self.lower_group, 2)
 
         self.content_area.setLayout(content_layout)
 
     def _setup_phase_buttons(self, button_layout):
-        self.check_button = TFBaseButton(
-            "Check",
+        self.show_combat_skills_button = TFBaseButton(
+            "Combat Skills",
             self,
             height=30,
-            on_clicked=self._on_check_clicked
+            on_clicked=self._on_show_combat_skills_clicked
+        )
+        self.show_weapon_list_button = TFBaseButton(
+            "Weapons List",
+            self,
+            height=30,
+            on_clicked=self._on_show_weapon_list_clicked
+        )
+        self.complete_button = TFBaseButton(
+            "Complete",
+            self,
+            height=30,
+            on_clicked=self._on_complete_clicked
         )
         self.previous_button = TFPreviousButton(
             self,
@@ -681,35 +1209,121 @@ class Phase3UI(BasePhaseUI):
             on_clicked=self._on_previous_clicked
         )
 
-        button_layout.addWidget(self.check_button)
+        button_layout.addWidget(self.show_combat_skills_button)
+        button_layout.addWidget(self.show_weapon_list_button)
+        button_layout.addWidget(self.complete_button)
         button_layout.addWidget(self.previous_button)
 
     def _setup_validation_rules(self):
         pass
 
-    def _on_occupation_list_clicked(self):
-        print("[Phase3UI] on_occupation_list_clicked called.")
+    def _on_show_combat_skills_clicked(self):
+        dialog = CombatSkillListDialog(self, self.combat_skills)
+        dialog.exec()
 
-    def _on_config_updated(self):
-        print("[Phase3UI] _on_config_updated called.")
+    def _on_show_weapon_list_clicked(self):
+        dialog = WeaponTypeListDialog(self, self.weapon_types)
+        dialog.exec()
 
-    def _on_check_clicked(self):
-        print("[Phase3UI] _on_check_clicked called.")
+    def _on_complete_clicked(self):
+        self.complete_button.setEnabled(False)
+        self.next_button.setEnabled(True)
+        self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETED)
 
     def _on_previous_clicked(self):
         self.main_window._on_phase_selected(PCBuilderPhase.PHASE2)
 
-    def _on_next_clicked(self):
-        print("[Phase3UI] _on_next_clicked called.")
-
     def _reset_content(self):
-        print("[Phase3UI] _reset_content called.")
+        super()._reset_content()
+
+        if 'loadout' in self.main_window.pc_data:
+            del self.main_window.pc_data['loadout']
+
+        self.weapon_group.reset()
+        
+        self.armour_group.reset()
+        self.combat_skill_group.reset()
+        self.credit_group.reset()
+        
+        self.lower_group.item_group.reset()
+        self.lower_group.deposit_group.reset()
+
+        self.complete_button.setEnabled(True)
+        self.next_button.setEnabled(False)
+
+        self.main_window.set_phase_status(self.phase, PhaseStatus.NOT_START)
+
+    def adjust_status(self):
+        if self.main_window.get_phase_status(self.phase) == PhaseStatus.NOT_START:
+            self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETING)
+        if self.main_window.get_phase_status(self.phase) == PhaseStatus.COMPLETED:
+            self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETING)
+            self.complete_button.setEnabled(True)
+            self.enable_next_button(False)
 
     def on_enter(self):
         super().on_enter()
 
     def on_exit(self):
-        super().on_exit()
+        if 'loadout' not in self.main_window.pc_data:
+            self.main_window.pc_data['loadout'] = {}
+            
+        loadout_data = {}
+
+        weapons_data = {}
+        for entry in self.weapon_group.weapon_entries:
+            weapon_name = entry.name_entry.get_value()
+            if weapon_name != "N/A":
+                weapons_data[weapon_name] = {
+                    "name": weapon_name,
+                    "skill": entry.skill_entry.get_value(),
+                    "damage": entry.damage_entry.get_value(),
+                    "range": entry.range_entry.get_value(),
+                    "penetration": entry.penetration_entry.get_value(),
+                    "rate_of_fire": entry.rof_entry.get_value(),
+                    "ammo": entry.ammo_entry.get_value() if entry.ammo_entry.get_value() != "N/A" else None,
+                    "malfunction": entry.malfunction_entry.get_value() if entry.malfunction_entry.get_value() != "N/A" else None,
+                    "category": entry.category_selector.get_value(),
+                    "notes": ""
+                }
+        loadout_data['weapons'] = weapons_data
+
+        combat_skill_name = self.combat_skill_group.combat_skill_selector.get_value()
+        if combat_skill_name != "None":
+            combat_skill_text = self.combat_skill_group.combat_skill_entry.get_value()
+            loadout_data['combat_skill'] = {
+                "name": combat_skill_name,
+                "combat_skill": [s.strip() for s in combat_skill_text.split(",") if s.strip() != "N/A"],
+                "notes": ""
+            }
+
+        armour_name = self.armour_group.name_entry.get_value()
+        if armour_name != "N/A":
+            armours_data = {
+                armour_name: {
+                    "type": self.armour_group.type_entry.get_value(),
+                    "points": self.armour_group.points_entry.get_value(),
+                    "coverage": self.armour_group.coverage_selector.get_value(),
+                    "notes": ""
+                }
+            }
+            loadout_data['armours'] = armours_data
+
+        belongings_data = {}
+        for widget, _, _ in self.lower_group.item_group.items:
+            if isinstance(widget, QLabel):
+                belongings_data[widget.text()] = {"notes": ""}
+        if belongings_data:
+            loadout_data['personal_belongings'] = belongings_data
+
+        deposit_data = {}
+        for widget, _, _ in self.lower_group.deposit_group.items:
+            if isinstance(widget, QLabel):
+                deposit_data[widget.text()] = {"notes": ""}
+        if deposit_data:
+            loadout_data['deposit'] = deposit_data
+        
+        self.main_window.pc_data['loadout'] = loadout_data
 
     def _load_weapon_types_from_json(self, file_path: str) -> List[WeaponType]:
         weapon_types = []
@@ -734,3 +1348,213 @@ class Phase3UI(BasePhaseUI):
                 )
                 weapon_types.append(weapon_type)
         return weapon_types
+    
+    def _load_combat_skills_from_json(self, file_path: str) -> List[CombatSkill]:
+        combat_skills = []
+
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+
+            for name, details in data.items():
+                damage = details.get("damage", "1D3 + DB")
+                techniques = details.get("techniques", {})
+
+                combat_skill = CombatSkill(
+                    name=name,
+                    damage=damage,
+                    techniques=techniques
+                )
+
+                combat_skills.append(combat_skill)
+
+        return combat_skills
+
+
+class DeleteItemDialog(TFComputingDialog):
+    def __init__(self, parent=None, items=None):
+        button_config = [
+            {"text": "OK", "callback": self._on_ok_clicked}
+        ]
+        self.items = items or []
+        self.checkboxes = {}
+        super().__init__("Delete Items", parent, button_config)
+        self.setup_content()
+
+    def setup_content(self):
+        layout = QVBoxLayout(self.content_frame)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
+        
+        scroll_area, container, container_layout = self.create_scroll_area()
+        
+        for widget, _, _ in self.items:
+            if isinstance(widget, QLabel): 
+                text = widget.text()
+                checkbox = self.create_check_with_label(text)
+                self.checkboxes[text] = checkbox
+                container_layout.addWidget(checkbox)
+        
+        container_layout.addStretch()
+        layout.addWidget(scroll_area)
+        
+        self.set_dialog_size(300, 400)
+
+    def setup_validation_rules(self):
+        pass
+        
+    def get_field_values(self):
+        return {"selected_items": [text for text, checkbox in self.checkboxes.items() 
+                                 if checkbox.get_value()]}
+
+    def process_validated_data(self, data):
+        return data["selected_items"]
+
+
+class CombatSkillListDialog(TFComputingDialog):
+    def __init__(self, parent, combat_skills: List[CombatSkill]):
+        self.combat_skills = combat_skills
+        button_config = [{"text": "OK", "role": "accept"}]
+        super().__init__("Combat Skills List", parent, button_config=button_config)
+        self.setup_content()
+
+    def setup_validation_rules(self):
+        pass
+        
+    def get_field_values(self):
+        return {}
+        
+    def process_validated_data(self, data):
+        return None
+    
+    def setup_content(self):
+        scroll_area, container, layout = self.create_scroll_area()
+        
+        sorted_skills = sorted(self.combat_skills, key=lambda x: x.name)
+        
+        for skill in sorted_skills:
+            skill_frame = QFrame()
+            skill_frame.setObjectName("skill_frame")
+            skill_layout = QVBoxLayout(skill_frame)
+            skill_layout.setSpacing(5)
+            skill_layout.setContentsMargins(10, 10, 10, 10)
+            
+            header_text = f"{skill.name} ({skill.damage})"
+            header_label = self.create_label(header_text, bold=True)
+            skill_layout.addWidget(header_label)
+            
+            for tech_name, tech_description in skill.techniques.items():
+                tech_frame = QFrame()
+                tech_layout = QVBoxLayout(tech_frame)
+                tech_layout.setSpacing(2)
+                tech_layout.setContentsMargins(5, 5, 5, 5)
+                
+                tech_name_label = self.create_label(tech_name, bold=True)
+                tech_layout.addWidget(tech_name_label)
+                
+                tech_desc_label = self.create_label(tech_description)
+                tech_desc_label.setWordWrap(True)
+                tech_layout.addWidget(tech_desc_label)
+                
+                skill_layout.addWidget(tech_frame)
+            
+            layout.addWidget(skill_frame)
+            
+            if skill != sorted_skills[-1]:
+                separator = TFSeparator.horizontal()
+                separator.setContentsMargins(0, 5, 0, 5)
+                layout.addWidget(separator)
+        
+        main_layout = QVBoxLayout(self.content_frame)
+        main_layout.addWidget(scroll_area)
+        
+        self.set_dialog_size(500, 600)
+
+
+class WeaponTypeListDialog(TFComputingDialog):
+    def __init__(self, parent, weapon_types: List[WeaponType]):
+        self.weapon_types = weapon_types
+        button_config = [{"text": "OK", "role": "accept"}]
+        super().__init__("Weapons List", parent, button_config=button_config)
+        self.setup_content()
+
+    def setup_validation_rules(self):
+        pass
+        
+    def get_field_values(self):
+        return {}
+        
+    def process_validated_data(self, data):
+        return None
+    
+    def setup_content(self):
+        scroll_area, container, layout = self.create_scroll_area()
+        
+        categories = {}
+        for weapon in self.weapon_types:
+            if weapon.category.value not in categories:
+                categories[weapon.category.value] = []
+            categories[weapon.category.value].append(weapon)
+        
+        sorted_categories = sorted(categories.keys())
+        
+        for category in sorted_categories:
+            category_label = self.create_label(category, bold=True)
+            layout.addWidget(category_label)
+            
+            category_frame = QFrame()
+            category_frame.setObjectName("category_frame")
+            category_layout = QVBoxLayout(category_frame)
+            category_layout.setSpacing(10)
+            category_layout.setContentsMargins(10, 10, 10, 10)
+            
+            sorted_weapons = sorted(categories[category], key=lambda x: x.name)
+            for weapon in sorted_weapons:
+                weapon_frame = QFrame()
+                weapon_frame.setObjectName("weapon_frame")
+                weapon_layout = QVBoxLayout(weapon_frame)
+                weapon_layout.setSpacing(5)
+                weapon_layout.setContentsMargins(10, 10, 10, 10)
+                
+                name_label = self.create_label(weapon.name, bold=True)
+                weapon_layout.addWidget(name_label)
+                
+                stats_layout = QGridLayout()
+                stats_layout.setSpacing(5)
+                
+                stats = [
+                    ("Skill", weapon.skill.standard_text),
+                    ("Damage", weapon.damage.standard_text),
+                    ("Range", weapon.range.standard_text),
+                    ("Penetration", weapon.penetration.value),
+                    ("Rate of Fire", weapon.rate_of_fire),
+                ]
+                
+                if weapon.ammo:
+                    stats.append(("Ammo", weapon.ammo))
+                if weapon.malfunction:
+                    stats.append(("Malfunction", weapon.malfunction))
+                
+                for i, (stat_name, stat_value) in enumerate(stats):
+                    row = i // 2
+                    col = i % 2 * 2 
+                    
+                    name_label = self.create_label(f"{stat_name}:", bold=True)
+                    value_label = self.create_label(str(stat_value))
+                    
+                    stats_layout.addWidget(name_label, row, col)
+                    stats_layout.addWidget(value_label, row, col + 1)
+                
+                weapon_layout.addLayout(stats_layout)
+                category_layout.addWidget(weapon_frame)
+            
+            layout.addWidget(category_frame)
+            
+            if category != sorted_categories[-1]:
+                separator = TFSeparator.horizontal()
+                separator.setContentsMargins(0, 5, 0, 5)
+                layout.addWidget(separator)
+        
+        main_layout = QVBoxLayout(self.content_frame)
+        main_layout.addWidget(scroll_area)
+        
+        self.set_dialog_size(600, 800)
