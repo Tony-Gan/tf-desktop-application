@@ -21,7 +21,6 @@ class TFOptionEntry(QWidget):
     def __init__(self, label_text: str = "", options: Union[List[str], Dict[str, List[str]]] = None,
                 current_value: str = "", label_size: int = 80, value_size: int = 36, height: int = 24,
                 custom_label_font: Optional[QFont] = None, custom_edit_font: Optional[QFont] = None,
-                alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
                 label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
                 object_name: Optional[str] = None, special_edit: Optional[Callable[[], Optional[str]]] = None,
                 extra_value_width: int = None, filter: bool = False, parent: Optional[QWidget] = None) -> None:
@@ -31,12 +30,11 @@ class TFOptionEntry(QWidget):
         self.extra_value_width = extra_value_width
         self.filter_enabled = filter
         self._setup_ui(label_text, options or [], current_value, label_size, value_size, height,
-                    custom_label_font, custom_edit_font, alignment, label_alignment, object_name)
+                    custom_label_font, custom_edit_font, label_alignment, object_name)
 
     def _setup_ui(self, label_text: str, options: List[str], current_value: str,
                  label_size: int, value_size: int, height: int,
-                 custom_label_font: Optional[QFont], custom_edit_font: Optional[QFont],
-                 alignment: Qt.AlignmentFlag, label_alignment: Qt.AlignmentFlag,
+                 custom_label_font: Optional[QFont], custom_edit_font: Optional[QFont], label_alignment: Qt.AlignmentFlag,
                  object_name: Optional[str]) -> None:
         self.setFixedHeight(height)
         self.layout = QHBoxLayout(self)
@@ -47,11 +45,17 @@ class TFOptionEntry(QWidget):
         self.label.setFont(custom_label_font if custom_label_font else self.label_font)
         self.label.setFixedWidth(label_size)
         self.label.setAlignment(label_alignment)
+        self.label.setFixedHeight(height - 4)
 
         self.value_field = QComboBox()
+        self.value_field.setFixedHeight(height - 4)
         if self.extra_value_width:
             self.value_field.view().setMinimumWidth(value_size + self.extra_value_width)
         self.value_field.setFont(custom_edit_font if custom_edit_font else self.edit_font)
+        self.value_field.view().setFont(custom_edit_font if custom_edit_font else self.edit_font)
+        self.value_field.setEditable(True)
+        self.value_field.lineEdit().setFont(custom_edit_font if custom_edit_font else self.edit_font)
+
         if object_name:
             self.value_field.setObjectName(object_name)
         self.value_field.setFixedWidth(value_size)
@@ -80,37 +84,27 @@ class TFOptionEntry(QWidget):
 
     def _set_grouped_options(self, options: Union[List[str], Dict[str, List[str]]]) -> None:
         model = QStandardItemModel(self.value_field)
-
-        group_font = QFont("Open Sans", 10)
-        group_font.setWeight(QFont.Weight.Normal)
+        item_font = self.value_field.font()
 
         if isinstance(options, dict):
             for group_name, items in options.items():
                 group_item = QStandardItem(group_name)
                 group_item.setFlags(Qt.ItemFlag.NoItemFlags)
-                group_item.setFont(group_font)
                 model.appendRow(group_item)
 
                 group_item.setData("color: #555555;", Qt.ItemDataRole.ToolTipRole)
 
                 for item in items:
                     option_item = QStandardItem(item)
+                    option_item.setFont(item_font)
                     model.appendRow(option_item)
         else:
             for item in options:
                 option_item = QStandardItem(item)
+                option_item.setFont(item_font)
                 model.appendRow(option_item)
 
         self.value_field.setModel(model)
-
-        self.value_field.setStyleSheet("""
-            QComboBox::item:hover:!enabled {
-                background-color: transparent;
-            }
-            QComboBox QStandardItem {
-                font-family: 'Open Sans';
-            }
-        """)
 
     def _handle_special_edit(self, event: QMouseEvent) -> None:
         if self.special_edit:

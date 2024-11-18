@@ -69,12 +69,13 @@ class TFPcBuilder(TFDraggableWindow):
         self.stacked_widget.setFrameShape(QFrame.Shape.Box)
         main_layout.addWidget(self.stacked_widget, 4)
 
-        self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
+        # TODO: REMEMBER TO CHANGE PHASE 3 BACK TO PHASE 1
+        self.phase_status[PCBuilderPhase.PHASE3] = PhaseStatus.COMPLETING
         self.progress_ui.set_active_phase(self.current_phase)
         for phase, status in self.phase_status.items():
             self.progress_ui.update_status(phase, status)
-
-        initial_phase = self._load_phase(PCBuilderPhase.PHASE1)
+        # TODO: REMEMBER TO CHANGE PHASE 3 BACK TO PHASE 1
+        initial_phase = self._load_phase(PCBuilderPhase.PHASE3)
         self.stacked_widget.setCurrentWidget(initial_phase)
         initial_phase.on_enter()
 
