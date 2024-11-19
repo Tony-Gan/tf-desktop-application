@@ -241,3 +241,12 @@ class CombatSkill:
     damage: str
     techniques: Dict[str, str]
 
+
+@dataclass
+class Spell:
+    name: str
+    pow_cost: str
+    mag_cost: str
+    san_cost: str
+    casting_time: str
+    description: str

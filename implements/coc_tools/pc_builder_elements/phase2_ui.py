@@ -36,7 +36,7 @@ PARENT_SKILL_DEFAULTS = {
 
 class SkillEntry(QFrame):
 
-    def __init__(self, skill: Skill, occupation_points=None, interest_points=None, parent=None):
+    def __init__(self, skill: Skill, label_width=115, occupation_points=None, interest_points=None, parent=None):
         super().__init__(parent)
 
         self.skill = skill
@@ -48,7 +48,7 @@ class SkillEntry(QFrame):
 
         self.name_label = QLabel(skill.display_name)
         self.name_label.setFont(LABEL_FONT)
-        self.name_label.setFixedWidth(115) 
+        self.name_label.setFixedWidth(label_width) 
 
         if skill.is_occupation:
             self.name_label.setStyleSheet("color: #3498DB;")
@@ -421,10 +421,12 @@ class InfoGroup(QGroupBox):
                     )
                     if current_skill:
                         current_skill.is_occupation = False
+                        current_skill.occupation_point = 0
                         
                 selected_skill.is_occupation = True
                 target_cell.update_display(selected_skill.display_name, "Switch")
                 self.parent.refresh_skill_display()
+                self.parent.update_points_display()
                 self.parent.reset_completion_status()
 
 
@@ -559,11 +561,14 @@ class Phase2UI(BasePhaseUI):
         upper_layout.setSpacing(10)
 
         self.points_group = PointsGroup(self.main_window.pc_data, self)
+        
         self.info_group = InfoGroup(self.main_window.pc_data, self)
+        
         upper_layout.addWidget(self.points_group, 3)
         upper_layout.addWidget(self.info_group, 7)
 
         self.skill_group = SkillGroup(self.main_window.pc_data, self)
+        
         content_layout.addWidget(upper_frame, 2)
         content_layout.addWidget(self.skill_group, 8)
 
@@ -648,7 +653,7 @@ class Phase2UI(BasePhaseUI):
         self.validator.add_custom_validator('credit_rating_range', validate_credit_rating)
 
     def _on_occupation_list_clicked(self):
-        dialog = OccupationListDialog(self, self.occupation_list)
+        dialog = OccupationListDialog(self)
         dialog.exec()
 
     def _on_check_clicked(self):
@@ -777,6 +782,10 @@ class Phase2UI(BasePhaseUI):
     def refresh_skill_display(self):
         for skill_entry in self.skill_group.findChildren(SkillEntry):
             skill_entry.occupation_points.setEnabled(skill_entry.skill.is_occupation)
+            skill_entry.occupation_points.setText(str(skill_entry.skill.occupation_point))
+            skill_entry.interest_points.setText(str(skill_entry.skill.interest_point))
+            skill_entry.total.setText(str(skill_entry.skill.total_point))
+            
             if skill_entry.skill.is_occupation:
                 skill_entry.name_label.setStyleSheet("color: #3498DB;")
             elif skill_entry.skill.interest_point > 0:
@@ -825,6 +834,7 @@ class SkillExpandDialog(TFComputingDialog):
                             key=lambda x: x.name):
             entry = SkillEntry(
                 skill,
+                label_width=160,
                 occupation_points=skill.occupation_point,
                 interest_points=skill.interest_point,
                 parent=self

@@ -70,12 +70,12 @@ class TFPcBuilder(TFDraggableWindow):
         main_layout.addWidget(self.stacked_widget, 4)
 
         # TODO: YOUKNOW
-        self.phase_status[PCBuilderPhase.PHASE4] = PhaseStatus.COMPLETING
+        self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
         self.progress_ui.set_active_phase(self.current_phase)
         for phase, status in self.phase_status.items():
             self.progress_ui.update_status(phase, status)
         # TODO: YOUKNOW
-        initial_phase = self._load_phase(PCBuilderPhase.PHASE4)
+        initial_phase = self._load_phase(PCBuilderPhase.PHASE1)
         self.stacked_widget.setCurrentWidget(initial_phase)
         initial_phase.on_enter()
 
@@ -95,10 +95,23 @@ class TFPcBuilder(TFDraggableWindow):
         )
 
     def _load_phase(self, phase: PCBuilderPhase) -> QWidget:
-        if phase not in self.phase_uis:
+        should_recreate = False
+        if phase in self.phase_uis:
+            if phase != PCBuilderPhase.PHASE1:
+                prev_phase = PCBuilderPhase(phase.value - 1)
+                if self.phase_status[prev_phase] == PhaseStatus.COMPLETING:
+                    should_recreate = True
+                    
+        if phase not in self.phase_uis or should_recreate:
+            if should_recreate and self.phase_uis[phase] in self.stacked_widget.children():
+                old_widget = self.phase_uis[phase]
+                self.stacked_widget.removeWidget(old_widget)
+                old_widget.deleteLater()
+                
             new_phase = self._create_phase_ui(phase)
             self.phase_uis[phase] = new_phase
             self.stacked_widget.addWidget(new_phase)
+            
         return self.phase_uis[phase]
 
     def _setup_shortcut(self):
@@ -159,11 +172,16 @@ class TFPcBuilder(TFDraggableWindow):
                 current_ui.on_exit()
 
             target_ui = self._load_phase(phase)
-
+            
             self.current_phase = phase
             self.stacked_widget.setCurrentWidget(target_ui)
             target_ui.on_enter()
-
+            
+            if phase.value > 1:
+                prev_phase = PCBuilderPhase(phase.value - 1)
+                if self.phase_status[prev_phase] == PhaseStatus.COMPLETING:
+                    self.phase_status[prev_phase] = PhaseStatus.COMPLETED
+            
             self.progress_ui.set_active_phase(phase)
         else:
             self._show_cannot_switch_warning(phase)

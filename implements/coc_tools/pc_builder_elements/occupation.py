@@ -14,26 +14,41 @@ class Occupation:
 
     def format_formula_for_display(self) -> str:
         return self.skill_points_formula.replace('*', '×').replace('MAX', 'max')
+    
+    def _calculate_max_stats(self, formula_part: str, stats: Dict[str, int]) -> int:
+        parts = [part.strip() for part in formula_part.split(',')]
+        results = []
+        
+        for part in parts:
+            if '*' in part:
+                stat, multiplier = part.split('*')
+                stat_value = stats.get(stat.strip(), 0)
+                results.append(stat_value * int(multiplier))
+            else:
+                results.append(stats.get(part.strip(), 0))
+                
+        return max(results)
 
     def _calculate_max_stats(self, stats_str: str, stats: Dict[str, int]) -> int:
         stats_list = [s.strip() for s in stats_str.split(',')]
         return max(stats.get(stat, 0) for stat in stats_list)
 
     def calculate_skill_points(self, stats: Dict[str, int]) -> int:
-        parts = self.skill_points_formula.split('+')
+        formula = self.skill_points_formula
+        parts = [p.strip() for p in formula.split('+')]
         total = 0
 
         for part in parts:
-            part = part.strip()
             if 'MAX(' in part:
-                stat_str = part[part.find('(') + 1:part.find(')')]
-                max_value = self._calculate_max_stats(stat_str, stats)
-                multiplier = int(part[part.find('*') + 1:])
-                total += max_value * multiplier
+                max_content = part[part.find('(') + 1:part.find(')')].strip()
+                total += self._calculate_max_stats(max_content, stats)
             else:
-                stat = part[:part.find('*')]
-                multiplier = int(part[part.find('*') + 1:])
-                total += stats.get(stat, 0) * multiplier
+                if '*' in part:
+                    stat, multiplier = part.split('*')
+                    stat_value = stats.get(stat.strip(), 0)
+                    total += stat_value * int(multiplier)
+                else:
+                    total += stats.get(part.strip(), 0)
 
         return total
 

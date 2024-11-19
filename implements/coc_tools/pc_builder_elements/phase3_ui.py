@@ -1025,6 +1025,7 @@ class Phase3UI(BasePhaseUI):
                     buttons=["OK"]
                 )
                 return False
+
         self.complete_button.setEnabled(False)
         self.next_button.setEnabled(True)
         self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETED)

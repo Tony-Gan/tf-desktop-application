@@ -390,7 +390,7 @@ class Phase1UI(BasePhaseUI):
             "Gender:", 
             ["None", "Male", "Female", "Other"],
             label_size=130,
-            value_size=150,
+            value_size=170,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         self.gender.value_field.setEditable(False)
@@ -400,7 +400,7 @@ class Phase1UI(BasePhaseUI):
             "Occupation:", 
             occupation_options, 
             label_size=130, 
-            value_size=150,
+            value_size=170,
             alignment=Qt.AlignmentFlag.AlignLeft,
             extra_value_width=60
         )
@@ -409,7 +409,7 @@ class Phase1UI(BasePhaseUI):
         self.skill_points_formula = TFValueEntry(
             "Skill Points:",
             label_size=130,
-            value_size=150,
+            value_size=170,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         self.skill_points_formula.value_field.setEnabled(False)
@@ -418,21 +418,21 @@ class Phase1UI(BasePhaseUI):
         self.nationality = TFValueEntry(
             "Nationality:", 
             label_size=130, 
-            value_size=150,
+            value_size=170,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         
         self.residence = TFValueEntry(
             "Residence:", 
             label_size=130, 
-            value_size=150,
+            value_size=170,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         
         self.birthplace = TFValueEntry(
             "Birthplace:", 
             label_size=130, 
-            value_size=150,
+            value_size=170,
             alignment=Qt.AlignmentFlag.AlignLeft
         )
         
@@ -518,20 +518,44 @@ class Phase1UI(BasePhaseUI):
     def _update_occupation_formula(self):
         current_text = self.occupation.get_value()
         selected_occupation = next((occ for occ in self.occupation_list if occ.name == current_text), None)
-        if selected_occupation:
-            formula = selected_occupation.skill_points_formula
-            if 'MAX' in formula:
-                base_part = formula.split('+')[0].strip()
-                max_part = formula.split('+')[1].strip()
-                
-                stats = max_part[max_part.find('(')+1:max_part.find(')')].replace(',', '|').replace(' ', '')
-                multiplier = max_part[max_part.find('*')+1:]
-                
-                formatted_formula = f"{base_part}+{stats}*{multiplier}"
-            else:
-                formatted_formula = formula
+        
+        if not selected_occupation:
+            return
             
-            self.skill_points_formula.set_value(formatted_formula)
+        formula = selected_occupation.skill_points_formula
+        
+        if 'MAX' in formula:
+            parts = formula.split('+')
+            formatted_parts = []
+            
+            for part in parts:
+                part = part.strip()
+                if 'MAX' in part:
+                    max_content = part[part.find('(')+1:part.find(')')].strip()
+                    stat_parts = max_content.split(',')
+                    processed_stats = []
+                    
+                    for stat_part in stat_parts:
+                        stat_part = stat_part.strip()
+                        if '*' in stat_part:
+                            stat, multiplier = stat_part.split('*')
+                            processed_stats.append(f"{stat.strip()}×{multiplier.strip()}")
+                        else:
+                            processed_stats.append(stat_part)
+                    
+                    formatted_parts.append('MAX(' + '|'.join(processed_stats) + ')')
+                else:
+                    if '*' in part:
+                        stat, multiplier = part.split('*')
+                        formatted_parts.append(f"{stat.strip()}×{multiplier.strip()}")
+                    else:
+                        formatted_parts.append(part)
+            
+            formatted_formula = '+'.join(formatted_parts)
+        else:
+            formatted_formula = formula.replace('*', '×')
+        
+        self.skill_points_formula.set_value(formatted_formula)
 
     def _setup_points_mode(self):
         left_layout = QVBoxLayout(self.stats_left_panel)
@@ -1044,7 +1068,7 @@ class Phase1UI(BasePhaseUI):
             self._calculate_derived_stats()
 
     def _on_occupation_list_clicked(self):
-        dialog = OccupationListDialog(self, self.occupation_list)
+        dialog = OccupationListDialog(self)
         dialog.exec()
     
     def _on_description_clicked(self):
@@ -1329,7 +1353,7 @@ class Phase1UI(BasePhaseUI):
         self.char_name.set_value("")
         self.age.set_value("")
         self.gender.set_value("None")
-        self.occupation.set_value("None")
+        self.occupation.value_field.setCurrentText("None")
         self.nationality.set_value("")
         self.residence.set_value("")
         self.birthplace.set_value("")

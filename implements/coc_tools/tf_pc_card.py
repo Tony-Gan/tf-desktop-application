@@ -160,6 +160,13 @@ class TFPcCard(TFDraggableWindow):
                 )
                 return
 
+            if 'loadout' in data:
+                data['items'] = {
+                    'weapons': data['loadout'].get('weapons', {}),
+                    'armours': data['loadout'].get('armours', {}),
+                    'others': data['loadout'].get('personal_belongings', {})
+                }
+
             self.pc_data = data
             self.current_file_path = file_path
             self.has_unsaved_changes = False
@@ -168,7 +175,10 @@ class TFPcCard(TFDraggableWindow):
             self.title = self.pc_data['personal_info']['name']
             dex = self.pc_data['basic_stats']['dexterity']
             edu = self.pc_data['basic_stats']['education']
-            self.default_skills = load_skills_from_json("implements/coc_tools/coc_data/default_skills.json", dex, edu)
+            skills = load_skills_from_json("implements/coc_tools/coc_data/default_skills.json", dex, edu)
+            self.default_skills = {}
+            for skill in skills:
+                self.default_skills[skill.name] = skill.default_point
             
             self._update_ui()
             
@@ -352,22 +362,37 @@ class TFPcCard(TFDraggableWindow):
                             f"Invalid value for skill {skill_name}: {str(e)}"
                         )
                         return False
-                    
+                        
             for item_entry in self.lower_panel.items_panel.findChildren(TFValueEntry):
                 value = item_entry.get_value()
                 display_name = item_entry.label.text().lower()
                 item_name = '_'.join(display_name.split())
                 
-                for category in ['weapons', 'armours', 'others']:
-                    if category in updated_data['items']:
-                        if isinstance(updated_data['items'][category], dict):
-                            if item_name in updated_data['items'][category]:
-                                updated_data['items'][category][item_name]['notes'] = value
-                                break
-                    
+                if not 'loadout' in updated_data:
+                    updated_data['loadout'] = {
+                        'weapons': {},
+                        'armours': {},
+                        'personal_belongings': {}
+                    }
+                
+                for source, target in [
+                    ('weapons', 'weapons'),
+                    ('armours', 'armours'),
+                    ('others', 'personal_belongings')
+                ]:
+                    if 'items' in updated_data and source in updated_data['items']:
+                        if isinstance(updated_data['items'][source], dict):
+                            if item_name in updated_data['items'][source]:
+                                updated_data['loadout'][target][item_name] = \
+                                    updated_data['items'][source][item_name].copy()
+                                updated_data['loadout'][target][item_name]['notes'] = value
+                        
+            if 'items' in updated_data:
+                del updated_data['items']
+                        
             notes_text = self.lower_panel.notes_panel.notes_edit.toPlainText()
             updated_data['notes'] = notes_text
-                    
+                        
             errors = self.validator.validate_dict(updated_data, is_new=False)
 
             for stat in ['hp', 'mp', 'san']:
@@ -1075,7 +1100,7 @@ class SkillsGrid(QFrame):
             if item.widget():
                 item.widget().deleteLater()
 
-        display_skills = self.modified_skills if not self.show_all else self.parent.default_skills | self.modified_skills
+        display_skills = self.modified_skills if not self.show_all else self.parent.parent.default_skills | self.modified_skills
 
         for index, (skill_name, skill_value) in enumerate(display_skills.items()):
             row = index // 4

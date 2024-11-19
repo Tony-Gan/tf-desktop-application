@@ -1,14 +1,17 @@
+import json
 from typing import Tuple, Dict, Optional, List
 
 from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QDialog, QFrame, QGridLayout, QButtonGroup, QRadioButton, \
-    QGroupBox, QLabel
+    QGroupBox, QLabel, QComboBox, QLineEdit
 
 from implements.coc_tools.coc_data.data_type import Skill, WeaponType, CombatSkill
 from utils.validator.tf_validation_rules import TFValidationRule
+from utils.helper import resource_path
 from ui.components.tf_computing_dialog import TFComputingDialog
 from ui.components.tf_separator import TFSeparator
+from ui.components.tf_base_button import TFBaseButton
 
 
 class RuleSettingsDialog(TFComputingDialog):
@@ -680,77 +683,141 @@ class CharacterDescriptionDialog(TFComputingDialog):
 
 
 class OccupationListDialog(TFComputingDialog):
-    def __init__(self, parent, occupation_list):
-        self.occupation_list = occupation_list
-        button_config = [{"text": "OK", "role": "accept"}]
+    
+    def __init__(self, parent=None):
+        button_config = [
+            {"text": "OK", "callback": self._on_ok_clicked}
+        ]
         super().__init__("Occupation List", parent, button_config=button_config)
+        self._load_occupations()
+        self.filtered_occupations = self.occupations
         self.setup_content()
-
+        
+    def _load_occupations(self):
+        with open(resource_path('implements/coc_tools/coc_data/occupations.json'), 'r') as f:
+            self.occupations = json.load(f)
+            
+        self.categories = set()
+        for occupation in self.occupations:
+            for category in occupation['category']:
+                self.categories.add(category)
+        self.categories = sorted(list(self.categories))
+        
+    def setup_content(self):
+        layout = QVBoxLayout(self.content_frame)
+        
+        filter_layout = QHBoxLayout()
+        
+        self.category_combo = QComboBox()
+        self.category_combo.setFont(self.create_font())
+        self.category_combo.addItem("All Categories")
+        self.category_combo.addItems(self.categories)
+        self.category_combo.currentTextChanged.connect(self._on_category_filter)
+        filter_layout.addWidget(self.create_label("Category:", bold=True))
+        filter_layout.addWidget(self.category_combo)
+        
+        filter_layout.addSpacing(20)
+        
+        self.name_input = QLineEdit()
+        self.name_input.setFont(self.create_font())
+        self.name_input.setPlaceholderText("Enter name to filter...")
+        filter_layout.addWidget(self.create_label("Name:", bold=True))
+        filter_layout.addWidget(self.name_input)
+        
+        self.apply_name_btn = TFBaseButton(
+            "Apply",
+            width=80,
+            enabled=True,
+            on_clicked=self._on_name_filter
+        )
+        filter_layout.addWidget(self.apply_name_btn)
+        
+        layout.addLayout(filter_layout)
+        
+        scroll_area, _, self.container_layout = self.create_scroll_area()
+        layout.addWidget(scroll_area)
+        
+        self._update_occupation_display()
+        self.set_dialog_size(1280, 800)
+        
+    def _create_occupation_frame(self, occupation: Dict) -> QFrame:
+        frame = QFrame()
+        frame.setFrameShape(QFrame.Shape.StyledPanel)
+        frame_layout = QVBoxLayout(frame)
+        
+        name_label = self.create_label(occupation['name'], bold=True)
+        frame_layout.addWidget(name_label)
+        
+        skills = occupation['occupation_skills'].split(',')
+        processed_skills = [
+            skill.replace(':', ' - ')
+                .replace('_', ' ')
+                .strip()
+                .title() 
+            for skill in skills
+        ]
+        skills_str = ', '.join(processed_skills)
+        
+        details = [
+            f"Skill Points: {occupation['skill_points_formula']}",
+            f"Skills: {skills_str}",
+            f"Categories: {', '.join(occupation['category'])}",
+            f"Credit Rating: {occupation['credit_rating']}"
+        ]
+        
+        for detail in details:
+            label = self.create_label(detail)
+            frame_layout.addWidget(label)
+            
+        return frame
+        
+    def _update_occupation_display(self):
+        while self.container_layout.count():
+            widget = self.container_layout.takeAt(0).widget()
+            if widget:
+                widget.deleteLater()
+                
+        for occupation in self.filtered_occupations:
+            frame = self._create_occupation_frame(occupation)
+            self.container_layout.addWidget(frame)
+            
+        self.container_layout.addStretch()
+        
+    def _on_category_filter(self, category: str):
+        self.name_input.clear()
+        
+        if category == "All Categories":
+            self.filtered_occupations = self.occupations
+        else:
+            self.filtered_occupations = [
+                occ for occ in self.occupations
+                if category in occ['category']
+            ]
+            
+        self._update_occupation_display()
+        
+    def _on_name_filter(self):
+        self.category_combo.setCurrentText("All Categories")
+        
+        search_text = self.name_input.text().lower()
+        if not search_text:
+            self.filtered_occupations = self.occupations
+        else:
+            self.filtered_occupations = [
+                occ for occ in self.occupations
+                if search_text in occ['name'].lower()
+            ]
+            
+        self._update_occupation_display()
+        
     def setup_validation_rules(self):
         pass
-
+        
     def get_field_values(self):
         return {}
-
+        
     def process_validated_data(self, data):
-        return None
-
-    def setup_content(self):
-        scroll_area, container, layout = self.create_scroll_area()
-
-        categories: Dict[str, List] = {}
-        for occupation in self.occupation_list:
-            primary_category = occupation.category[0] if isinstance(occupation.category, list) else occupation.category
-            if primary_category not in categories:
-                categories[primary_category] = []
-            categories[primary_category].append(occupation)
-
-        sorted_categories = sorted(categories.keys())
-
-        for category in sorted_categories:
-            category_label = self.create_label(category, bold=True)
-            layout.addWidget(category_label)
-
-            category_frame = QFrame()
-            category_layout = QVBoxLayout(category_frame)
-            category_layout.setSpacing(10)
-            category_layout.setContentsMargins(10, 10, 10, 10)
-
-            for occupation in sorted(categories[category], key=lambda x: x.name):
-                occ_frame = QFrame()
-                occ_layout = QVBoxLayout(occ_frame)
-                occ_layout.setSpacing(5)
-                occ_layout.setContentsMargins(10, 10, 10, 10)
-
-                name_label = self.create_label(occupation.name, bold=True)
-                occ_layout.addWidget(name_label)
-
-                if isinstance(occupation.category, list) and len(occupation.category) > 1:
-                    categories_text = f"Categories: {', '.join(occupation.category)}"
-                    categories_label = self.create_label(categories_text)
-                    occ_layout.addWidget(categories_label)
-
-                formula_text = f"Skill Points: {occupation.format_formula_for_display()}"
-                formula_label = self.create_label(formula_text)
-                occ_layout.addWidget(formula_label)
-
-                credit_text = f"Credit Rating: {occupation.credit_rating}"
-                credit_label = self.create_label(credit_text)
-                occ_layout.addWidget(credit_label)
-
-                skills_text = f"Skills: {occupation.format_skills()}"
-                skills_label = self.create_label(skills_text)
-                skills_label.setWordWrap(True)
-                occ_layout.addWidget(skills_label)
-
-                category_layout.addWidget(occ_frame)
-
-            layout.addWidget(category_frame)
-
-        main_layout = QVBoxLayout(self.content_frame)
-        main_layout.addWidget(scroll_area)
-
-        self.set_dialog_size(600, 800)
+        pass
 
 
 class BaseSkillSelectDialog(TFComputingDialog):
@@ -939,6 +1006,7 @@ class AnySkillDialog(BaseSkillSelectDialog):
 
         self.content_frame.setLayout(QVBoxLayout())
         self.content_frame.layout().addWidget(scroll_area)
+        self.set_dialog_size(840, 800)
 
 
 class MultiOptionSkillDialog(BaseSkillSelectDialog):
@@ -1312,3 +1380,64 @@ class WeaponTypeListDialog(TFComputingDialog):
         main_layout.addWidget(scroll_area)
 
         self.set_dialog_size(600, 800)
+
+
+class CommonListDialog(TFComputingDialog):
+    def __init__(self, title: str, items: List[str], parent=None):
+        button_config = [
+            {"text": "OK", "role": "accept"}
+        ]
+        self.items = items
+        super().__init__(title, parent, button_config)
+        self.setup_content()
+        self.adjust_size()
+        
+    def setup_content(self):
+        scroll_area, _, layout = self.create_scroll_area()
+        
+        max_width = 0
+        total_height = 0
+        
+        for i, text in enumerate(self.items, 1):
+            label = self.create_label(f"{i}. {text}")
+            layout.addWidget(label)
+            width = label.sizeHint().width()
+            height = label.sizeHint().height()
+            max_width = max(max_width, width)
+            total_height += height + layout.spacing()
+            
+        layout.addStretch()
+        self.content_frame.setLayout(QVBoxLayout())
+        self.content_frame.layout().addWidget(scroll_area)
+        
+        self._content_width = max_width
+        self._content_height = total_height
+
+    def adjust_size(self):
+        scroll_bar_width = 20
+        padding = 40
+        button_height = 40
+        
+        ideal_width = self._content_width + scroll_bar_width + padding
+        ideal_height = min(self._content_height + button_height + padding, 600)
+        
+        screen = self.screen()
+        screen_geometry = screen.geometry()
+        
+        max_width = int(screen_geometry.width() * 0.8)
+        max_height = int(screen_geometry.height() * 0.8)
+        
+        final_width = min(ideal_width, max_width)
+        final_height = min(ideal_height, max_height)
+        
+        self.resize(final_width, final_height)
+
+    def setup_validation_rules(self):
+        pass
+
+    def get_field_values(self):
+        return {}
+
+    def process_validated_data(self, data):
+        return None
+
