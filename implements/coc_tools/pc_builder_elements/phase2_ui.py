@@ -1,20 +1,20 @@
-from dataclasses import dataclass
-from typing import List, Optional
-from PyQt6.QtCore import Qt, QRegularExpression
-from PyQt6.QtGui import QFont, QIcon, QRegularExpressionValidator
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFrame, QGroupBox, QLabel, QRadioButton, QButtonGroup, QPushButton, QLineEdit
+from typing import List
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont, QIcon
+from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFrame, QGroupBox, QLabel, QPushButton, QLineEdit
 
-from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
-from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
-from implements.coc_tools.pc_builder_helper.constants import DEFAULT_SKILLS, PARENT_SKILL_DEFAULTS, INTERPERSONAL_SKILLS
-from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
-from implements.coc_tools.pc_builder_helper.occupation_list_dialog import OccupationListDialog
+from implements.coc_tools.coc_data.dialogs import OccupationListDialog, MultiOptionSkillDialog, \
+    InterpersonalSkillDialog, SpecificSkillDialog, AnySkillDialog, NewSkillDialog
+from implements.coc_tools.coc_data.data_type import Skill
+from implements.coc_tools.coc_data.data_reader import load_skills_from_json
+from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
+from implements.coc_tools.pc_builder_elements.phase_ui import BasePhaseUI
+from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
 from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_computing_dialog import TFComputingDialog
 from utils.validator.tf_validator import TFValidator
-from utils.validator.tf_validation_rules import TFValidationRule
 from utils.helper import resource_path
 
 TEXT_FONT = QFont("Inconsolata")
@@ -23,26 +23,15 @@ TEXT_FONT.setPointSize(10)
 LABEL_FONT = QFont("Inconsolata SemiCondensed")
 LABEL_FONT.setPointSize(10)
 
-@dataclass
-class Skill:
-    name: str
-    super_name: str
-    default_point: int
-    is_occupation: bool = False
-    occupation_point: int = 0
-    interest_point: int = 0
-
-    @property
-    def total_point(self) -> int:
-        return self.default_point + self.occupation_point + self.interest_point
-
-    @property
-    def display_name(self) -> str:
-        formatted_name = self.name.replace("_", " ").title()
-        if self.super_name:
-            formatted_super_name = self.super_name.replace("_", " ").title()
-            return f"{formatted_super_name} - {formatted_name}"
-        return formatted_name
+PARENT_SKILL_DEFAULTS = {
+    "art": 5,
+    "fighting": 5,
+    "firearms": 10,
+    "language": 1,
+    "pilot": 1,
+    "science": 1,
+    "survival": 10,
+}
 
 
 class SkillEntry(QFrame):
@@ -551,23 +540,8 @@ class Phase2UI(BasePhaseUI):
         basic_stats = self.main_window.pc_data.get('basic_stats', {})
         dexterity = basic_stats.get('dexterity', 0)
         education = basic_stats.get('education', 0)
-        self.skills = []
-        for skill_key, default_point in DEFAULT_SKILLS.items():
-            name = skill_key.split(":")[1] if ":" in skill_key else skill_key
-            super_name = skill_key.split(":")[0] if ":" in skill_key else None
-            
-            if name == 'dodge':
-                default_point = dexterity // 2
-            
-            elif name == 'language_own':
-                default_point = education
-                
-            skill = Skill(
-                name=name,
-                super_name=super_name,
-                default_point=default_point
-            )
-            self.skills.append(skill)
+
+        self.skills = load_skills_from_json(resource_path("implements/coc_tools/coc_data/default_skills.json"), dexterity, education)
 
         super().__init__(PCBuilderPhase.PHASE2, main_window, parent)
 
@@ -847,12 +821,12 @@ class SkillExpandDialog(TFComputingDialog):
     def setup_content(self):
         scroll_area, _, layout = self.create_scroll_area()
 
-        for skill in sorted([s for s in self.parent_ui.skills if s.super_name == self.skill_type], 
-                        key=lambda x: x.name):
+        for skill in sorted([s for s in self.parent_ui.skills if s.super_name == self.skill_type],
+                            key=lambda x: x.name):
             entry = SkillEntry(
-                skill, 
-                occupation_points=skill.occupation_point, 
-                interest_points=skill.interest_point, 
+                skill,
+                occupation_points=skill.occupation_point,
+                interest_points=skill.interest_point,
                 parent=self
             )
             self.skill_entries[skill.name] = entry
@@ -862,23 +836,23 @@ class SkillExpandDialog(TFComputingDialog):
         buttons_layout = QHBoxLayout(self.buttons_frame)
         buttons_layout.setContentsMargins(1, 1, 1, 1)
         buttons_layout.setSpacing(10)
-        
+
         plus_icon = QIcon(resource_path("resources/images/icons/plus.png"))
         self.plus_button = QPushButton()
         self.plus_button.setIcon(plus_icon)
         self.plus_button.setFixedSize(24, 24)
         self.plus_button.clicked.connect(self._on_add_clicked)
-        
+
         minus_icon = QIcon(resource_path("resources/images/icons/minus.png"))
         self.minus_button = QPushButton()
         self.minus_button.setIcon(minus_icon)
         self.minus_button.setFixedSize(24, 24)
         self.minus_button.clicked.connect(self._on_remove_clicked)
-        
+
         buttons_layout.addWidget(self.plus_button)
         buttons_layout.addWidget(self.minus_button)
         buttons_layout.addStretch()
-        
+
         layout.addWidget(self.buttons_frame)
         layout.addStretch()
 
@@ -889,19 +863,19 @@ class SkillExpandDialog(TFComputingDialog):
         input_field = QLineEdit()
         input_field.setFixedHeight(30)
         input_field.setFont(TEXT_FONT)
-        
+
         parent_layout = self.buttons_frame.parentWidget().layout()
         index = parent_layout.indexOf(self.buttons_frame)
         parent_layout.insertWidget(index, input_field)
         input_field.setFocus()
-        
+
         input_field.focusOutEvent = lambda e: self._on_input_focus_lost(e, input_field)
 
     def _on_input_focus_lost(self, event, input_field: QLineEdit):
         skill_name = input_field.text().strip()
         if skill_name:
-            if any(s.name == skill_name.lower() and s.super_name == self.skill_type 
-                  for s in self.parent_ui.skills):
+            if any(s.name == skill_name.lower() and s.super_name == self.skill_type
+                   for s in self.parent_ui.skills):
                 self.parent_ui.main_window.app.show_warning(
                     "Duplicate Skill",
                     "This skill already exists.",
@@ -909,18 +883,18 @@ class SkillExpandDialog(TFComputingDialog):
                 )
                 input_field.deleteLater()
                 return
-            
+
             new_skill = Skill(
                 name=skill_name.lower(),
                 super_name=self.skill_type,
                 default_point=PARENT_SKILL_DEFAULTS.get(self.skill_type, 1)
             )
-            
+
             self.parent_ui.skills.append(new_skill)
 
             entry = SkillEntry(new_skill, self)
             self.skill_entries[new_skill.name] = entry
-            
+
             parent_layout = self.buttons_frame.parentWidget().layout()
             index = parent_layout.indexOf(self.buttons_frame)
             parent_layout.insertWidget(index, entry)
@@ -942,382 +916,12 @@ class SkillExpandDialog(TFComputingDialog):
 
     def get_result(self) -> List[Skill]:
         return [entry.skill for entry in self.skill_entries.values()]
-    
+
     def get_field_values(self) -> dict:
         skill_data = {}
         for name, entry in self.skill_entries.items():
             skill_data[name] = entry.get_values()
         return skill_data
-    
+
     def process_validated_data(self, data: dict) -> any:
         pass
-    
-
-class BaseSkillSelectDialog(TFComputingDialog):
-    def __init__(self, title: str, parent_ui: 'Phase2UI'):
-        button_config = [
-            {"text": "OK", "callback": self._on_ok_clicked}, 
-            {"text": "Cancel", "callback": self.reject, "role": "reject"}
-        ]
-        super().__init__(title, parent_ui, button_config=button_config)
-        self.parent_ui = parent_ui
-        self.selected_skill = None
-        self.radio_buttons = {}
-        self.setup_content()
-        self.setup_validation_rules()
-
-    def setup_validation_rules(self):
-        self.validator.add_rule('skill_selected', TFValidationRule(custom='skill_selected'))
-        self.validator.add_custom_validator(
-            'skill_selected',
-            lambda value: (value is not None, "Please select a skill.")
-        )
-        self.validator.add_rule('skill_not_occupied', TFValidationRule(custom='skill_not_occupied'))
-        
-        def validate_skill_occupation(value):
-            if not value:
-                return True, ""
-            existing_skill = next(
-                (s for s in self.parent_ui.skills 
-                if s.name == value.name and s.super_name == value.super_name),
-                None
-            )
-            return (not existing_skill or not existing_skill.is_occupation, "This skill is already an occupation skill.")
-        self.validator.add_custom_validator('skill_not_occupied', validate_skill_occupation)
-
-    def get_field_values(self):
-        return {'skill_selected': self.selected_skill, 'skill_not_occupied': self.selected_skill}
-
-    def process_validated_data(self, data):
-        return self.selected_skill
-    
-    def get_result(self) -> Optional[Skill]:
-        return self.selected_skill
-
-    def _on_radio_button_clicked(self, skill: Skill):
-        self.selected_skill = skill
-
-    def _on_ok_clicked(self):
-        success, result = self.compute_result()
-        if success:
-            self._result = result
-            self.accept()
-        else:
-            self.parent_ui.main_window.app.show_warning("Select Failure", result)
-
-
-class InterpersonalSkillDialog(BaseSkillSelectDialog):
-    def __init__(self, parent_ui: 'Phase2UI'):
-        super().__init__("Select Interpersonal Skill", parent_ui)
-
-    def setup_content(self):
-        layout = QGridLayout(self.content_frame)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
-
-        button_group = QButtonGroup(self)
-        row = col = 0
-
-        interpersonal_skills = [skill for skill in self.parent_ui.skills 
-                                    if skill.name in INTERPERSONAL_SKILLS]
-
-        for skill in sorted(interpersonal_skills, key=lambda x: x.name):
-            radio = QRadioButton(skill.display_name)
-            radio.setFont(self.create_font())
-            radio.clicked.connect(lambda checked, s=skill: self._on_radio_button_clicked(s))
-            
-            self.radio_buttons[skill.name] = radio
-            button_group.addButton(radio)
-            layout.addWidget(radio, row, col)
-            
-            col += 1
-            if col == 4:
-                col = 0
-                row += 1
-
-
-class SpecificSkillDialog(BaseSkillSelectDialog):
-    def __init__(self, skill_type: str, parent_ui: 'Phase2UI'):
-        self.skill_type = skill_type
-        super().__init__(f"Select {skill_type.title()} Skill", parent_ui)
-
-    def setup_content(self):
-        layout = QGridLayout(self.content_frame)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
-
-        button_group = QButtonGroup(self)
-        row = col = 0
-
-        type_skills = sorted(
-            [skill for skill in self.parent_ui.skills 
-             if skill.super_name == self.skill_type.lower()],
-            key=lambda x: x.name
-        )
-
-        for skill in type_skills:
-            radio = QRadioButton(skill.display_name)
-            radio.setFont(self.create_font())
-            radio.clicked.connect(lambda checked, s=skill: self._on_radio_button_clicked(s))
-            
-            self.radio_buttons[skill.name] = radio
-            button_group.addButton(radio)
-            layout.addWidget(radio, row, col)
-            
-            col += 1
-            if col == 4:
-                col = 0
-                row += 1
-
-
-class AnySkillDialog(BaseSkillSelectDialog):
-    def __init__(self, parent_ui: 'Phase2UI'):
-        super().__init__("Select Any Skill", parent_ui)
-
-    def setup_content(self):
-        scroll_area, container, main_layout = self.create_scroll_area()
-        button_group = QButtonGroup(self)
-
-        independent_frame = QGroupBox("Independent Skills")
-        independent_layout = QGridLayout(independent_frame)
-        row = col = 0
-        
-        independent_skills = sorted(
-            [skill for skill in self.parent_ui.skills if not skill.super_name],
-            key=lambda x: x.name
-        )
-        
-        for skill in independent_skills:
-            radio = QRadioButton(skill.display_name)
-            radio.setFont(self.create_font())
-            radio.clicked.connect(lambda checked, s=skill: self._on_radio_button_clicked(s))
-            
-            self.radio_buttons[skill.name] = radio
-            button_group.addButton(radio)
-            independent_layout.addWidget(radio, row, col)
-            
-            col += 1
-            if col == 4:
-                col = 0
-                row += 1
-                
-        main_layout.addWidget(independent_frame)
-
-        parent_types = set(
-            skill.super_name for skill in self.parent_ui.skills 
-            if skill.super_name is not None
-        )
-                          
-        for parent_type in sorted(parent_types):
-            group = QGroupBox(parent_type.title())
-            group_layout = QGridLayout(group)
-            row = col = 0
-            
-            child_skills = sorted(
-                [skill for skill in self.parent_ui.skills 
-                 if skill.super_name == parent_type],
-                key=lambda x: x.name
-            )
-                                 
-            for skill in child_skills:
-                radio = QRadioButton(skill.display_name)
-                radio.setFont(self.create_font())
-                radio.clicked.connect(lambda checked, s=skill: self._on_radio_button_clicked(s))
-                
-                self.radio_buttons[skill.name] = radio
-                button_group.addButton(radio)
-                group_layout.addWidget(radio, row, col)
-                
-                col += 1
-                if col == 4:
-                    col = 0
-                    row += 1
-                    
-            main_layout.addWidget(group)
-
-        self.content_frame.setLayout(QVBoxLayout())
-        self.content_frame.layout().addWidget(scroll_area)
-
-
-class MultiOptionSkillDialog(BaseSkillSelectDialog):
-    def __init__(self, skills: str, parent_ui: 'Phase2UI'):
-        self.skill_options = skills.split(' / ')
-        super().__init__("Select One Skill", parent_ui)
-
-    def setup_content(self):
-        layout = QGridLayout(self.content_frame)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
-
-        button_group = QButtonGroup(self)
-        row = col = 0
-
-        for skill_option in self.skill_options:
-            skill_name = skill_option.strip().lower().replace(' ', '_')
-
-            if ':any' in skill_name:
-                skill_type = skill_name.split(':')[0]
-                type_skills = [s for s in self.parent_ui.skills if s.super_name == skill_type]
-                
-                for skill in sorted(type_skills, key=lambda x: x.name):
-                    radio = QRadioButton(skill.display_name)
-                    radio.setFont(self.create_font())
-                    radio.clicked.connect(lambda checked, s=skill: self._on_radio_button_clicked(s))
-                    
-                    self.radio_buttons[skill.name] = radio
-                    button_group.addButton(radio)
-                    layout.addWidget(radio, row, col)
-                    
-                    col += 1
-                    if col == 4:
-                        col = 0 
-                        row += 1
-            else:
-                skill = next(
-                    (s for s in self.parent_ui.skills 
-                        if s.name == skill_name or
-                        (s.super_name and f"{s.super_name}:{s.name}" == skill_name)),
-                    None
-                )
-                if skill:
-                    radio = QRadioButton(skill.display_name)
-                    radio.setFont(self.create_font())
-                    radio.clicked.connect(lambda checked, s=skill: self._on_radio_button_clicked(s))
-                    
-                    self.radio_buttons[skill.name] = radio
-                    button_group.addButton(radio)
-                    layout.addWidget(radio, row, col)
-                    
-                    col += 1
-                    if col == 4:
-                        col = 0
-                        row += 1
-
-
-class NewSkillDialog(TFComputingDialog):
-    def __init__(self, parent_ui: 'Phase2UI'):
-        button_config = [
-            {"text": "OK", "callback": self._on_ok_clicked}
-        ]
-        super().__init__("Add New Skill", parent_ui, button_config=button_config)
-        self.parent_ui = parent_ui
-        self.all_grouped_skills = set(s.super_name for s in parent_ui.skills if s.super_name)
-        self.setup_validation_rules()
-        self.setup_content()
-        
-    def setup_content(self):
-        layout = QVBoxLayout(self.content_frame)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(15)
-        
-        options = ["None"]
-        for skill in sorted(self.all_grouped_skills):
-            display_name = skill.replace('_', ' ').title()
-            options.append(display_name)
-            
-        self.parent_combo = self.create_option_entry(
-            "Skill Category:",
-            options=options,
-            current_value="None",
-            label_size=120,
-            value_size=150,
-        )
-        layout.addWidget(self.parent_combo)
-        
-        self.name_entry = self.create_value_entry(
-            label_text="Skill Name:",
-            label_size=120,
-            value_size=150
-        )
-        self.name_entry.value_field.setValidator(
-            QRegularExpressionValidator(QRegularExpression("[a-zA-Z ]+"))
-        )
-        layout.addWidget(self.name_entry)
-        
-        self.value_entry = self.create_value_entry(
-            label_text="Base Value:",
-            label_size=120,
-            value_size=150,
-            number_only=True,
-            allow_decimal=False
-        )
-        self.value_entry.set_value("0")
-        layout.addWidget(self.value_entry)
-        
-        layout.addStretch()
-        self.set_dialog_size(350, 250)
-
-    def setup_validation_rules(self):
-        self.validator.add_rules({
-            'skill_name': TFValidationRule(
-                type_=str,
-                required=True,
-                pattern=r'^[a-zA-Z ]+$',
-                error_messages={
-                    'required': 'Please enter a skill name',
-                    'pattern': 'Skill name can only contain letters and spaces'
-                }
-            ),
-            'base_value': TFValidationRule(
-                type_=int,
-                required=True,
-                min_val=0,
-                max_val=99,
-                error_messages={
-                    'min': 'Base value cannot be negative',
-                    'max': 'Base value cannot exceed 99'
-                }
-            ),
-            'skill_category': TFValidationRule(
-                type_=str,
-                required=True,
-                error_messages={
-                    'required': 'Please select a skill category'
-                }
-            )
-        })
-
-    def get_field_values(self):
-        return {
-            'skill_name': self.name_entry.get_value().strip(),
-            'base_value': self.value_entry.get_value().strip(),
-            'skill_category': self.parent_combo.get_value()
-        }
-
-    def process_validated_data(self, data):
-        category = data['skill_category'].lower().replace(' ', '_')
-        skill_name = data['skill_name'].lower().replace(" ", "_")
-        base_value = int(data['base_value'])
-
-        if category == "none":
-            super_name = None
-        else:
-            super_name = category
-
-        existing_skill = next(
-            (s for s in self.parent_ui.skills
-            if s.name == skill_name and s.super_name == super_name),
-            None
-        )
-
-        if existing_skill:
-            parent_name = "Base Skills" if super_name is None else super_name.replace('_', ' ').title()
-            raise ValueError(f"A skill with name '{skill_name}' already exists under {parent_name}. "
-                            "Please use a different name or remove the existing skill first.")
-
-        if super_name:
-            final_name = f"{super_name}:{skill_name}"
-        else:
-            final_name = skill_name
-
-        return final_name, base_value
-
-    @classmethod
-    def get_input(cls, parent) -> tuple[bool, tuple[str, int]]:
-        dialog = cls(parent)
-        confirmed = dialog.exec()
-        return confirmed == 1, dialog.get_result() if confirmed == 1 else (None, None)
-
-    def get_result(self) -> tuple[str, int]:
-        return self._result if hasattr(self, '_result') else (None, None)
-    

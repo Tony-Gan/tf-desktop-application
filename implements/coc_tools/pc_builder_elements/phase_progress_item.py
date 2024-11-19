@@ -2,8 +2,8 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QFrame
 
-from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
-from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
+from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
+from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 
 
 class PhaseProgressItem(QFrame):

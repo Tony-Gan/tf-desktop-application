@@ -2,9 +2,9 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QFrame, QVBoxLayout, QLabel
 
-from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
-from implements.coc_tools.pc_builder_helper.phase_progress_item import PhaseProgressItem
-from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
+from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
+from implements.coc_tools.pc_builder_elements.phase_progress_item import PhaseProgressItem
+from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 from ui.components.tf_separator import TFSeparator
 
 

@@ -1,11 +1,9 @@
-import json
-
 from PyQt6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QWidget
 
-from implements.coc_tools.pc_builder_helper.occupation import Occupation
 from ui.components.tf_base_button import TFNextButton, TFResetButton
-from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
-from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
+from implements.coc_tools.coc_data.data_reader import load_occupations_from_json
+from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
+from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 from utils.helper import resource_path
 
 
@@ -21,7 +19,7 @@ class BasePhaseUI(QWidget):
         self.next_button = None
 
         self.has_activated = False
-        self.occupation_list = self._load_occupation_list()
+        self.occupation_list = load_occupations_from_json(resource_path("implements/coc_tools/coc_data/occupations.json"))
 
         self._setup_base_ui()
         self._setup_ui()
@@ -75,16 +73,6 @@ class BasePhaseUI(QWidget):
     
     def _setup_ui(self):
         raise NotImplementedError("Child classes must implement _setup_ui")
-
-    def _load_occupation_list(self):
-        try:
-            with open(resource_path("implements/coc_tools/pc_builder_helper/occupations.json"), "r", encoding="utf-8") as f:
-                data = json.load(f)
-            occupations = [Occupation.from_json(entry) for entry in data]
-            return occupations
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            self.main_window.app.show_message(f"Error loading occupations.json: {e}", 3000, 'red')
-            return []
 
     def _on_reset_clicked(self):
         response = self.main_window.app.show_warning(

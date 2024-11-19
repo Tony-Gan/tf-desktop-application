@@ -1,26 +1,4 @@
-from PyQt6.QtGui import QFont
-
-LABEL_FONT = QFont("Inconsolata SemiBold")
-LABEL_FONT.setPointSize(10)
-
-EDIT_FONT = QFont("Inconsolatav")
-EDIT_FONT.setPointSize(10)
-
-GROUPED_SKILLS = {'art', 'science', 'survival', 'pilot'}
-SPECIAL_SKILLS = {'fighting', 'firearms'}
-INTERPERSONAL_SKILLS = ["charm", "fast_talk", "intimidate", "persuade"]
-
-PARENT_SKILL_DEFAULTS = {
-    "art": 5,
-    "fighting": 5,
-    "firearms": 10,
-    "language": 1,
-    "pilot": 1,
-    "science": 1,
-    "survival": 10,
-}
-
-DEFAULT_SKILLS = {
+{
     "accounting": 5,
     "anthropology": 1,
     "appraise": 5,
@@ -53,7 +31,6 @@ DEFAULT_SKILLS = {
     "fighting:sword": 20,
     "fighting:whip": 5,
     "fighting:bow": 5,
-    "fighting:garrote": 5,
     "fighting:axe": 20,
     "fighting:spare": 15,
     "firearms:handgun": 20,
@@ -106,10 +83,4 @@ DEFAULT_SKILLS = {
     "swim": 20,
     "throw": 20,
     "track": 10
-}
-
-WEAPON_TYPES = {
-    "Knife, Small": ("fighting:brawl", "1d4+db", 0),
-    "Knife, Medium": ("fighting:brawl", "1d4+2+db", 0),
-    "Knife, Large": ("fighting:brawl", "1d8+db", 0)
 }

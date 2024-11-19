@@ -4,24 +4,22 @@ import shutil
 import random
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Tuple
 
 from PyQt6 import sip
-from PyQt6.QtWidgets import (QFrame, QVBoxLayout, QHBoxLayout, QGroupBox, QButtonGroup,
-                             QDialog, QScrollArea, QLabel, QRadioButton, QGridLayout,
-                             QWidget, QFileDialog, QSizePolicy, QSpacerItem)
+from PyQt6.QtWidgets import (QFrame, QVBoxLayout, QHBoxLayout, QGroupBox, QButtonGroup,QScrollArea,
+                             QLabel, QRadioButton, QGridLayout, QWidget, QFileDialog, QSizePolicy, QSpacerItem)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QFont, QPainter, QPen, QColor
 
 from ui.components.tf_base_button import TFBaseButton, TFConfirmButton
-from ui.components.tf_computing_dialog import TFComputingDialog
 from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_date_entry import TFDateEntry
-from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
-from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
-from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
-from implements.coc_tools.pc_builder_helper.occupation_list_dialog import OccupationListDialog
+from implements.coc_tools.coc_data.dialogs import StatExchangeDialog, AgeReductionDialog, CharacterDescriptionDialog, OccupationListDialog
+from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
+from implements.coc_tools.pc_builder_elements.phase_ui import BasePhaseUI
+from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 from utils.validator.tf_validation_rules import TFValidationRule
 from utils.validator.tf_validator import TFValidator
 from utils.helper import resource_path
@@ -1066,7 +1064,11 @@ class Phase1UI(BasePhaseUI):
         dialog.exec()
 
     def _on_age_modification(self):
-        self._perform_age_calculation()
+        success = self._perform_age_calculation()
+        if success:
+            self.description_button.setEnabled(True)
+            self.age_modification_button.setEnabled(False)
+            self.next_button.setEnabled(True)
 
     def _perform_age_calculation(self):
         age = int(self.age.get_value())
@@ -1114,12 +1116,17 @@ class Phase1UI(BasePhaseUI):
             app_reduction = 25
             edu_reduction = 0
 
-        if age < 20:
-            self._handle_physical_reduction(base_reduction, modifications, 2)
-        elif age < 40:
-            self._handle_physical_reduction(base_reduction, modifications, 3)
-        else:
-            self._handle_physical_reduction(base_reduction, modifications, 1)
+        if base_reduction > 0:
+            if age < 20:
+                confirmed, result = self._handle_physical_reduction(base_reduction, modifications, 2)
+                if not confirmed:
+                    return False
+            elif age < 40:
+                self._handle_physical_reduction(base_reduction, modifications, 3)
+            else:
+                confirmed, result = self._handle_physical_reduction(base_reduction, modifications, 1)
+                if not confirmed:
+                    return False
 
         current_edu = int(self.stat_entries['EDU'].get_value())
         total_improvement, improvement_details = self._perform_edu_improvements(edu_improvement_count, current_edu)
@@ -1144,13 +1151,15 @@ class Phase1UI(BasePhaseUI):
 
         self._update_right_panel_chart()
         self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETED)
-            
+
         if modifications:
             self.main_window.app.show_warning(
                 "Age-based Modifications",
                 "The following modifications were applied:\n" + "\n".join(modifications),
                 buttons=["OK"]
             )
+
+        return True
 
     def _perform_edu_improvements(self, improvement_count: int, current_edu: int) -> tuple[int, list[str]]:
         total_improvement = 0
@@ -1168,7 +1177,7 @@ class Phase1UI(BasePhaseUI):
 
         return total_improvement, improvement_details
 
-    def _handle_physical_reduction(self, total_reduction: int, modifications: list, mode: int = 1) -> None:
+    def _handle_physical_reduction(self, total_reduction: int, modifications: list, mode: int = 1) -> tuple[bool, dict]:
         current_stats = None
         if mode == 1:
             physical_stats = ['STR', 'CON', 'DEX']
@@ -1191,7 +1200,7 @@ class Phase1UI(BasePhaseUI):
             )
 
             if not confirmed:
-                return
+                return False, None
 
             if mode == 1:
                 str_deduction = result.get('STR', 0)
@@ -1201,13 +1210,15 @@ class Phase1UI(BasePhaseUI):
                 self.stat_entries['STR'].set_value(str(current_stats['STR'] - str_deduction))
                 self.stat_entries['CON'].set_value(str(current_stats['CON'] - con_deduction))
                 self.stat_entries['DEX'].set_value(str(current_stats['DEX'] - dex_deduction))
-                
+
                 if str_deduction != 0:
                     modifications.append(f"STR reduced {str_deduction} points.")
                 if con_deduction != 0:
                     modifications.append(f"CON reduced {con_deduction} points.")
                 if dex_deduction != 0:
                     modifications.append(f"DEX reduced {dex_deduction} points.")
+
+                return True, result
             else:
                 str_deduction = result.get('STR', 0)
                 siz_deduction = result.get('SIZ', 0)
@@ -1220,9 +1231,9 @@ class Phase1UI(BasePhaseUI):
                 if siz_deduction != 0:
                     modifications.append(f"SIZ reduced {siz_deduction} points.")
 
-        self.description_button.setEnabled(True)
-        self.age_modification_button.setEnabled(False)
-        self.next_button.setEnabled(True)
+                return True, result
+
+        return True, {}
 
     def _validate_all_fields(self) -> bool:
         error_messages = []
@@ -1450,53 +1461,6 @@ class Phase1UI(BasePhaseUI):
     def on_enter(self):
         super().on_enter()
 
-
-class StatExchangeDialog(TFComputingDialog):
-    def __init__(self, parent, remaining_times: int, current_stats: dict):
-        self.remaining_times = remaining_times
-        self.current_stats = current_stats
-        self.stat_checkboxes = {}
-        super().__init__("Exchange Stats", parent)
-        self.setup_content()
-
-    @classmethod
-    def get_input(cls, parent=None, **kwargs) -> Tuple[bool, Tuple[str, str]]:
-        dialog = cls(parent, kwargs.get('remaining_times'), kwargs.get('current_stats'))
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            return True, dialog.get_result()
-        return False, None
-        
-    def setup_content(self):
-        layout = QVBoxLayout(self.content_frame)
-        
-        times_label = self.create_label(
-            f"Remaining exchange times: {self.remaining_times}",
-            bold=True
-        )
-        layout.addWidget(times_label)
-        
-        stats = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU']
-        for stat in stats:
-            checkbox = self.create_check_with_label(
-                f"{stat}: {self.current_stats[stat]}"
-            )
-            self.stat_checkboxes[stat] = checkbox
-            layout.addWidget(checkbox)
-        
-    def get_field_values(self) -> dict:
-        selected = []
-        for stat, checkbox in self.stat_checkboxes.items():
-            if checkbox.get_value():
-                selected.append(stat)
-        return {'selected': selected}
-        
-    def process_validated_data(self, data: dict) -> Tuple[str, str]:
-        selected = data['selected']
-        if len(selected) != 2:
-            raise ValueError("Please select exactly two stats to exchange")
-        return tuple(selected)
-
-
 class StatRadarChart(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1601,303 +1565,3 @@ class StatRadarChart(QWidget):
                 int(label_y + 5), 
                 text
             )
-
-
-class AgeReductionDialog(TFComputingDialog):
-    def __init__(self, parent, total_reduction: int, current_stats: dict):
-        self.total_reduction = total_reduction
-        self.current_stats = current_stats
-        self.stat_entries = {}
-        self.remaining_label = None
-
-        button_config = [
-            {"text": "OK", "callback": self._on_ok_clicked}
-        ]
-        super().__init__(f"Reduce Stats by {total_reduction} Points", parent, button_config=button_config)
-        self._setup_validation_rules()
-        self.setup_content()
-
-
-    def _setup_validation_rules(self):
-        rules = {}
-        for stat in self.current_stats.keys():
-            rules[f'reduction_{stat}'] = TFValidationRule(
-                type_=int,
-                required=True,
-                min_val=0,
-                max_val=self.total_reduction,
-                error_messages={
-                    'required': f'{stat} reduction is required',
-                    'min': f'{stat} reduction cannot be negative',
-                    'max': f'{stat} reduction cannot exceed {self.total_reduction}'
-                }
-            )
-        rules['total_reduction'] = TFValidationRule(custom='total_reduction')
-        rules['final_values'] = TFValidationRule(custom='final_values')
-
-        self.validator.add_rules(rules)
-
-        self.validator.add_custom_validator(
-            'total_reduction',
-            lambda values: (
-                sum(values) == self.total_reduction,
-                f"Total reduction must equal exactly {self.total_reduction}"
-            )
-        )
-
-        self.validator.add_custom_validator(
-            'final_values',
-            lambda value: (
-                self.current_stats[value[0]] - value[1] >= 1,
-                f"Final {stat} value cannot be less than 1"
-            )
-        )
-
-    def setup_content(self):
-        layout = QVBoxLayout(self.content_frame)
-        layout.setContentsMargins(10, 10, 10, 10)
-
-        instruction = self.create_label(
-            f"Due to age, you must reduce your stats by {self.total_reduction} points total.",
-            bold=True
-        )
-        layout.addWidget(instruction)
-
-        self.remaining_label = self.create_label(
-            f"Remaining points to allocate: {self.total_reduction}",
-            bold=True
-        )
-        layout.addWidget(self.remaining_label)
-
-        for stat in self.current_stats.keys():
-            entry = self.create_value_entry(
-                f"{stat} (Current: {self.current_stats[stat]}):",
-                number_only=True,
-                label_size=200,
-                value_size=50
-            )
-            entry.set_value("0")
-            entry.value_field.textChanged.connect(self._on_value_changed)
-            self.stat_entries[stat] = entry
-            layout.addWidget(entry)
-
-        layout.addStretch()
-
-        self.set_dialog_size(400, 250)
-
-    def _on_value_changed(self):
-        total = sum(int(entry.get_value() or 0) for entry in self.stat_entries.values())
-        remaining = self.total_reduction - total
-        self.remaining_label.setText(f"Remaining points to allocate: {remaining}")
-
-    def get_field_values(self) -> dict:
-        basic_values = {
-            f'reduction_{stat}': entry.get_value() or "0"
-            for stat, entry in self.stat_entries.items()
-        }
-        
-        reductions = [int(basic_values[f'reduction_{stat}']) for stat in self.current_stats.keys()]
-        basic_values['reductions_list'] = reductions
-        
-        basic_values['final_values_list'] = [
-            (stat, int(basic_values[f'reduction_{stat}']))
-            for stat in self.current_stats.keys()
-        ]
-            
-        return basic_values
-
-    def process_validated_data(self, data: dict) -> dict:
-        reductions = [int(data[f'reduction_{stat}']) for stat in self.current_stats.keys()]
-        if not self.validator.validate_field('total_reduction', reductions)[0]:
-            raise ValueError(f"Total reduction must equal exactly {self.total_reduction}")
-
-        result = {}
-        for stat in self.current_stats.keys():
-            reduction = int(data[f'reduction_{stat}'])
-            if not self.validator.validate_field('final_values', (stat, reduction))[0]:
-                raise ValueError(f"Final {stat} value cannot be less than 1")
-            result[stat] = reduction
-
-        return result
-
-    @classmethod
-    def get_input(cls, parent, total_reduction: int, current_stats: dict) -> tuple[bool, dict]:
-        dialog = cls(parent, total_reduction, current_stats)
-        confirmed = dialog.exec()
-        return confirmed == 1, dialog.get_result() if confirmed == 1 else None
-
-
-class CharacterDescriptionDialog(TFComputingDialog):
-    def __init__(self, parent, stats: Dict[str, int]):
-        self.stats = stats
-        button_config = [{"text": "OK", "role": "accept"}]
-        super().__init__("Character Description", parent, button_config=button_config)
-        self.setup_content()
-        
-    def setup_validation_rules(self):
-        pass
-        
-    def get_field_values(self):
-        return {}
-        
-    def process_validated_data(self, data):
-        return None
-        
-    def _get_str_description(self, value: int) -> str:
-        if value <= 15:
-            return "Struggles with even basic physical tasks"
-        elif value <= 40:
-            return "Notably weak, has difficulty with manual labor"
-        elif value <= 60:
-            return "Possesses average human strength"
-        elif value <= 80:
-            return "Remarkably strong, could be a successful athlete"
-        else:
-            return "Exceptionally powerful, rivals professional strongmen"
-            
-    def _get_con_description(self, value: int) -> str:
-        if value <= 20:
-            return "Chronically ill, requires frequent medical attention"
-        elif value <= 40:
-            return "Often sick, has a weak constitution"
-        elif value <= 60:
-            return "Generally healthy with normal resilience"
-        elif value <= 80:
-            return "Robust health, rarely gets sick"
-        else:
-            return "Iron constitution, seems immune to illness"
-            
-    def _get_siz_description(self, value: int) -> str:
-        if value <= 20:
-            return "Child-sized, very small and thin"
-        elif value <= 40:
-            return "Small and slight of build"
-        elif value <= 60:
-            return "Average height and build"
-        elif value <= 80:
-            return "Notably tall or broad"
-        elif value <= 100:
-            return "Exceptionally large, stands out in any crowd"
-        else:
-            return "Giant-like proportions, possibly record-breaking"
-            
-    def _get_dex_description(self, value: int) -> str:
-        if value <= 20:
-            return "Severely uncoordinated, struggles with basic motor tasks"
-        elif value <= 40:
-            return "Clumsy and awkward in movement"
-        elif value <= 60:
-            return "Average coordination and reflexes"
-        elif value <= 80:
-            return "Graceful and agile, excellent physical coordination"
-        else:
-            return "Exceptional agility, could be a professional acrobat"
-            
-    def _get_app_description(self, value: int) -> str:
-        if value <= 20:
-            return "Appearance causes discomfort in others"
-        elif value <= 40:
-            return "Plain, tends to blend into the background"
-        elif value <= 60:
-            return "Average appearance, neither striking nor forgettable"
-        elif value <= 80:
-            return "Attractive, draws positive attention"
-        else:
-            return "Stunning beauty, could be a professional model"
-            
-    def _get_int_description(self, value: int) -> str:
-        if value <= 20:
-            return "Severe cognitive limitations"
-        elif value <= 40:
-            return "Below average mental capacity"
-        elif value <= 60:
-            return "Average intelligence, capable of normal reasoning"
-        elif value <= 80:
-            return "Sharp mind, quick to understand complex concepts"
-        else:
-            return "Genius-level intellect"
-            
-    def _get_pow_description(self, value: int) -> str:
-        if value <= 20:
-            return "Weak-willed, easily manipulated"
-        elif value <= 40:
-            return "Lacks mental fortitude"
-        elif value <= 60:
-            return "Normal willpower and determination"
-        elif value <= 80:
-            return "Strong-willed, difficult to influence"
-        elif value <= 100:
-            return "Exceptional mental fortitude, almost unshakeable"
-        else:
-            return "Superhuman willpower, possibly psychically sensitive"
-            
-    def _get_edu_description(self, value: int) -> str:
-        if value <= 20:
-            return "Minimal formal education"
-        elif value <= 40:
-            return "Basic education, equivalent to elementary school"
-        elif value <= 60:
-            return "High school level education"
-        elif value <= 80:
-            return "University graduate, well-educated"
-        else:
-            return "Scholarly excellence, extensive knowledge in many fields"
-            
-    def _get_luck_description(self, value: int) -> str:
-        if value <= 20:
-            return "Seems to attract misfortune"
-        elif value <= 40:
-            return "Often experiences bad luck"
-        elif value <= 60:
-            return "Average fortune in life"
-        elif value <= 80:
-            return "Notably lucky, things tend to work out well"
-        else:
-            return "Incredibly fortunate, seems blessed by fate"
-    
-    def setup_content(self):
-        scroll_area, container, layout = self.create_scroll_area()
-        
-        descriptions = {
-            'STR': ('Strength', self._get_str_description(self.stats['strength'])),
-            'CON': ('Constitution', self._get_con_description(self.stats['constitution'])),
-            'SIZ': ('Size', self._get_siz_description(self.stats['size'])),
-            'DEX': ('Dexterity', self._get_dex_description(self.stats['dexterity'])),
-            'APP': ('Appearance', self._get_app_description(self.stats['appearance'])),
-            'INT': ('Intelligence', self._get_int_description(self.stats['intelligence'])),
-            'POW': ('Power', self._get_pow_description(self.stats['power'])),
-            'EDU': ('Education', self._get_edu_description(self.stats['education'])),
-            'LUK': ('Luck', self._get_luck_description(self.stats['luck']))
-        }
-        
-        frame = QFrame()
-        grid_layout = QGridLayout(frame)
-        grid_layout.setSpacing(15)
-        grid_layout.setContentsMargins(15, 15, 15, 15)
-        
-        for idx, (stat, (full_name, desc)) in enumerate(descriptions.items()):
-            stat_frame = QFrame()
-            stat_layout = QVBoxLayout(stat_frame)
-            
-            header_label = self.create_label(
-                f"{stat} ({full_name}): {self.stats[full_name.lower()]}",
-                bold=True
-            )
-            header_label.setStyleSheet("color: #2c3e50;")
-            
-            desc_label = self.create_label(desc)
-            desc_label.setWordWrap(True)
-            
-            stat_layout.addWidget(header_label)
-            stat_layout.addWidget(desc_label)
-            
-            row = idx // 2
-            col = idx % 2
-            grid_layout.addWidget(stat_frame, row, col)
-        
-        layout.addWidget(frame)
-        
-        main_layout = QVBoxLayout(self.content_frame)
-        main_layout.addWidget(scroll_area)
-        
-        self.set_dialog_size(800, 600)

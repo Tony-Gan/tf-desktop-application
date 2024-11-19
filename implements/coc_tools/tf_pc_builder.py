@@ -9,16 +9,16 @@ from ui.components.tf_value_entry import TFValueEntry
 from utils.registry.tf_tool_matadata import TFToolMetadata
 from utils.validator.tf_validator import TFValidator
 from ui.components.tf_settings_widget import MenuSection
-from implements.coc_tools.pc_builder_helper.pc_builder_config import PCBuilderConfig
-from implements.coc_tools.pc_builder_helper.rule_setting_dialog import RuleSettingsDialog
-from implements.coc_tools.pc_builder_helper.pc_builder_phase import  PCBuilderPhase
-from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
-from implements.coc_tools.pc_builder_helper.progress_container import ProgressContainer
-from implements.coc_tools.pc_builder_helper.phase1_ui import Phase1UI
-from implements.coc_tools.pc_builder_helper.phase2_ui import Phase2UI
-from implements.coc_tools.pc_builder_helper.phase3_ui import Phase3UI
-from implements.coc_tools.pc_builder_helper.phase4_ui import Phase4UI
-from implements.coc_tools.pc_builder_helper.phase5_ui import Phase5UI
+from implements.coc_tools.coc_data.dialogs import RuleSettingsDialog
+from implements.coc_tools.pc_builder_elements.pc_builder_config import PCBuilderConfig
+from implements.coc_tools.pc_builder_elements.pc_builder_phase import  PCBuilderPhase
+from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
+from implements.coc_tools.pc_builder_elements.progress_container import ProgressContainer
+from implements.coc_tools.pc_builder_elements.phase1_ui import Phase1UI
+from implements.coc_tools.pc_builder_elements.phase2_ui import Phase2UI
+from implements.coc_tools.pc_builder_elements.phase3_ui import Phase3UI
+from implements.coc_tools.pc_builder_elements.phase4_ui import Phase4UI
+from implements.coc_tools.pc_builder_elements.phase5_ui import Phase5UI
 
 
 class TFPcBuilder(TFDraggableWindow):
@@ -69,11 +69,13 @@ class TFPcBuilder(TFDraggableWindow):
         self.stacked_widget.setFrameShape(QFrame.Shape.Box)
         main_layout.addWidget(self.stacked_widget, 4)
 
-        self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
+        # TODO: YOUKNOW
+        self.phase_status[PCBuilderPhase.PHASE4] = PhaseStatus.COMPLETING
         self.progress_ui.set_active_phase(self.current_phase)
         for phase, status in self.phase_status.items():
             self.progress_ui.update_status(phase, status)
-        initial_phase = self._load_phase(PCBuilderPhase.PHASE1)
+        # TODO: YOUKNOW
+        initial_phase = self._load_phase(PCBuilderPhase.PHASE4)
         self.stacked_widget.setCurrentWidget(initial_phase)
         initial_phase.on_enter()
 

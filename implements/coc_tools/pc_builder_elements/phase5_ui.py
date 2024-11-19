@@ -1,7 +1,7 @@
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout
+from PyQt6.QtWidgets import QHBoxLayout
 
-from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
-from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
+from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
+from implements.coc_tools.pc_builder_elements.phase_ui import BasePhaseUI
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
 from utils.validator.tf_validator import TFValidator
 

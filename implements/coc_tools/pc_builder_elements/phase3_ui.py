@@ -1,260 +1,22 @@
-import re
-import json
-from dataclasses import dataclass
-from enum import Enum
-from typing import Dict, List, Optional
-
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (QVBoxLayout, QFrame, QHBoxLayout, QWidget, QLabel,
                              QGridLayout, QGroupBox, QScrollArea, QLineEdit)
 
-from implements.coc_tools.pc_builder_helper.pc_builder_phase import PCBuilderPhase
-from implements.coc_tools.pc_builder_helper.phase_ui import BasePhaseUI
-from implements.coc_tools.pc_builder_helper.phase_status import PhaseStatus
+from implements.coc_tools.coc_data.dialogs import DeleteItemDialog, CombatSkillListDialog, WeaponTypeListDialog
+from implements.coc_tools.coc_data.data_enum import Category
+from implements.coc_tools.coc_data.data_reader import load_weapon_types_from_json, load_combat_skills_from_json
+from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
+from implements.coc_tools.pc_builder_elements.phase_ui import BasePhaseUI
+from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_value_entry import TFValueEntry
-from ui.components.tf_computing_dialog import TFComputingDialog
-from ui.components.tf_separator import TFSeparator
 from utils.validator.tf_validator import TFValidator
 from utils.helper import resource_path
 
 LABEL_FONT = QFont("Inconsolata SemiCondensed")
 LABEL_FONT.setPointSize(10)
-
-
-class Penetration(Enum):
-    YES = "Yes"
-    NO = "No"
-
-
-class Category(Enum):
-    COLD_WEAPON = "Cold Weapon"
-    THROWN_WEAPO = "Thrown Weapon"
-    HANDGUN = "Handgun"
-    RIFLE = "Rifle"
-    SHOTGUN = "Shotgun"
-    SMG = "SMG"
-    EXPLOSIVE = "Explosive"
-    HEAVY_WEAPON = "Heavy Weapon"
-    ARTILLERY = "Artillery"
-
-
-@dataclass
-class Damage:
-    dmg_text: str
-
-    @property
-    def damage_type(self) -> str:
-        slash_count = self.dmg_text.count('/')
-        if slash_count == 1:
-            return "ranged"
-        elif slash_count > 1:
-            return "attenuated"
-        return "normal"
-
-    @property
-    def range_modifier(self) -> str:
-        if self.damage_type == "normal":
-            return "N/A"
-
-        # For ranged damage
-        if self.damage_type == "ranged":
-            parts = self.dmg_text.split('/')
-            if len(parts) == 2:
-                match = re.search(r'(\d+)\s*(?:yards?|feet)', parts[1])
-                if match:
-                    number = float(match.group(1))
-                    if 'yard' in parts[1]:
-                        return f"x{self._convert_yards_to_meters(number)}"
-                    else:
-                        return f"x{self._convert_feet_to_meters(number)}"
-
-        elif self.damage_type == "attenuated":
-            return "9, 18, 45"
-
-        return "N/A"
-
-    @property
-    def dice_part(self) -> str:
-        if self.dmg_text.lower() == "stun":
-            return "N/A"
-
-        if self.damage_type == "attenuated":
-            return self.dmg_text
-
-        dice_pattern = re.findall(r'\d+D\d+', self.dmg_text)
-        if not dice_pattern:
-            return "N/A"
-        return "+".join(dice_pattern)
-
-    @property
-    def static_part(self) -> int:
-        if self.damage_type == "attenuated":
-            return 0
-
-        match = re.search(r'(?<!\d)\+\s*(\d+)(?!\s*D)', self.dmg_text)
-        if match:
-            return int(match.group(1))
-        return 0
-
-    @property
-    def db_modifier(self) -> float:
-        if self.damage_type == "attenuated":
-            return 0
-
-        if "halfDB" in self.dmg_text.replace(" ", "").lower():
-            return 0.5
-        elif "+DB" in self.dmg_text.replace(" ", "").upper():
-            return 1.0
-        return 0
-
-    @property
-    def special_effect(self) -> str | None:
-        special_effects = ["burn", "stun"]
-        for effect in special_effects:
-            if effect in self.dmg_text.lower():
-                return effect
-        return "N/A"
-
-    @property
-    def standard_text(self) -> str | None:
-        if self.dmg_text.lower() == "stun":
-            return "Stun"
-
-        if self.special_effect != "N/A":
-            return f"{self.dice_part} {self.special_effect.capitalize()}"
-
-        if self.damage_type == "attenuated":
-            return self.dmg_text
-
-        parts = []
-        if self.dice_part != "N/A":
-            parts.append(self.dice_part)
-
-        if self.db_modifier == 1:
-            parts.append("DB")
-        elif self.db_modifier == 0.5:
-            parts.append("1/2DB")
-
-        if self.static_part > 0:
-            parts.append(str(self.static_part))
-
-        if self.damage_type == "ranged":
-            return f"{'+'.join(parts)}, {self.range_modifier}"
-
-        return "+".join(parts)
-
-    def _convert_yards_to_meters(self, yards: float) -> int:
-        meters = yards * 0.9144
-        return round(meters)
-
-    def _convert_feet_to_meters(self, feet: float) -> int:
-        meters = feet * 0.3048
-        return round(meters)
-
-
-@dataclass
-class Range:
-    range_text: str
-
-    @property
-    def standard_text(self) -> str:
-        if self.range_text.lower() == "melee":
-            return "0"
-
-        if "STR" in self.range_text:
-            return self._convert_str_range(self.range_text)
-
-        if "/" in self.range_text:
-            return self._convert_multiple_ranges(self.range_text)
-
-        return self._convert_single_range(self.range_text)
-    
-    def _convert_yards_to_meters(self, yards: float) -> int:
-        meters = yards * 0.9144
-        return round(meters)
-
-    def _convert_feet_to_meters(self, feet: float) -> int:
-        meters = feet * 0.3048
-        return round(meters)
-    
-    def _convert_str_range(self, text: str) -> str:
-        if "feet" in text.lower():
-            conversion_factor = round(0.3048, 2)
-            return f"STR*{conversion_factor}"
-        elif "yards" in text.lower():
-            conversion_factor = round(0.9144, 2)
-            return f"STR*{conversion_factor}"
-        return text
-
-    def _convert_multiple_ranges(self, text: str) -> str:
-        ranges = text.split("/")
-        converted_ranges = []
-        for r in ranges:
-            match = re.search(r"(\d+)\s?(yards?|feet?)", r, re.IGNORECASE)
-            if match:
-                distance = int(match.group(1))
-                unit = match.group(2).lower()
-                if "yards" in unit:
-                    converted_ranges.append(str(self._convert_yards_to_meters(distance)))
-                elif "feet" in unit:
-                    converted_ranges.append(str(self._convert_feet_to_meters(distance)))
-        return "/".join(converted_ranges)
-
-    def _convert_single_range(self, text: str) -> str:
-        match = re.search(r"(\d+)\s?(yards?|feet?)", text, re.IGNORECASE)
-        if match:
-            distance = int(match.group(1))
-            unit = match.group(2).lower()
-            if "yards" in unit:
-                return str(self._convert_yards_to_meters(distance))
-            elif "feet" in unit:
-                return str(self._convert_feet_to_meters(distance))
-        return text
-
-
-@dataclass
-class WeaponSkill:
-    skill_text: str
-
-    @property
-    def standard_text(self):
-        return self.skill_text.split(":")[-1].strip().title()
-
-
-@dataclass
-class WeaponType:
-    name: str
-    skill: WeaponSkill
-    damage: Damage
-    range: Range
-    penetration: Penetration
-    rate_of_fire: str
-    ammo: Optional[str]
-    malfunction: Optional[str]
-    category: Category
-
-    def __str__(self) -> str:
-        damage_text = self.damage.standard_text if self.damage else "N/A"
-        range_text = self.range.standard_text if self.range else "N/A"
-        return (f"Weapon: {self.name}\n"
-                f"Skill: {self.skill}\n"
-                f"Damage: {damage_text}\n"
-                f"Range: {range_text}\n"
-                f"Penetration: {self.penetration.value}\n"
-                f"Rate of Fire: {self.rate_of_fire}\n"
-                f"Ammo: {self.ammo if self.ammo else 'N/A'}\n"
-                f"Malfunction: {self.malfunction if self.malfunction else 'N/A'}\n"
-                f"Category: {self.category.value}\n")
-    
-
-@dataclass
-class CombatSkill:
-    name: str
-    damage: str
-    techniques: Dict[str, str]
 
 
 class WeaponGroup(QGroupBox):
@@ -1141,8 +903,8 @@ class Phase3UI(BasePhaseUI):
         self.config = main_window.config
         self.main_window = main_window
 
-        self.weapon_types = self._load_weapon_types_from_json(resource_path("implements/coc_tools/pc_builder_helper/weapon_types.json"))
-        self.combat_skills = self._load_combat_skills_from_json(resource_path("implements/coc_tools/pc_builder_helper/combat_skills.json"))
+        self.weapon_types = load_weapon_types_from_json(resource_path("implements/coc_tools/coc_data/weapon_types.json"))
+        self.combat_skills = load_combat_skills_from_json(resource_path("implements/coc_tools/coc_data/combat_skills.json"))
         self.weapon_scroll_area = None
 
         super().__init__(PCBuilderPhase.PHASE3, main_window, parent)
@@ -1215,7 +977,29 @@ class Phase3UI(BasePhaseUI):
         button_layout.addWidget(self.previous_button)
 
     def _setup_validation_rules(self):
-        pass
+        def validate_weapon_entry(entry: WeaponEntry) -> tuple[bool, str]:
+            fields = {
+                "Name": entry.name_entry.get_value(),
+                "Category": entry.category_selector.get_value(),
+                "Type": entry.type_selector.get_value(),
+                "Skill": entry.skill_entry.get_value(),
+                "Damage": entry.damage_entry.get_value(),
+                "Range": entry.range_entry.get_value(),
+                "Penetration": entry.penetration_entry.get_value(),
+                "Rate of Fire": entry.rof_entry.get_value(),
+                "Ammunition": entry.ammo_entry.get_value(),
+                "Malfunction": entry.malfunction_entry.get_value()
+            }
+
+            empty_fields = [field for field, value in fields.items()
+                            if not value or value == "None"]
+
+            if empty_fields:
+                return False, f"In weapon entry: {', '.join(empty_fields)} cannot be empty"
+
+            return True, ""
+
+        self.validator.add_custom_validator('weapon_entry', validate_weapon_entry)
 
     def _on_show_combat_skills_clicked(self):
         dialog = CombatSkillListDialog(self, self.combat_skills)
@@ -1226,6 +1010,21 @@ class Phase3UI(BasePhaseUI):
         dialog.exec()
 
     def _on_complete_clicked(self):
+        error_messages = []
+
+        if self.weapon_group.weapon_entries:
+            for entry in self.weapon_group.weapon_entries:
+                is_valid, message = self.validator._custom_validators['weapon_entry'](entry)
+                if not is_valid:
+                    error_messages.append(message)
+
+            if error_messages:
+                self.main_window.app.show_warning(
+                    "Validation Error",
+                    "\n".join(error_messages),
+                    buttons=["OK"]
+                )
+                return False
         self.complete_button.setEnabled(False)
         self.next_button.setEnabled(True)
         self.main_window.set_phase_status(self.phase, PhaseStatus.COMPLETED)
@@ -1324,237 +1123,3 @@ class Phase3UI(BasePhaseUI):
             loadout_data['deposit'] = deposit_data
         
         self.main_window.pc_data['loadout'] = loadout_data
-
-    def _load_weapon_types_from_json(self, file_path: str) -> List[WeaponType]:
-        weapon_types = []
-        with open(file_path, 'r', encoding='utf-8') as file:
-            data = json.load(file)
-            for item in data:
-                weapon_skill = WeaponSkill(item["skill"])
-                penetration = Penetration.YES if item["penetration"].lower() == "yes" else Penetration.NO
-                damage = Damage(item["damage"])
-                weapon_range = Range(item["range"])
-                category = Category(item["category"])
-                weapon_type = WeaponType(
-                    name=item["name"],
-                    skill=weapon_skill,
-                    damage=damage,
-                    range=weapon_range,
-                    penetration=penetration,
-                    rate_of_fire=item["rate_of_fire"],
-                    ammo=item.get("ammo"),
-                    malfunction=item.get("malfunction"),
-                    category=category
-                )
-                weapon_types.append(weapon_type)
-        return weapon_types
-    
-    def _load_combat_skills_from_json(self, file_path: str) -> List[CombatSkill]:
-        combat_skills = []
-
-        with open(file_path, 'r', encoding='utf-8') as file:
-            data = json.load(file)
-
-            for name, details in data.items():
-                damage = details.get("damage", "1D3 + DB")
-                techniques = details.get("techniques", {})
-
-                combat_skill = CombatSkill(
-                    name=name,
-                    damage=damage,
-                    techniques=techniques
-                )
-
-                combat_skills.append(combat_skill)
-
-        return combat_skills
-
-
-class DeleteItemDialog(TFComputingDialog):
-    def __init__(self, parent=None, items=None):
-        button_config = [
-            {"text": "OK", "callback": self._on_ok_clicked}
-        ]
-        self.items = items or []
-        self.checkboxes = {}
-        super().__init__("Delete Items", parent, button_config)
-        self.setup_content()
-
-    def setup_content(self):
-        layout = QVBoxLayout(self.content_frame)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
-        
-        scroll_area, container, container_layout = self.create_scroll_area()
-        
-        for widget, _, _ in self.items:
-            if isinstance(widget, QLabel): 
-                text = widget.text()
-                checkbox = self.create_check_with_label(text)
-                self.checkboxes[text] = checkbox
-                container_layout.addWidget(checkbox)
-        
-        container_layout.addStretch()
-        layout.addWidget(scroll_area)
-        
-        self.set_dialog_size(300, 400)
-
-    def setup_validation_rules(self):
-        pass
-        
-    def get_field_values(self):
-        return {"selected_items": [text for text, checkbox in self.checkboxes.items() 
-                                 if checkbox.get_value()]}
-
-    def process_validated_data(self, data):
-        return data["selected_items"]
-
-
-class CombatSkillListDialog(TFComputingDialog):
-    def __init__(self, parent, combat_skills: List[CombatSkill]):
-        self.combat_skills = combat_skills
-        button_config = [{"text": "OK", "role": "accept"}]
-        super().__init__("Combat Skills List", parent, button_config=button_config)
-        self.setup_content()
-
-    def setup_validation_rules(self):
-        pass
-        
-    def get_field_values(self):
-        return {}
-        
-    def process_validated_data(self, data):
-        return None
-    
-    def setup_content(self):
-        scroll_area, container, layout = self.create_scroll_area()
-        
-        sorted_skills = sorted(self.combat_skills, key=lambda x: x.name)
-        
-        for skill in sorted_skills:
-            skill_frame = QFrame()
-            skill_frame.setObjectName("skill_frame")
-            skill_layout = QVBoxLayout(skill_frame)
-            skill_layout.setSpacing(5)
-            skill_layout.setContentsMargins(10, 10, 10, 10)
-            
-            header_text = f"{skill.name} ({skill.damage})"
-            header_label = self.create_label(header_text, bold=True)
-            skill_layout.addWidget(header_label)
-            
-            for tech_name, tech_description in skill.techniques.items():
-                tech_frame = QFrame()
-                tech_layout = QVBoxLayout(tech_frame)
-                tech_layout.setSpacing(2)
-                tech_layout.setContentsMargins(5, 5, 5, 5)
-                
-                tech_name_label = self.create_label(tech_name, bold=True)
-                tech_layout.addWidget(tech_name_label)
-                
-                tech_desc_label = self.create_label(tech_description)
-                tech_desc_label.setWordWrap(True)
-                tech_layout.addWidget(tech_desc_label)
-                
-                skill_layout.addWidget(tech_frame)
-            
-            layout.addWidget(skill_frame)
-            
-            if skill != sorted_skills[-1]:
-                separator = TFSeparator.horizontal()
-                separator.setContentsMargins(0, 5, 0, 5)
-                layout.addWidget(separator)
-        
-        main_layout = QVBoxLayout(self.content_frame)
-        main_layout.addWidget(scroll_area)
-        
-        self.set_dialog_size(500, 600)
-
-
-class WeaponTypeListDialog(TFComputingDialog):
-    def __init__(self, parent, weapon_types: List[WeaponType]):
-        self.weapon_types = weapon_types
-        button_config = [{"text": "OK", "role": "accept"}]
-        super().__init__("Weapons List", parent, button_config=button_config)
-        self.setup_content()
-
-    def setup_validation_rules(self):
-        pass
-        
-    def get_field_values(self):
-        return {}
-        
-    def process_validated_data(self, data):
-        return None
-    
-    def setup_content(self):
-        scroll_area, container, layout = self.create_scroll_area()
-        
-        categories = {}
-        for weapon in self.weapon_types:
-            if weapon.category.value not in categories:
-                categories[weapon.category.value] = []
-            categories[weapon.category.value].append(weapon)
-        
-        sorted_categories = sorted(categories.keys())
-        
-        for category in sorted_categories:
-            category_label = self.create_label(category, bold=True)
-            layout.addWidget(category_label)
-            
-            category_frame = QFrame()
-            category_frame.setObjectName("category_frame")
-            category_layout = QVBoxLayout(category_frame)
-            category_layout.setSpacing(10)
-            category_layout.setContentsMargins(10, 10, 10, 10)
-            
-            sorted_weapons = sorted(categories[category], key=lambda x: x.name)
-            for weapon in sorted_weapons:
-                weapon_frame = QFrame()
-                weapon_frame.setObjectName("weapon_frame")
-                weapon_layout = QVBoxLayout(weapon_frame)
-                weapon_layout.setSpacing(5)
-                weapon_layout.setContentsMargins(10, 10, 10, 10)
-                
-                name_label = self.create_label(weapon.name, bold=True)
-                weapon_layout.addWidget(name_label)
-                
-                stats_layout = QGridLayout()
-                stats_layout.setSpacing(5)
-                
-                stats = [
-                    ("Skill", weapon.skill.standard_text),
-                    ("Damage", weapon.damage.standard_text),
-                    ("Range", weapon.range.standard_text),
-                    ("Penetration", weapon.penetration.value),
-                    ("Rate of Fire", weapon.rate_of_fire),
-                ]
-                
-                if weapon.ammo:
-                    stats.append(("Ammo", weapon.ammo))
-                if weapon.malfunction:
-                    stats.append(("Malfunction", weapon.malfunction))
-                
-                for i, (stat_name, stat_value) in enumerate(stats):
-                    row = i // 2
-                    col = i % 2 * 2 
-                    
-                    name_label = self.create_label(f"{stat_name}:", bold=True)
-                    value_label = self.create_label(str(stat_value))
-                    
-                    stats_layout.addWidget(name_label, row, col)
-                    stats_layout.addWidget(value_label, row, col + 1)
-                
-                weapon_layout.addLayout(stats_layout)
-                category_layout.addWidget(weapon_frame)
-            
-            layout.addWidget(category_frame)
-            
-            if category != sorted_categories[-1]:
-                separator = TFSeparator.horizontal()
-                separator.setContentsMargins(0, 5, 0, 5)
-                layout.addWidget(separator)
-        
-        main_layout = QVBoxLayout(self.content_frame)
-        main_layout.addWidget(scroll_area)
-        
-        self.set_dialog_size(600, 800)
