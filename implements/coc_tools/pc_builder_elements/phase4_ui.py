@@ -360,5 +360,3 @@ class Phase4UI(BasePhaseUI):
         background_data['outside_relations'] = self.outside_relation_group.get_text()
         
         self.main_window.pc_data['personal_background'] = background_data
-
-        print(self.main_window.pc_data)

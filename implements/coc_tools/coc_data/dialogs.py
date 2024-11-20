@@ -1441,3 +1441,56 @@ class CommonListDialog(TFComputingDialog):
     def process_validated_data(self, data):
         return None
 
+
+class TextDisplayDialog(TFComputingDialog):
+    def __init__(self, title: str, content: dict, parent=None):
+        button_config = [
+            {"text": "OK", "role": "accept"}
+        ]
+        self.content = content
+        super().__init__(title, parent, button_config)
+
+        self.setup_content()
+        self.resize(600, 400)
+        
+    def setup_content(self):
+        layout = QVBoxLayout(self.content_frame)
+        layout.setSpacing(10)
+        
+        if 'title' in self.content:
+            title_label = self.create_label(self.content['title'], bold=True)
+            title_label.setStyleSheet("font-size: 14px;")
+            layout.addWidget(title_label)
+            
+        if 'paragraphs' in self.content:
+            for text in self.content['paragraphs']:
+                para_label = self.create_label(text)
+                para_label.setWordWrap(True)
+                layout.addWidget(para_label)
+            
+        if 'bullet_points' in self.content:
+            for text in self.content['bullet_points']:
+                bullet_label = self.create_label(f"• {text}")
+                bullet_label.setWordWrap(True)
+                layout.addWidget(bullet_label)
+            
+        if 'sections' in self.content:
+            for section in self.content['sections']:
+                subtitle_label = self.create_label(section['subtitle'], bold=True)
+                subtitle_label.setStyleSheet("font-size: 12px; padding-top: 10px;")
+                layout.addWidget(subtitle_label)
+                
+                content_label = self.create_label(section['content'])
+                content_label.setWordWrap(True)
+                layout.addWidget(content_label)
+
+        layout.addStretch()
+
+    def setup_validation_rules(self):
+        pass
+
+    def get_field_values(self):
+        return {}
+
+    def process_validated_data(self, data):
+        return None

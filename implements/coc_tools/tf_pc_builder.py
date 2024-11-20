@@ -6,9 +6,9 @@ from core.windows.tf_draggable_window import TFDraggableWindow
 from ui.components.tf_date_entry import TFDateEntry
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_value_entry import TFValueEntry
+from ui.components.tf_settings_widget import MenuSection
 from utils.registry.tf_tool_matadata import TFToolMetadata
 from utils.validator.tf_validator import TFValidator
-from ui.components.tf_settings_widget import MenuSection
 from implements.coc_tools.coc_data.dialogs import RuleSettingsDialog
 from implements.coc_tools.pc_builder_elements.pc_builder_config import PCBuilderConfig
 from implements.coc_tools.pc_builder_elements.pc_builder_phase import  PCBuilderPhase
@@ -70,12 +70,12 @@ class TFPcBuilder(TFDraggableWindow):
         main_layout.addWidget(self.stacked_widget, 4)
 
         # TODO: YOUKNOW
-        self.phase_status[PCBuilderPhase.PHASE3] = PhaseStatus.COMPLETING
+        self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
         self.progress_ui.set_active_phase(self.current_phase)
         for phase, status in self.phase_status.items():
             self.progress_ui.update_status(phase, status)
         # TODO: YOUKNOW
-        initial_phase = self._load_phase(PCBuilderPhase.PHASE3)
+        initial_phase = self._load_phase(PCBuilderPhase.PHASE1)
         self.stacked_widget.setCurrentWidget(initial_phase)
         initial_phase.on_enter()
 

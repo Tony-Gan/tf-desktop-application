@@ -175,7 +175,7 @@ class TFPcCard(TFDraggableWindow):
             self.title = self.pc_data['personal_info']['name']
             dex = self.pc_data['basic_stats']['dexterity']
             edu = self.pc_data['basic_stats']['education']
-            skills = load_skills_from_json("implements/coc_tools/coc_data/default_skills.json", dex, edu)
+            skills = load_skills_from_json(resource_path("implements/coc_tools/coc_data/default_skills.json"), dex, edu)
             self.default_skills = {}
             for skill in skills:
                 self.default_skills[skill.name] = skill.default_point
