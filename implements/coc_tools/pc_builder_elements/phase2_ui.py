@@ -1,6 +1,6 @@
 from typing import List
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QIcon
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFrame, QGroupBox, QLabel, QPushButton, QLineEdit
 
 from implements.coc_tools.coc_data.dialogs import OccupationListDialog, MultiOptionSkillDialog, \
@@ -14,14 +14,9 @@ from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
 from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_computing_dialog import TFComputingDialog
+from ui.components.tf_font import TEXT_FONT, LABEL_FONT
 from utils.validator.tf_validator import TFValidator
 from utils.helper import resource_path
-
-TEXT_FONT = QFont("Inconsolata")
-TEXT_FONT.setPointSize(10)
-
-LABEL_FONT = QFont("Inconsolata SemiCondensed")
-LABEL_FONT.setPointSize(10)
 
 PARENT_SKILL_DEFAULTS = {
     "art": 5,

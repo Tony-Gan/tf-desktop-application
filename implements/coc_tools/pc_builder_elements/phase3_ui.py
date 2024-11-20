@@ -1,5 +1,4 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (QVBoxLayout, QFrame, QHBoxLayout, QWidget, QLabel,
                              QGridLayout, QGroupBox, QScrollArea, QLineEdit)
 
@@ -10,29 +9,20 @@ from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderP
 from implements.coc_tools.pc_builder_elements.phase_ui import BasePhaseUI
 from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
+from ui.components.tf_group_box import TFGroupBox
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_value_entry import TFValueEntry
+from ui.components.tf_font import LABEL_FONT
 from utils.validator.tf_validator import TFValidator
 from utils.helper import resource_path
 
-LABEL_FONT = QFont("Inconsolata SemiCondensed")
-LABEL_FONT.setPointSize(10)
 
-
-class WeaponGroup(QGroupBox):
+class WeaponGroup(TFGroupBox):
     MAX_WEAPONS = 5
 
-    def __init__(self, parent:'Phase3UI'):
-        super().__init__("Weapons", parent)
-        self.parent = parent
-        self.setObjectName("section_frame")
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(5, 5, 5, 5)
-        self.layout.setSpacing(5)
-
+    def __init__(self, parent):
         self.weapon_entries = []
-
-        self._setup_content()
+        super().__init__("Weapons", parent=parent)
 
     def _setup_content(self):
         self.button_container = QWidget()
@@ -340,18 +330,10 @@ class WeaponEntry(QFrame):
             self.expand_button.setText("Collapse")
 
 
-class CombatSkillGroup(QGroupBox):
-    def __init__(self, parent:'Phase3UI'):
-        super().__init__("Combat Skills", parent)
-        self.parent = parent
-        self.setObjectName("section_frame")
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(5, 5, 5, 5)
-        self.layout.setSpacing(5)
-
-        self.skills = ["None"] + [cs.name for cs in self.parent.combat_skills]
-
-        self._setup_content()
+class CombatSkillGroup(TFGroupBox):
+    def __init__(self, parent):
+        self.skills = ["None"] + [cs.name for cs in parent.combat_skills]
+        super().__init__("Combat Skills", parent=parent)
 
     def _setup_content(self):
         upper_layout = QHBoxLayout()
@@ -428,16 +410,9 @@ class CombatSkillGroup(QGroupBox):
         self.damage_entry.value_field.setText("1D3")
 
 
-class ArmourGroup(QGroupBox):
-    def __init__(self, parent:'Phase3UI'):
-        super().__init__("Armour", parent)
-        self.parent = parent
-        self.setObjectName("section_frame")
-        self.layout = QGridLayout(self)
-        self.layout.setContentsMargins(5, 5, 5, 5)
-        self.layout.setSpacing(5)
-
-        self._setup_content()
+class ArmourGroup(TFGroupBox):
+    def __init__(self, parent):
+        super().__init__("Armour", layout_type=QGridLayout, parent=parent)
 
     def _setup_content(self):
         self.name_entry = TFValueEntry(
@@ -511,16 +486,9 @@ class ArmourGroup(QGroupBox):
         self.coverage_selector.value_field.setCurrentText("None")
 
 
-class CreditGroup(QGroupBox):
-    def __init__(self, parent:'Phase3UI'):
-        super().__init__("Credits", parent)
-        self.parent = parent
-        self.setObjectName("section_frame")
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(5, 5, 5, 5)
-        self.layout.setSpacing(5)
-
-        self._setup_content()
+class CreditGroup(TFGroupBox):
+    def __init__(self, parent):
+        super().__init__("Credits", parent=parent)
 
     def _setup_content(self):
         self.cash_entry = TFValueEntry(
@@ -602,48 +570,40 @@ class CreditGroup(QGroupBox):
         self.deposit_entry.value_field.setText("${:,}".format(deposit))
 
 
-class ItemBaseGroup(QGroupBox):
-    def __init__(self, parent=None, title=None):
-        super().__init__(title, parent)
-        self.parent = parent
-        self.setObjectName("section_frame")
-
-        self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(5, 5, 5, 5)
-        self.main_layout.setSpacing(5)
-
+class ItemBaseGroup(TFGroupBox):
+    def __init__(self, parent, title):
         self.content_widget = QWidget()
         self.content_widget.setStyleSheet("""
             QWidget {
-                border: 1px solid rgba(224, 224, 224, 0.01);
+                border: 1px solid rgba(224, 224, 224, 0.05);
             }
             QLineEdit {
-                border: 1px solid rgba(204, 204, 204, 0.01);
+                border: 1px solid rgba(204, 204, 204, 0.05);
             }
             QLabel {
-                border: 1px solid rgba(224, 224, 224, 0.01);
+                border: 1px solid rgba(224, 224, 224, 0.05);
             }
         """)
-        
+
         self.content_vertical_layout = QVBoxLayout(self.content_widget)
         self.content_vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.content_vertical_layout.setSpacing(0)
-        
+
         self.grid_widget = QWidget()
         self.content_layout = QGridLayout(self.grid_widget)
         self.content_layout.setContentsMargins(0, 0, 0, 0)
         self.content_layout.setSpacing(1)
-        
+
         self.content_vertical_layout.addWidget(self.grid_widget)
         self.content_vertical_layout.addStretch(1)
 
         self.items = []
         self.current_row = 0
         self.COLS_PER_ROW = 3
-        
+
         self.placeholder_widgets = []
-        
-        self._setup_content()
+
+        super().__init__(title, parent=parent)
         self._setup_first_row()
 
     def _setup_content(self):
@@ -676,8 +636,8 @@ class ItemBaseGroup(QGroupBox):
         self.button_layout.addWidget(self.delete_button)
         self.button_layout.addStretch()
 
-        self.main_layout.addWidget(self.content_widget, 1)
-        self.main_layout.addWidget(self.button_container, 0)
+        self.layout.addWidget(self.content_widget, 1)
+        self.layout.addWidget(self.button_container, 0)
 
     def _setup_first_row(self):
         for col in range(self.COLS_PER_ROW):

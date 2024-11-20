@@ -70,12 +70,12 @@ class TFPcBuilder(TFDraggableWindow):
         main_layout.addWidget(self.stacked_widget, 4)
 
         # TODO: YOUKNOW
-        self.phase_status[PCBuilderPhase.PHASE1] = PhaseStatus.COMPLETING
+        self.phase_status[PCBuilderPhase.PHASE3] = PhaseStatus.COMPLETING
         self.progress_ui.set_active_phase(self.current_phase)
         for phase, status in self.phase_status.items():
             self.progress_ui.update_status(phase, status)
         # TODO: YOUKNOW
-        initial_phase = self._load_phase(PCBuilderPhase.PHASE1)
+        initial_phase = self._load_phase(PCBuilderPhase.PHASE3)
         self.stacked_widget.setCurrentWidget(initial_phase)
         initial_phase.on_enter()
 

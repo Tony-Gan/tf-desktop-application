@@ -1,68 +1,23 @@
 import random
-from typing import List, Tuple, Dict
+from typing import Tuple, Dict
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QVBoxLayout, QScrollArea, QFrame, QHBoxLayout, QGroupBox, QTextEdit, QWidget, QDialog
+from PyQt6.QtWidgets import QVBoxLayout, QScrollArea, QFrame, QHBoxLayout, QWidget
 
-from implements.coc_tools.coc_data.data_type import Spell
 from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
 from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 from implements.coc_tools.pc_builder_elements.phase_ui import BasePhaseUI
 from implements.coc_tools.coc_data.dialogs import CommonListDialog
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
-from ui.components.tf_computing_dialog import TFComputingDialog
+from ui.components.tf_group_box import TFGroupBox
+from ui.components.tf_text_group_box import TFTextGroupBox
 from ui.components.tf_value_entry import TFValueEntry
-from utils.validator.tf_validation_rules import TFValidationRule
+from ui.components.tf_font import LABEL_FONT
 from utils.validator.tf_validator import TFValidator
 
-LABEL_FONT = QFont("Inconsolata SemiCondensed")
-LABEL_FONT.setPointSize(10)
 
-
-class BackgroundGroup(QGroupBox):
+class PortraitGroup(TFGroupBox):
     def __init__(self, parent):
-        super().__init__("Background", parent)
-        self.parent = parent
-        self.setObjectName("section_frame")
-
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(5, 5, 5, 5)
-        self.layout.setSpacing(5)
-
-        self._setup_content()
-
-    def _setup_content(self):
-        self.text_edit = QTextEdit()
-        self.text_edit.setFont(QFont(LABEL_FONT))
-        self.text_edit.setStyleSheet("background-color: transparent;")
-        self.text_edit.setPlaceholderText("Enter character background here...")
-
-        self.layout.addWidget(self.text_edit)
-
-    def get_text(self) -> str:
-        return self.text_edit.toPlainText().strip()
-
-    def set_text(self, text: str):
-        self.text_edit.setText(text)
-
-    def reset(self):
-        self.text_edit.clear()
-
-
-class PortraitGroup(QGroupBox):
-    def __init__(self, parent):
-        super().__init__("Portraits", parent)
-        self.parent = parent
-        self.setObjectName("section_frame")
-
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(5, 5, 5, 5)
-        self.layout.setSpacing(5)
-
-        self.mythos_entries: Dict[str, TFValueEntry] = {}
-        self.entries: Dict[str, Tuple[TFValueEntry, TFBaseButton, TFBaseButton]] = {}
-
         self.common_lists = {
             "Ideology/Beliefs": [
                 "Religious Faith - There is a higher power that you worship and pray to (Vishnu, Jesus Christ, Haile Selassie I)",
@@ -108,7 +63,7 @@ class PortraitGroup(QGroupBox):
                 "Something given to you by your Significant Person (e.g. ring, diary, map)",
                 "Your collection (e.g. bus tickets, stuffed animals, records)",
                 "Something mysterious you found and seek answers about (e.g. unknown letter, curious pipe, strange silver ball)",
-                "A sporting item (e.g. cricket bat, signed baseball, fishing rod)", 
+                "A sporting item (e.g. cricket bat, signed baseball, fishing rod)",
                 "A weapon (e.g. service revolver, hunting rifle, hidden boot knife)",
                 "A pet (e.g. dog, cat, tortoise)"
             ],
@@ -137,8 +92,10 @@ class PortraitGroup(QGroupBox):
                 "Mystery scar (e.g. unexplained mark, ritualistic scar, forgotten wound)"
             ]
         }
+        self.mythos_entries: Dict[str, TFValueEntry] = {}
+        self.entries: Dict[str, Tuple[TFValueEntry, TFBaseButton, TFBaseButton]] = {}
 
-        self._setup_content()
+        super().__init__("Portraits", parent=parent)
 
     def _setup_content(self):
         details = [
@@ -273,66 +230,6 @@ class PortraitGroup(QGroupBox):
             entry.set_value("")
 
 
-class InnerRelationGroup(QGroupBox):
-    def __init__(self, parent):
-        super().__init__("Inner Relations", parent)
-        self.parent = parent
-        self.setObjectName("section_frame")
-
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(5, 5, 5, 5)
-        self.layout.setSpacing(5)
-
-        self._setup_content()
-
-    def _setup_content(self):
-        self.text_edit = QTextEdit()
-        self.text_edit.setFont(QFont(LABEL_FONT))
-        self.text_edit.setStyleSheet("background-color: transparent;")
-        self.text_edit.setPlaceholderText("Enter your party connections here, separate multiple entries with commas...")
-
-        self.layout.addWidget(self.text_edit)
-
-    def get_text(self) -> str:
-        return self.text_edit.toPlainText().strip()
-    
-    def set_text(self, text: str):
-        self.text_edit.setText(text)
-
-    def reset(self):
-        self.text_edit.clear()
-
-
-class OutsideRelationGroup(QGroupBox):
-    def __init__(self, parent):
-        super().__init__("Outside Relations", parent)
-        self.parent = parent
-        self.setObjectName("section_frame")
-
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(5, 5, 5, 5)
-        self.layout.setSpacing(5)
-
-        self._setup_content()
-
-    def _setup_content(self):
-        self.text_edit = QTextEdit()
-        self.text_edit.setFont(QFont(LABEL_FONT))
-        self.text_edit.setStyleSheet("background-color: transparent;")
-        self.text_edit.setPlaceholderText("Enter your social connections here, separate different relationships with commas...")
-
-        self.layout.addWidget(self.text_edit)
-
-    def get_text(self) -> str:
-        return self.text_edit.toPlainText().strip()
-    
-    def set_text(self, text: str):
-        self.text_edit.setText(text)
-
-    def reset(self):
-        self.text_edit.clear()
-
-
 class Phase4UI(BasePhaseUI):
     def __init__(self, main_window, parent=None):
         self.config = main_window.config
@@ -354,7 +251,11 @@ class Phase4UI(BasePhaseUI):
         self.background_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.background_scroll.setFrameShape(QFrame.Shape.NoFrame)
 
-        self.background_group = BackgroundGroup(self)
+        self.background_group = TFTextGroupBox(
+            "Background",
+            "Enter character background here...",
+            parent=self
+        )
         self.background_scroll.setWidget(self.background_group)
 
         self.lower_group = QFrame(self)
@@ -370,8 +271,16 @@ class Phase4UI(BasePhaseUI):
         self.lower_right_group.layout.setContentsMargins(0, 0, 0, 0)
         self.lower_right_group.setStyleSheet("QFrame#section_frame { border: none; }")
 
-        self.inner_relation_group = InnerRelationGroup(self)
-        self.outside_relation_group = OutsideRelationGroup(self)
+        self.inner_relation_group = TFTextGroupBox(
+            "Inner Relations",
+            "Enter your party connections here, separate multiple entries with commas...",
+            parent=self
+        )
+        self.outside_relation_group = TFTextGroupBox(
+            "Outside Relations",
+            "Enter your social connections here, separate different relationships with commas...",
+            parent=self
+        )
         self.lower_right_group.layout.addWidget(self.inner_relation_group, 1)
         self.lower_right_group.layout.addWidget(self.outside_relation_group, 1)
 
