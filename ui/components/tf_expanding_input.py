@@ -1,8 +1,6 @@
-import sys
-
 from PyQt6.QtCore import Qt, QEvent
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QLineEdit, QTextEdit, QPushButton, QApplication, QWidget
+from PyQt6.QtWidgets import QLineEdit, QTextEdit
 
 from ui.tf_application import TFApplication
 from ui.components.tf_font import TEXT_FONT

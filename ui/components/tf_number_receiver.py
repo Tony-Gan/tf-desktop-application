@@ -2,6 +2,8 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent, QFont
 
+from ui.components.tf_font import LABEL_FONT
+
 class TFNumberReceiver(QLineEdit):
     """
     A specialized line edit widget that only accepts numeric input including decimals.
@@ -30,7 +32,7 @@ class TFNumberReceiver(QLineEdit):
     def __init__(self, 
                  text="0", 
                  alignment: Qt.AlignmentFlag=Qt.AlignmentFlag.AlignLeft, 
-                 font: QFont=QFont("Montserrat", 12),
+                 font: QFont=LABEL_FONT,
                  allow_decimal=True,
                  allow_negative=False,
                  width=50,
