@@ -1,10 +1,11 @@
-from typing import List, Dict, Any, Optional, Tuple
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QFrame, QLabel
+from typing import Callable, List, Dict, Any, Optional, Tuple
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QFrame, QLabel, QCompleter, QComboBox, QLineEdit, QCheckBox
 from PyQt6.QtCore import Qt
 
 from ui.components.tf_check_with_label import TFCheckWithLabel
 from ui.components.tf_date_entry import TFDateEntry
 from ui.components.tf_option_entry import TFOptionEntry
+from ui.components.tf_tooltip import TFTooltip
 from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_message_box import TFMessageBox
@@ -202,6 +203,110 @@ class TFComputingDialog(QDialog):
         label.setAlignment(alignment)
         label.setFixedHeight(height)
         return label
+    
+    def create_line_edit(
+            self,
+            name: str,
+            text: str = "",
+            width: Optional[int] = None,
+            height: int = 24,
+            alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft
+    ) -> QLineEdit:
+        edit = QLineEdit(self)
+        edit.setText(text)
+        edit.setFont(TEXT_FONT)
+        if width:
+            edit.setFixedWidth(width)
+        edit.setFixedHeight(height)
+        edit.setAlignment(alignment)
+
+        return edit
+
+    def create_combo_box(
+            self,
+            name: str,
+            items: list[str],
+            current_text: str = "",
+            width: Optional[int] = None,
+            height: int = 24,
+            editable: bool = False,
+            enable_completer: bool = False
+    ) -> QComboBox:
+        combo = QComboBox(self)
+        combo.addItems(items)
+        combo.setFont(TEXT_FONT)
+        if width:
+            combo.setFixedWidth(width)
+        combo.setFixedHeight(height)
+        combo.setEditable(editable)
+        
+        if current_text and current_text in items:
+            combo.setCurrentText(current_text)
+            
+        if enable_completer and editable:
+            completer = QCompleter(items)
+            completer.setFilterMode(Qt.MatchFlag.MatchContains)
+            completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+            combo.setCompleter(completer)
+            
+        return combo
+
+    def create_check_box(
+            self,
+            name: str,
+            text: str = "",
+            checked: bool = False,
+            width: Optional[int] = None,
+            height: int = 24
+    ) -> QCheckBox:
+        check = QCheckBox(text, self)
+        check.setFont(TEXT_FONT)
+        check.setChecked(checked)
+        if width:
+            check.setFixedWidth(width)
+        check.setFixedHeight(height)
+
+        return check
+    
+    def create_tooltip(
+            self,
+            tool_tip: str,
+    ) -> TFTooltip:
+        item = TFTooltip(
+            tool_tip,
+            self
+        )
+
+        return item
+    
+    def create_button(
+        self,
+        name: str,
+        text: str,
+        width: int = 100,
+        height: Optional[int] = None,
+        font_family: str = "Inconsolata SemiCondensed",
+        font_size: int = 10,
+        enabled: bool = True,
+        checkable: bool = False,
+        object_name: Optional[str] = None,
+        tooltip: Optional[str] = None,
+        on_clicked: Optional[Callable] = None
+    ) -> TFBaseButton:
+        button = TFBaseButton(
+            text=text,
+            parent=self,
+            width=width,
+            height=height,
+            font_family=font_family,
+            font_size=font_size,
+            enabled=enabled,
+            checkable=checkable,
+            object_name=object_name,
+            tooltip=tooltip,
+            on_clicked=on_clicked
+        )
+        return button
 
     @classmethod
     def get_input(cls, parent=None, **kwargs) -> Tuple[bool, Any]:

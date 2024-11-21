@@ -58,13 +58,17 @@ class TFBaseFrame(QFrame):
 
     def _emit_values_changed(self) -> None:
         values = self.get_values()
+        print(values)
         self.values_changed.emit(values)
 
     def get_values(self) -> Dict[str, Any]:
         values = {}
         for name, component in self._components.items():
             if hasattr(component, 'text'):
-                values[name] = component.text()
+                if isinstance(component, QCheckBox):
+                    values[name] = component.isChecked()
+                else:
+                    values[name] = component.text()
             elif hasattr(component, 'currentText'):
                 values[name] = component.currentText()
             elif hasattr(component, 'isChecked'):
