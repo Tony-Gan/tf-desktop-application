@@ -98,4 +98,13 @@ class TFValueEntry(QFrame):
         layout.addStretch()
 
     def get_value(self) -> str:
-        return self.value_field.text()
+        if isinstance(self.value_field, TFExpandingInput):
+            return self.value_field.text_edit.toPlainText()
+        else:
+            return self.value_field.text()
+
+    def set_value(self, value: str) -> None:
+        if isinstance(self.value_field, TFExpandingInput):
+            self.value_field.text_edit.setPlainText(str(value))
+        else:
+            self.value_field.setText(str(value))

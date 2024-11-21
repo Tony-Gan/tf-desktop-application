@@ -1,14 +1,15 @@
 from typing import List, Dict, Any, Optional, Tuple
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QFrame
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QFrame, QLabel
 from PyQt6.QtCore import Qt
 
 from ui.components.tf_check_with_label import TFCheckWithLabel
 from ui.components.tf_date_entry import TFDateEntry
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_value_entry import TFValueEntry
-from utils.validator.tf_validator import TFValidator
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_message_box import TFMessageBox
+from ui.components.tf_font import LABEL_FONT, TEXT_FONT
+from utils.validator.tf_validator import TFValidator
 
 
 class TFComputingDialog(QDialog):
@@ -35,6 +36,11 @@ class TFComputingDialog(QDialog):
         self.content_frame = QFrame()
         self.content_frame.setFrameShape(QFrame.Shape.NoFrame)
         self.content_frame.setObjectName("content_frame")
+        
+        content_layout = QVBoxLayout(self.content_frame)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(10)
+        
         self.main_layout.addWidget(self.content_frame)
 
         self._setup_buttons()
@@ -60,7 +66,7 @@ class TFComputingDialog(QDialog):
 
     def default_button_config(self) -> List[Dict]:
         return [
-            {"text": "OK", "callback": self._on_ok_clicked, "role": "accept"},
+            {"text": "OK", "callback": self._on_ok_clicked},
             {"text": "Cancel", "callback": self.reject, "role": "reject"}
         ]
 
@@ -180,6 +186,22 @@ class TFComputingDialog(QDialog):
             spacing=spacing,
             parent=self
         )
+    
+    def create_label(
+            self,
+            text: str,
+            fixed_width: Optional[int] = None,
+            alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+            height: int = 24,
+            bold: bool = False
+    ) -> QLabel:
+        label = QLabel(text, parent=self)
+        label.setFont(LABEL_FONT if bold else TEXT_FONT)
+        if fixed_width:
+            label.setFixedWidth(fixed_width)
+        label.setAlignment(alignment)
+        label.setFixedHeight(height)
+        return label
 
     @classmethod
     def get_input(cls, parent=None, **kwargs) -> Tuple[bool, Any]:

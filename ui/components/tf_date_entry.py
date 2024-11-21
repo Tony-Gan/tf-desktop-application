@@ -1,11 +1,12 @@
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QDateEdit
-from PyQt6.QtCore import QDate
+from PyQt6.QtCore import QDate, pyqtSignal
 from typing import Optional
 
 from ui.components.tf_font import LABEL_FONT, TEXT_FONT
 
 
 class TFDateEntry(QFrame):
+    value_changed = pyqtSignal()
 
     def __init__(
             self,
@@ -52,6 +53,8 @@ class TFDateEntry(QFrame):
         if value_size:
             self.date_field.setFixedWidth(value_size)
 
+        self.date_field.dateChanged.connect(self.value_changed.emit)
+        
         layout.addWidget(self.label)
         layout.addSpacing(-2)
         layout.addWidget(self.date_field)

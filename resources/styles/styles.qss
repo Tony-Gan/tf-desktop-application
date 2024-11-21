@@ -60,109 +60,18 @@ QLineEdit#scientific_history {
     color: gray;
 }
 
-/* Calculator Buttons */
-QPushButton[id$="number"],
-QPushButton#scientific_function {
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    border-radius: 32px;
-    color: black;
-}
-
-QPushButton[id$="number"]:hover,
-QPushButton#scientific_function:hover {
-    background-color: #e0e0e0;
-}
-
-QPushButton[id$="operator"] {
-    background-color: #ffd700;
-    border: 1px solid #daa520;
-    border-radius: 32px;
-    color: black;
-}
-
-QPushButton[id$="operator"]:hover {
-    background-color: #ffcd00;
-}
-
-QPushButton[id$="special"] {
-    background-color: #ff6b6b;
-    color: white;
-    border: 1px solid #ff5252;
-    border-radius: 32px;
-}
-
-QPushButton[id$="special"]:hover {
-    background-color: #ff5252;
-}
-
-QPushButton[id$="equal"] {
-    background-color: #4CAF50;
-    color: white;
-    border: 1px solid #45a049;
-    border-radius: 32px;
-}
-
-QPushButton[id$="equal"]:hover {
-    background-color: #45a049;
-}
-
-/* Currency Selector Styles */
-QComboBox#currency_selector {
-    min-height: 40px;
-    padding-left: 10px;
-}
-
-QComboBox#currency_selector::drop-down {
-    width: 25px;
-}
-
-QComboBox#currency_selector::down-arrow {
-    width: 14px;
-    height: 14px;
-}
-
-/* Output Panel */
-QWidget#output_panel {
-    background-color: white;
-    border-top: 1px solid #ccc;
-}
-
-QTextEdit#output_text {
-    background-color: white;
-    color: black;
-    border: none;
-}
-
-QFrame#section_frame, QFrame#progress_container {
-    background-color: white;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
 QLabel#image_container {
     background-color: white;
     border: 1px solid #ccc;
 }
 
-QWidget#upper_container {
-    background-color: transparent;
-    border: none;
-}
-
-QScrollArea#transparent_scroll {
-    background-color: transparent;
-    border: none;
-}
-
-QWidget#transparent_viewport {
-    background-color: transparent;
-}
-
-QWidget#transparent_container {
-    background-color: transparent;
-}
-
 QFrame#TFDraggableWindow[focused="true"] {
     border: 2px solid gray;
+}
+
+/* General Widget Settings */
+QFrame#section_frame {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
 }
