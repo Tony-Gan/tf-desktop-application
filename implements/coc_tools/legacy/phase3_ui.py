@@ -1,12 +1,12 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (QVBoxLayout, QFrame, QHBoxLayout, QWidget, QLabel,
-                             QGridLayout, QGroupBox, QScrollArea, QLineEdit)
+                             QGridLayout, QScrollArea, QLineEdit)
 
 from implements.coc_tools.coc_data.dialogs import DeleteItemDialog, CombatSkillListDialog, WeaponTypeListDialog
 from implements.coc_tools.coc_data.data_enum import Category
 from implements.coc_tools.coc_data.data_reader import load_weapon_types_from_json, load_combat_skills_from_json
 from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
-from implements.coc_tools.pc_builder_elements.phase_ui import BasePhaseUI
+from implements.coc_tools.legacy.phase_ui import BasePhaseUI
 from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
 from ui.components.tf_group_box import TFGroupBox

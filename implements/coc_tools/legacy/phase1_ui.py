@@ -18,7 +18,7 @@ from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_date_entry import TFDateEntry
 from implements.coc_tools.coc_data.dialogs import StatExchangeDialog, AgeReductionDialog, CharacterDescriptionDialog, OccupationListDialog
 from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
-from implements.coc_tools.pc_builder_elements.phase_ui import BasePhaseUI
+from implements.coc_tools.legacy.phase_ui import BasePhaseUI
 from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 from utils.validator.tf_validation_rules import TFValidationRule
 from utils.validator.tf_validator import TFValidator

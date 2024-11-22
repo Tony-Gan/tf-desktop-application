@@ -14,11 +14,11 @@ from implements.coc_tools.pc_builder_elements.pc_builder_config import PCBuilder
 from implements.coc_tools.pc_builder_elements.pc_builder_phase import  PCBuilderPhase
 from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 from implements.coc_tools.pc_builder_elements.progress_container import ProgressContainer
-from implements.coc_tools.pc_builder_elements.phase1_ui import Phase1UI
-from implements.coc_tools.pc_builder_elements.phase2_ui import Phase2UI
-from implements.coc_tools.pc_builder_elements.phase3_ui import Phase3UI
-from implements.coc_tools.pc_builder_elements.phase4_ui import Phase4UI
-from implements.coc_tools.pc_builder_elements.phase5_ui import Phase5UI
+from implements.coc_tools.legacy.phase1_ui import Phase1UI
+from implements.coc_tools.legacy.phase2_ui import Phase2UI
+from implements.coc_tools.legacy.phase3_ui import Phase3UI
+from implements.coc_tools.legacy.phase4_ui import Phase4UI
+from implements.coc_tools.legacy.phase5_ui import Phase5UI
 
 
 class TFPcBuilder(TFDraggableWindow):

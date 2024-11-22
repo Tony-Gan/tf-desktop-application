@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QWidget, QGridLayout, QFr
 
 from implements.coc_tools.coc_data.dialogs import TextDisplayDialog
 from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
-from implements.coc_tools.pc_builder_elements.phase_ui import BasePhaseUI
+from implements.coc_tools.legacy.phase_ui import BasePhaseUI
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
 from ui.components.tf_group_box import TFGroupBox
 from ui.components.tf_separator import TFSeparator

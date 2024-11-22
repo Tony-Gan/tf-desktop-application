@@ -8,7 +8,7 @@ from implements.coc_tools.coc_data.dialogs import OccupationListDialog, MultiOpt
 from implements.coc_tools.coc_data.data_type import Skill
 from implements.coc_tools.coc_data.data_reader import load_skills_from_json
 from implements.coc_tools.pc_builder_elements.pc_builder_phase import PCBuilderPhase
-from implements.coc_tools.pc_builder_elements.phase_ui import BasePhaseUI
+from implements.coc_tools.legacy.phase_ui import BasePhaseUI
 from implements.coc_tools.pc_builder_elements.phase_status import PhaseStatus
 from ui.components.tf_base_button import TFPreviousButton, TFBaseButton
 from ui.components.tf_number_receiver import TFNumberReceiver
