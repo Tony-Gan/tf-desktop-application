@@ -1,9 +1,6 @@
 from typing import Callable, List, Dict, Optional, Any
-from PyQt6.QtWidgets import (
-    QLabel, QLineEdit, QComboBox, QCheckBox,
-    QCompleter, QLayout, QWidget
-)
-from PyQt6.QtCore import Qt, pyqtSignal, QTimer
+from PyQt6.QtWidgets import QLabel, QLineEdit, QComboBox, QCheckBox, QCompleter
+from PyQt6.QtCore import Qt, QTimer
 
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_check_with_label import TFCheckWithLabel
@@ -11,7 +8,7 @@ from ui.components.tf_date_entry import TFDateEntry
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_tooltip import TFTooltip
-from ui.components.tf_font import TEXT_FONT, LABEL_FONT
+from ui.components.tf_font import TEXT_FONT, LABEL_FONT, Merriweather
 
 DEBOUNCE_INTERVAL = 500
 
@@ -164,10 +161,10 @@ class ComponentCreatorMixin:
             fixed_width: Optional[int] = None,
             alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
             height: int = 24,
-            bold: bool = False
+            serif: bool = False
     ) -> QLabel:
         label = QLabel(text, parent=self)
-        label.setFont(LABEL_FONT if bold else TEXT_FONT)
+        label.setFont(Merriweather if serif else TEXT_FONT)
         if fixed_width:
             label.setFixedWidth(fixed_width)
         label.setAlignment(alignment)

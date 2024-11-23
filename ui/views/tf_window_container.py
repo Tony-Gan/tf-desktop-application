@@ -7,8 +7,9 @@ from core.windows.tf_draggable_window import TFDraggableWindow
 from ui.tf_application import TFApplication
 from settings.general import MAX_WIDTH, MAX_HEIGHT
 
+
 class TFWindowContainer(QWidget):
-    
+
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -36,23 +37,18 @@ class TFWindowContainer(QWidget):
         window = window_class(parent=self)
         window.closed.connect(self._remove_specific_window)
         window_size = window.metadata.window_size
-        
+
         x, y = 0, 0
-        while self._is_position_occupied(x, y, window_size):
-            x += window_size[0]
+
+        if self.windows:
+            offset = 20 * len(self.windows)
+            x += offset
+            y += offset
+
             if x + window_size[0] > self.width():
                 x = 0
-                y += window_size[1]
             if y + window_size[1] > self.height():
-                break
-        
-        if y + window_size[1] > self.height():
-            if self.windows:
-                rightmost_window = max(self.windows, key=lambda w: w.x() + w.width())
-                x = rightmost_window.x() + rightmost_window.width()
-                y = rightmost_window.y()
-            else:
-                x, y = 0, 0
+                y = 0
 
         window.move(x, y)
         self._append_window(window)
@@ -135,7 +131,7 @@ class TFWindowContainer(QWidget):
         self.focused_window = window
         if self.focused_window is not None:
             self.focused_window.focused = True
-    
+
     def sizeHint(self) -> QSize:
         return self.minimumSizeHint()
     

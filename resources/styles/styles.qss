@@ -1,13 +1,82 @@
+QLabel, QLineEdit, QTextEdit {
+    color: #FFFFFF;
+    border: none;
+}
+
 QScrollArea {
     background: transparent;
     border: none;
 }
+
 QScrollArea > QWidget {
     background: transparent;
 }
+
 QFrame[class="TFDraggableWindow"],
 QFrame#TFDraggableWindow {
     background-color: #242831;
     border-radius: 10px;
     border: none;
+}
+
+QFrame#TFDraggableWindow[focused="true"] {
+    border: 2px solid #808080;
+}
+
+QFrame#TFDraggableWindow[focused="false"] {
+    border: none;
+}
+
+QWidget#titleBar {
+    border: none;
+    background: transparent;
+}
+
+QWidget#contentContainer {
+    border: none;
+    background: transparent;
+}
+
+QFrame#TFDraggableWindow > QWidget {
+    border: none;
+}
+
+TFBaseFrame[frameLevel="0"][frameRadius="5"] {
+    background-color: #181C26;
+    border-radius: 5px;
+}
+
+TFBaseFrame[frameLevel="0"][frameRadius="10"] {
+    background-color: #181C26;
+    border-radius: 10px;
+}
+
+TFBaseFrame[frameLevel="0"][frameRadius="15"] {
+    background-color: #181C26;
+    border-radius: 15px;
+}
+
+TFBaseFrame[frameLevel="0"][frameRadius="20"] {
+    background-color: #181C26;
+    border-radius: 20px;
+}
+
+TFBaseFrame[frameLevel="1"][frameRadius="5"] {
+    background-color: #242831;
+    border-radius: 5px;
+}
+
+TFBaseFrame[frameLevel="1"][frameRadius="10"] {
+    background-color: #242831;
+    border-radius: 10px;
+}
+
+TFBaseFrame[frameLevel="1"][frameRadius="15"] {
+    background-color: #242831;
+    border-radius: 15px;
+}
+
+TFBaseFrame[frameLevel="1"][frameRadius="20"] {
+    background-color: #242831;
+    border-radius: 20px;
 }

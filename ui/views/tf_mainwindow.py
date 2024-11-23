@@ -11,7 +11,7 @@ from ui.views.tf_window_container import TFWindowContainer
 from utils.helper import resource_path
 from utils.registry.tf_tool_registry import TFToolRegistry
 
-WIDTH = 80
+WIDTH = 100
 
 
 class TFMainWindow(QMainWindow):
@@ -35,7 +35,7 @@ class TFMainWindow(QMainWindow):
             }
         """)
 
-        self.setGeometry(100, 100, 1600, 960)
+        self.setGeometry(100, 100, 1920, 1080)
 
         self.dragging = False
         self.resizing = False
@@ -299,6 +299,9 @@ class MenuFrame(TFBaseFrame):
             self.main_layout.addWidget(btn, 0, Qt.AlignmentFlag.AlignHCenter)
         
         self.main_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
+
+        layers_btn = TFAnimatedButton('layers')
+        self.main_layout.addWidget(layers_btn, 0, Qt.AlignmentFlag.AlignHCenter)
         
         exit_btn = TFAnimatedButton('exit')
         exit_btn.clicked_signal.connect(TFApplication.instance().quit)
@@ -347,7 +350,7 @@ class ExpandableIconGroup(QWidget):
         super().__init__(parent)
         self.setFixedWidth(WIDTH)
         self.layout = QVBoxLayout(self)
-        self.layout.setSpacing(10)
+        self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         
@@ -363,7 +366,7 @@ class ExpandableIconGroup(QWidget):
         self.sub_container = QWidget()
         self.sub_layout = QVBoxLayout(self.sub_container)
         self.sub_layout.setSpacing(15)
-        self.sub_layout.setContentsMargins(0, 5, 0, 5)
+        self.sub_layout.setContentsMargins(0, 0, 0, 0)
         self.sub_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         
         self.layout.addWidget(self.sub_container)

@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QPushButton
-from PyQt6.QtGui import QFont
-from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont, QColor, QPainter
+from PyQt6.QtCore import Qt, QPropertyAnimation, pyqtProperty
 
 class TFBaseButton(QPushButton):
     """
@@ -41,7 +41,7 @@ class TFBaseButton(QPushButton):
         parent=None,
         width: int = 100,
         height: int = None,
-        font_family: str = "Inconsolata SemiCondensed",
+        font_family: str = "Merriweather Light",
         font_size: int = 10,
         enabled: bool = True,
         checkable: bool = False,
@@ -66,6 +66,8 @@ class TFBaseButton(QPushButton):
             on_clicked: Callback function for click events
         """
         super().__init__(text, parent)
+
+        self.setObjectName("TFBaseButton")
         
         # Set fixed size
         self.setFixedWidth(width)
@@ -92,6 +94,98 @@ class TFBaseButton(QPushButton):
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
+        if not enabled:
+            self._bg_color = QColor("#4D4D4D")
+            self._text_color = QColor("#808080")
+        else:
+            self._bg_color = QColor("#242831")
+            self._text_color = QColor("#FFFFFF")
+        
+        self._bg_animation = QPropertyAnimation(self, b"backgroundColor", self)
+        self._bg_animation.setDuration(200)
+        
+        self._text_animation = QPropertyAnimation(self, b"textColor", self)
+        self._text_animation.setDuration(200)
+
+    @pyqtProperty(QColor)
+    def backgroundColor(self):
+        return self._bg_color
+
+    @backgroundColor.setter
+    def backgroundColor(self, color):
+        self._bg_color = color
+        self.update()
+
+    @pyqtProperty(QColor)
+    def textColor(self):
+        return self._text_color
+
+    @textColor.setter
+    def textColor(self, color):
+        self._text_color = color
+        self.update()
+
+    def enterEvent(self, event):
+        if not self.isEnabled():
+            return super().enterEvent(event)
+            
+        self._bg_animation.stop()
+        self._bg_animation.setStartValue(QColor("#242831"))
+        self._bg_animation.setEndValue(QColor("#858585"))
+        self._bg_animation.start()
+        
+        # 文字颜色动画
+        self._text_animation.stop()
+        self._text_animation.setStartValue(QColor("#FFFFFF"))
+        self._text_animation.setEndValue(QColor("#FFFFFF"))
+        self._text_animation.start()
+        
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        if not self.isEnabled():
+            return super().leaveEvent(event)
+            
+        self._bg_animation.stop()
+        self._bg_animation.setStartValue(QColor("#858585"))
+        self._bg_animation.setEndValue(QColor("#242831"))
+        self._bg_animation.start()
+        
+        self._text_animation.stop()
+        self._text_animation.setStartValue(QColor("#FFFFFF"))
+        self._text_animation.setEndValue(QColor("#FFFFFF"))
+        self._text_animation.start()
+        
+        super().leaveEvent(event)
+
+    def setEnabled(self, enabled: bool):
+        super().setEnabled(enabled)
+        if not enabled:
+            self._bg_color = QColor("#4D4D4D")
+            self._text_color = QColor("#808080")
+        else:
+            self._bg_color = QColor("#242831")
+            self._text_color = QColor("#FFFFFF")
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        painter.setBrush(self._bg_color)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRoundedRect(self.rect(), 15, 15)
+        
+        painter.setPen(self._text_color)
+        painter.setFont(self.font())
+        text_rect = self.rect()
+        painter.drawText(text_rect, Qt.AlignmentFlag.AlignCenter, self.text())
+
+    def disable_animations(self):
+        self._bg_color = QColor("#4D4D4D")
+        self._text_color = QColor("#808080")
+        self.update()
+
 class TFNextButton(TFBaseButton):
     """
     Standard "Next" button with predefined styling and behavior.
@@ -113,7 +207,7 @@ class TFNextButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Inconsolata SemiCondensed",
+        font_family: str = "Merriweather Light",
         font_size: int = 10,
         enabled:bool = False,
         on_clicked=None, 
@@ -131,6 +225,8 @@ class TFNextButton(TFBaseButton):
             tooltip=tooltip,
             on_clicked=on_clicked
         )
+
+        self.setObjectName("TFNextButton")
 
 class TFPreviousButton(TFBaseButton):
     """
@@ -153,7 +249,7 @@ class TFPreviousButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Inconsolata SemiCondensed",
+        font_family: str = "Merriweather Light",
         font_size: int = 10,
         enabled:bool = True,
         on_clicked=None, 
@@ -171,6 +267,8 @@ class TFPreviousButton(TFBaseButton):
             tooltip=tooltip,
             on_clicked=on_clicked
         )
+
+        self.setObjectName("TFPreviousButton")
 
 class TFBackButton(TFBaseButton):
     """
@@ -193,7 +291,7 @@ class TFBackButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Inconsolata SemiCondensed",
+        font_family: str = "Merriweather Light",
         font_size: int = 10,
         enabled:bool = False,
         on_clicked=None, 
@@ -211,6 +309,8 @@ class TFBackButton(TFBaseButton):
             tooltip=tooltip,
             on_clicked=on_clicked
         )
+
+        self.setObjectName("TFBackButton")
 
 class TFConfirmButton(TFBaseButton):
     """
@@ -233,7 +333,7 @@ class TFConfirmButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Inconsolata SemiCondensed",
+        font_family: str = "Merriweather Light",
         font_size: int = 10,
         enabled:bool = False,
         on_clicked=None, 
@@ -251,6 +351,8 @@ class TFConfirmButton(TFBaseButton):
             tooltip=tooltip,
             on_clicked=on_clicked
         )
+
+        self.setObjectName("TFConfirmButton")
 
 class TFResetButton(TFBaseButton):
     """
@@ -273,7 +375,7 @@ class TFResetButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Inconsolata SemiCondensed",
+        font_family: str = "Merriweather Light",
         font_size: int = 10,
         enabled:bool = True,
         on_clicked=None, 
@@ -291,6 +393,8 @@ class TFResetButton(TFBaseButton):
             tooltip=tooltip,
             on_clicked=on_clicked
         )
+
+        self.setObjectName("TFResetButton")
 
 class TFCancelButton(TFBaseButton):
     """
@@ -313,7 +417,7 @@ class TFCancelButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Inconsolata SemiCondensed",
+        font_family: str = "Merriweather Light",
         font_size: int = 10,
         enabled:bool = False,
         on_clicked=None, 
@@ -331,6 +435,8 @@ class TFCancelButton(TFBaseButton):
             tooltip=tooltip,
             on_clicked=on_clicked
         )
+
+        self.setObjectName("TFCancelButton")
 
 class TFSubmitButton(TFBaseButton):
     """
@@ -353,7 +459,7 @@ class TFSubmitButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Inconsolata SemiCondensed",
+        font_family: str = "Merriweather Light",
         font_size: int = 10,
         enabled:bool = False,
         on_clicked=None, 
@@ -371,4 +477,6 @@ class TFSubmitButton(TFBaseButton):
             tooltip=tooltip,
             on_clicked=on_clicked
         )
+
+        self.setObjectName("TFSubmitButton")
 

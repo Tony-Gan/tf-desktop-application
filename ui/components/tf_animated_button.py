@@ -5,20 +5,20 @@ from PyQt6.QtGui import QPainter, QPixmap, QCursor
 class TFAnimatedButton(QPushButton):
     clicked_signal = pyqtSignal(str)
 
-    def __init__(self, icon_name, tooltip="", parent=None):
+    def __init__(self, icon_name, tooltip="", size=24, parent=None):
         super().__init__(parent)
         self.icon_name = icon_name
-        self.setFixedSize(24, 24)
+        self.setFixedSize(size, size)
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         
         if tooltip:
             self.setToolTip(tooltip)
 
         self.normal_icon = QPixmap(f"resources/images/icons/{icon_name}.png").scaled(
-            48, 48, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+            size*2, size*2, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
         )
         self.hover_icon = QPixmap(f"resources/images/icons/{icon_name}_hover.png").scaled(
-            48, 48, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+            size*2, size*2, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
         )
         
         self.setIconSize(self.size())
