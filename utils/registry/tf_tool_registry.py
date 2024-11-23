@@ -37,7 +37,7 @@ class TFToolRegistry:
         """
         if not hasattr(tool_class, 'metadata'):
             raise ValueError(f"Tool class {tool_class.__name__} must have metadata attribute")
-        cls._tools[tool_class.__name__] = tool_class
+        cls._tools[tool_class.metadata.name] = tool_class
     
     @classmethod
     def get_tools(cls) -> Dict[str, Type]:

@@ -5,3 +5,6 @@ LABEL_FONT.setPointSize(10)
 
 TEXT_FONT = QFont("Inconsolata")
 TEXT_FONT.setPointSize(10)
+
+Merriweather = QFont("Merriweather")
+Merriweather.setPointSize(10)

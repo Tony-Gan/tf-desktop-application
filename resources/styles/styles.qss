@@ -1,77 +1,13 @@
-/* Base Window */
+QScrollArea {
+    background: transparent;
+    border: none;
+}
+QScrollArea > QWidget {
+    background: transparent;
+}
+QFrame[class="TFDraggableWindow"],
 QFrame#TFDraggableWindow {
-    background-color: white;
-    border: 1px solid #ccc;
-}
-
-/* Common Label Styles */
-QLabel {
+    background-color: #242831;
+    border-radius: 10px;
     border: none;
-    color: black;
-}
-
-/* Window Controls */
-QPushButton#close_button {
-    background-color: transparent;
-    border: none;
-    color: black;
-}
-QPushButton#close_button:hover {
-    color: #ff4c4c;
-}
-
-QPushButton#menu_button {
-    background-color: transparent;
-    border: none;
-    color: gray;
-}
-QPushButton#menu_button:hover {
-    color: darkgray;
-}
-
-/* Message Bar */
-QLabel#message_label {
-    background-color: green;
-    color: white;
-    padding: 5px;
-    border-radius: 5px;
-    text-align: center;
-}
-
-/* Common Display Elements */
-QLineEdit#display,
-QLineEdit#calculator_display,
-QLineEdit#scientific_display {
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    color: black;
-    padding: 10px;
-    border-radius: 5px;
-}
-
-QLineEdit#display {
-    font-size: 24px;
-}
-
-QLineEdit#calculator_history,
-QLineEdit#scientific_history {
-    background-color: white;
-    border: none;
-    color: gray;
-}
-
-QLabel#image_container {
-    background-color: white;
-    border: 1px solid #ccc;
-}
-
-QFrame#TFDraggableWindow[focused="true"] {
-    border: 2px solid gray;
-}
-
-/* General Widget Settings */
-QFrame#section_frame {
-    background-color: white;
-    border: 1px solid #ccc;
-    border-radius: 5px;
 }

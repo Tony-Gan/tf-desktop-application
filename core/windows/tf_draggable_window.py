@@ -6,9 +6,9 @@ from utils.registry.tf_tool_matadata import TFToolMetadata
 from ui.tf_application import TFApplication
 from ui.components.tf_settings_widget import TFCloseButton, TFMenuButton, TFIconButton
 from utils.helper import resource_path
+from ui.components.tf_font import Merriweather
 
 # Window appearance constants
-TITLE_FONT_FAMILY = "Open Sans"
 TITLE_FONT_SIZE = 11
 TITLE_X_OFFSET = 10
 TITLE_Y_OFFSET = 5
@@ -116,8 +116,7 @@ class TFDraggableWindow(QFrame):
         self._title_label = QLabel(self.metadata.window_title, self)
         self._title_label.move(TITLE_X_OFFSET, TITLE_Y_OFFSET)
         self._title_label.setFixedWidth(self.width())
-        font = QFont(TITLE_FONT_FAMILY, TITLE_FONT_SIZE)
-        self._title_label.setFont(font)
+        self._title_label.setFont(Merriweather)
 
         self._init_buttons()
 

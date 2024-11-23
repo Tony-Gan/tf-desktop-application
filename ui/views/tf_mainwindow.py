@@ -1,86 +1,425 @@
-from PyQt6.QtWidgets import QMainWindow, QScrollArea, QWidget, QVBoxLayout, QSizePolicy
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QMainWindow, QScrollArea, QSizePolicy, QHBoxLayout, QFrame, QSpacerItem, QLabel, QWidget, QVBoxLayout, QPushButton
+from PyQt6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, pyqtSignal, QSize
+from PyQt6.QtGui import QIcon, QPixmap
 
-from core.database.models import TFSystemState
-from ui.views.tf_window_container import TFWindowContainer
-from ui.views.tf_menubar import TFMenuBar
+from ui.components.tf_action_label import TFActionLabel
+from ui.components.tf_animated_button import TFAnimatedButton
+from ui.components.tf_base_frame import TFBaseFrame
+from ui.components.tf_font import Merriweather
 from ui.tf_application import TFApplication
+from ui.views.tf_window_container import TFWindowContainer
 from utils.helper import resource_path
+from utils.registry.tf_tool_registry import TFToolRegistry
+
+WIDTH = 80
+
 
 class TFMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.app = TFApplication.instance()
+        self.setWindowTitle('TF Desktop Application')
+        self.setWindowIcon(QIcon(resource_path("resources/images/icons/app.png")))
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        self.setObjectName("mainWindow")
+        self.setStyleSheet("""
+            QMainWindow#mainWindow {
+                background: transparent;
+                border: none;
+            }
+            QWidget#centralWidget {
+                background-color: #181C26;
+                border-radius: 20px;
+            }
+        """)
+
+        self.setGeometry(100, 100, 1600, 960)
+
+        self.dragging = False
+        self.resizing = False
+        self.drag_position = QPoint()
+        self.resize_edge = None
+        self.resize_border = 5
+
+        self._setup_ui()
         
-        self._create_central_widget()
-        self._create_window_container()
-        self._create_scroll_area()
-        self._setup_layout()
-        self._init_menubar()
-        self._setup_window_properties()
-        self._setup_output_panel()
-    
-    def _create_central_widget(self):
-        self.central_widget = QWidget()
-        self.main_layout = QVBoxLayout(self.central_widget)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_layout.setSpacing(0)
+    def _setup_ui(self):
+        self.central_widget = QFrame(self)
+        self.central_widget.setObjectName("centralWidget")
         self.setCentralWidget(self.central_widget)
         
-    def _create_window_container(self):
-        self.window_container = TFWindowContainer(self)
-    
-    def _create_scroll_area(self):
+        main_layout = QVBoxLayout(self.central_widget)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(0)
+        
+        titlebar = QFrame()
+        titlebar.setFixedHeight(30)
+        titlebar.setStyleSheet("background-color: transparent;")
+        titlebar_layout = QHBoxLayout(titlebar)
+        titlebar_layout.setContentsMargins(0, 0, 0, 0)
+
+        class HoverContainer(QWidget):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self.setMouseTracking(True)
+                self.buttons = []
+                
+            def enterEvent(self, event):
+                for btn in self.buttons:
+                    btn.setIconSize(QSize(10, 10))
+                super().enterEvent(event)
+                
+            def leaveEvent(self, event):
+                for btn in self.buttons:
+                    btn.setIconSize(QSize(0, 0))
+                super().leaveEvent(event)
+        
+        button_container = HoverContainer()
+        button_container.setFixedWidth(100)
+        button_container.setObjectName("windowControlContainer")
+        button_layout = QHBoxLayout(button_container)
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.setSpacing(12)
+        
+        button_size = 14
+        button_configs = [
+            {
+                "color": "#FF605C",
+                "tooltip": "Close",
+                "callback": self.close,
+                "icon": "close_button",
+                "object_name": "windowCloseButton"
+            },
+            {
+                "color": "#FFBD44",
+                "tooltip": "Minimize",
+                "callback": self.showMinimized,
+                "icon": "minimize_button",
+                "object_name": "windowMinButton"
+            },
+            {
+                "color": "#00CA4E",
+                "tooltip": "Maximize",
+                "callback": self.toggle_maximize,
+                "icon": "maximize_button",
+                "object_name": "windowMaxButton"
+            }
+        ]
+
+        for config in button_configs:
+            button = QPushButton()
+            button.setObjectName(config["object_name"])
+            button.setFixedSize(button_size, button_size)
+            button.setToolTip(config["tooltip"])
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            
+            icon = QIcon(resource_path(f"resources/images/icons/{config['icon']}.png"))
+            button.setIcon(icon)
+            button.setIconSize(QSize(0, 0))
+            
+            button.setStyleSheet(f"""
+                QPushButton#{config["object_name"]} {{
+                    background-color: {config["color"]};
+                    border-radius: {button_size//2}px;
+                    border: none;
+                }}
+            """)
+            
+            button.clicked.connect(config["callback"])
+            button_layout.addWidget(button)
+            button_container.buttons.append(button)
+        
+        titlebar_layout.addItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
+        titlebar_layout.addWidget(button_container)
+        titlebar_layout.addItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
+        
+        main_layout.addWidget(titlebar)
+        
+        content_container = QFrame()
+        content_layout = QHBoxLayout(content_container)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(0)
+        
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll_area.setMinimumSize(200, 200)
-        
-        self.scroll_area.setWidget(self.window_container)
-        self.window_container.setParent(self.scroll_area)
         self.scroll_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-    
-    def _setup_layout(self):
-        self.main_layout.addWidget(self.scroll_area)
 
-    def _init_menubar(self):
-        self.menu_bar = TFMenuBar(self, self.window_container)
-        self.setMenuBar(self.menu_bar)
+        self.window_container = TFWindowContainer(self)
+        self.scroll_area.setWidget(self.window_container)
+        
+        self.menu_frame = MenuFrame(parent=self)
+        self.menu_frame.setFixedWidth(100)
+        self.menu_frame.register_tools()
+        
+        content_layout.addWidget(self.menu_frame)
+        content_layout.addWidget(self.scroll_area)
+        
+        main_layout.addWidget(content_container)
 
-    def _setup_window_properties(self):
-        self.setWindowTitle('TF Desktop Application')
-        self.setWindowIcon(QIcon(resource_path("resources/images/icons/app.png")))
-        with self.app.database.get_session() as session:
-            system_state = session.query(TFSystemState).first()
-            if system_state is not None:
-                width = max(system_state.window_width, 600)
-                height = max(system_state.window_height, 400)
-                self.setGeometry(100, 100, width, height)
+    def toggle_maximize(self):
+        if self.isMaximized():
+            self.showNormal()
+        else:
+            self.showMaximized()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            pos = event.position().toPoint()
+            if self._is_on_edge(pos):
+                self.resizing = True
+                self.resize_edge = self._get_resize_edge(pos)
             else:
-                self.setGeometry(100, 100, 1200, 960)
+                self.dragging = True
+                self.drag_position = event.globalPosition().toPoint() - self.pos()
+            event.accept()
 
-    def _setup_output_panel(self):
-        self.app.output_panel.setParent(self)
-        self.app.output_panel.setFixedWidth(self.width())
-        self.app.output_panel.move(0, self.height() - self.app.output_panel.height())
-        self.app.output_panel.update_button_positions()
-
-    def resizeEvent(self, event):
-        self.app.output_panel.setFixedWidth(self.width())
-        self.app.output_panel.move(0, self.height() - self.app.output_panel.height())
-        self.app.output_panel.update_button_positions()
-
-    def closeEvent(self, event):
-        if hasattr(self, 'window_container'):
-            self.window_container.save_all_window_states()
-
-        with self.app.database.get_session() as session:
-            state = session.query(TFSystemState).first()
-            state.window_width = self.width()
-            state.window_height = self.height()
-            session.commit()
-            
-        self.app.removeTranslator(self.app.translator)
+    def mouseMoveEvent(self, event):
+        pos = event.position().toPoint()
+        if self.resizing and event.buttons() & Qt.MouseButton.LeftButton:
+            global_pos = event.globalPosition().toPoint()
+            if self.resize_edge:
+                self._handle_resize(global_pos)
+        elif self.dragging and event.buttons() & Qt.MouseButton.LeftButton:
+            self.move(event.globalPosition().toPoint() - self.drag_position)
+        else:
+            if self._is_on_edge(pos):
+                edge = self._get_resize_edge(pos)
+                self._update_cursor(edge)
+            else:
+                self.setCursor(Qt.CursorShape.ArrowCursor)
         event.accept()
+
+    def mouseReleaseEvent(self, event):
+        self.dragging = False
+        self.resizing = False
+        self.resize_edge = None
+        event.accept()
+
+    def _is_on_edge(self, pos):
+        x, y = pos.x(), pos.y()
+        width, height = self.width(), self.height()
+        return (x < self.resize_border or 
+                x > width - self.resize_border or 
+                y < self.resize_border or 
+                y > height - self.resize_border)
+
+    def _get_resize_edge(self, pos):
+        x, y = pos.x(), pos.y()
+        width, height = self.width(), self.height()
+        
+        if x < self.resize_border:
+            if y < self.resize_border:
+                return 'top-left'
+            elif y > height - self.resize_border:
+                return 'bottom-left'
+            return 'left'
+        elif x > width - self.resize_border:
+            if y < self.resize_border:
+                return 'top-right'
+            elif y > height - self.resize_border:
+                return 'bottom-right'
+            return 'right'
+        elif y < self.resize_border:
+            return 'top'
+        elif y > height - self.resize_border:
+            return 'bottom'
+        return None
+
+    def _update_cursor(self, edge):
+        if edge in ['left', 'right']:
+            self.setCursor(Qt.CursorShape.SizeHorCursor)
+        elif edge in ['top', 'bottom']:
+            self.setCursor(Qt.CursorShape.SizeVerCursor)
+        elif edge in ['top-left', 'bottom-right']:
+            self.setCursor(Qt.CursorShape.SizeFDiagCursor)
+        elif edge in ['top-right', 'bottom-left']:
+            self.setCursor(Qt.CursorShape.SizeBDiagCursor)
+
+    def _handle_resize(self, global_pos):
+        new_rect = self.geometry()
+        pos = self.mapToGlobal(QPoint(0, 0))
+        
+        if self.resize_edge in ['left', 'top-left', 'bottom-left']:
+            _ = pos.x() - global_pos.x()
+            new_rect.setLeft(global_pos.x())
+            if new_rect.width() < self.minimumWidth():
+                new_rect.setLeft(pos.x() + self.width() - self.minimumWidth())
+                
+        if self.resize_edge in ['right', 'top-right', 'bottom-right']:
+            new_rect.setRight(global_pos.x())
+            
+        if self.resize_edge in ['top', 'top-left', 'top-right']:
+            _ = pos.y() - global_pos.y()
+            new_rect.setTop(global_pos.y())
+            if new_rect.height() < self.minimumHeight():
+                new_rect.setTop(pos.y() + self.height() - self.minimumHeight())
+                
+        if self.resize_edge in ['bottom', 'bottom-left', 'bottom-right']:
+            new_rect.setBottom(global_pos.y())
+            
+        self.setGeometry(new_rect)
+
+
+class MenuFrame(TFBaseFrame):
+    def __init__(self, parent):
+        super().__init__(parent=parent)
+        self.parent = parent
+        self.setMinimumWidth(WIDTH)
+        self.tools = {}
+
+    def _setup_content(self):
+        self.main_layout.setSpacing(60)
+        self.main_layout.setContentsMargins(0, 30, 0, 30)
+
+        icon_container = QWidget()
+        icon_layout = QHBoxLayout(icon_container)
+        icon_layout.setContentsMargins(0, 0, 0, 0)
+        icon_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_label = QLabel()
+        icon = QPixmap("resources/images/icons/app.ico").scaled(
+            32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+        )
+        icon_label.setPixmap(icon)
+        icon_label.setFixedSize(32, 32)
+        icon_layout.addWidget(icon_label)
+        self.main_layout.addWidget(icon_container)
+        
+        self.tools_group = ExpandableIconGroup('tools', [], parent=self)
+        self.main_layout.addWidget(self.tools_group, 0, Qt.AlignmentFlag.AlignHCenter)
+        
+        self.tools_group.main_button.clicked.connect(self.toggle_tools)
+        
+        for icon in ['about', 'settings']:
+            btn = TFAnimatedButton(icon)
+            self.main_layout.addWidget(btn, 0, Qt.AlignmentFlag.AlignHCenter)
+        
+        self.main_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
+        
+        exit_btn = TFAnimatedButton('exit')
+        exit_btn.clicked_signal.connect(TFApplication.instance().quit)
+        self.main_layout.addWidget(exit_btn, 0, Qt.AlignmentFlag.AlignHCenter)
+
+    def register_tools(self):
+        registered_tools = TFToolRegistry.get_tools()
+        
+        tool_actions = []
+        for tool_class in registered_tools.values():
+            metadata = tool_class.metadata
+            self.tools[metadata.name] = tool_class
+            tool_actions.append(metadata.name)
+            
+        tool_actions.sort()
+        
+        self.tools_group.update_actions(tool_actions)
+        self.tools_group.action_triggered.connect(self.handle_tool_action)
+
+    def handle_tool_action(self, action_text):
+        if action_text in self.tools:
+            tool_class = self.tools[action_text]
+            self.parent.window_container.add_window(window_class=tool_class)
+            self.tools_group.collapse()
+
+    def _decrement_instance_count(self, tool_name):
+        if tool_name in self.tool_instances:
+            self.tool_instances[tool_name] = max(0, self.tool_instances[tool_name] - 1)
+
+    def toggle_tools(self):
+        if self.tools_group.expanded:
+            self.tools_group.collapse()
+        else:
+            self.tools_group.expand()
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if not self.tools_group.geometry().contains(event.pos()):
+            self.tools_group.collapse()
+
+
+class ExpandableIconGroup(QWidget):
+    action_triggered = pyqtSignal(str)
+
+    def __init__(self, main_icon, actions, parent=None):
+        super().__init__(parent)
+        self.setFixedWidth(WIDTH)
+        self.layout = QVBoxLayout(self)
+        self.layout.setSpacing(10)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        
+        main_button_container = QWidget()
+        main_button_layout = QHBoxLayout(main_button_container)
+        main_button_layout.setContentsMargins(0, 0, 0, 0)
+        main_button_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        
+        self.main_button = TFAnimatedButton(main_icon)
+        main_button_layout.addWidget(self.main_button)
+        self.layout.addWidget(main_button_container)
+        
+        self.sub_container = QWidget()
+        self.sub_layout = QVBoxLayout(self.sub_container)
+        self.sub_layout.setSpacing(15)
+        self.sub_layout.setContentsMargins(0, 5, 0, 5)
+        self.sub_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        
+        self.layout.addWidget(self.sub_container)
+        
+        self.action_labels = []
+        self.update_actions(actions)
+        
+        self.animation = QPropertyAnimation(self.sub_container, b"maximumHeight")
+        self.animation.setDuration(300)
+        self.animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        
+        self.expanded = False
+
+    def update_actions(self, actions):
+        for label in self.action_labels:
+            self.sub_layout.removeWidget(label)
+            label.deleteLater()
+        self.action_labels.clear()
+        
+        for action_text in actions:
+            label = TFActionLabel(action_text)
+            label.setFont(Merriweather)
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            label.clicked.connect(lambda t=action_text: self.handle_action(t))
+            self.action_labels.append(label)
+            self.sub_layout.addWidget(label)
+            label.setVisible(False)
+        
+        self.sub_container.setMaximumHeight(0)
+
+    def expand(self):
+        for label in self.action_labels:
+            label.setVisible(True)
+            
+        total_height = (self.sub_layout.spacing() * (len(self.action_labels) - 1) + 
+                       sum(label.sizeHint().height() for label in self.action_labels) +
+                       self.sub_layout.contentsMargins().top() +
+                       self.sub_layout.contentsMargins().bottom())
+        
+        self.animation.setStartValue(0)
+        self.animation.setEndValue(total_height)
+        self.animation.start()
+        self.expanded = True
+
+    def collapse(self):
+        current_height = self.sub_container.height()
+        self.animation.setStartValue(current_height)
+        self.animation.setEndValue(0)
+        self.animation.finished.connect(self.hide_labels)
+        self.animation.start()
+        self.expanded = False
+    
+    def hide_labels(self):
+        for label in self.action_labels:
+            label.setVisible(False)
+        self.animation.finished.disconnect(self.hide_labels)
+        
+    def handle_action(self, action_text):
+        self.action_triggered.emit(action_text)
