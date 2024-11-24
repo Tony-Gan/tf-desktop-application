@@ -11,9 +11,10 @@ class BasePhase(TFBaseFrame):
 
     navigate = pyqtSignal(int)
 
-    def __init__(self, p_data: Dict, parent: QStackedWidget):
+    def __init__(self, p_data: Dict, config: Dict, parent: QStackedWidget):
         self.parent = parent
         self.p_data = p_data
+        self.config = config
 
         super().__init__(radius=5, parent=parent)
         self.initialized = False
@@ -21,7 +22,7 @@ class BasePhase(TFBaseFrame):
         self.saved_state = {}
 
     def _setup_content(self) -> None:
-        self.contents_frame = ContentsFrame(self.p_data, self)
+        self.contents_frame = ContentsFrame(self.p_data, self.config, self)
         self.buttons_frame = ButtonsFrame(self)
         self.buttons_frame.setFixedHeight(40)
 
@@ -57,8 +58,9 @@ class BasePhase(TFBaseFrame):
 
 class ContentsFrame(TFBaseFrame):
 
-    def __init__(self, p_data: Dict, parent=None):
+    def __init__(self, p_data: Dict, config: Dict, parent=None):
         self.p_data = p_data
+        self.config = config
         super().__init__(level=0, radius=0, parent=parent)
 
     def _setup_content(self) -> None:

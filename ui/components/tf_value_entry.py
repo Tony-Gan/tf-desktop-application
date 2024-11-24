@@ -55,12 +55,13 @@ class TFValueEntry(QFrame):
         self.setFrameShape(QFrame.Shape.NoFrame)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(2, 0, 2, 0)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
 
         self.label = QLabel(label_text)
         self.label.setFont(LABEL_FONT)
         self.label.setFixedWidth(label_size)
+        self.label.setFixedHeight(height)
         self.label.setAlignment(label_alignment)
 
         if number_only:
@@ -85,6 +86,7 @@ class TFValueEntry(QFrame):
         else:
             self.value_field = QLineEdit()
             self.value_field.setFont(TEXT_FONT)
+            self.value_field.setFixedHeight(height)
             self.value_field.setAlignment(alignment)
             self.value_field.setText(str(value_text))
 

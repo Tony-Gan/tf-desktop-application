@@ -35,18 +35,18 @@ class TFDateEntry(QFrame):
         self.setFrameShape(QFrame.Shape.NoFrame)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(2, 0, 2, 0)
-        layout.setSpacing(2)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
         self.label = QLabel(label_text)
         self.label.setFont(LABEL_FONT)
-        self.label.setFixedHeight(height - 4)
+        self.label.setFixedHeight(height)
         if label_size:
             self.label.setFixedWidth(label_size)
 
         self.date_field = QDateEdit()
         self.date_field.setFont(TEXT_FONT)
-        self.date_field.setFixedHeight(height - 4)
+        self.date_field.setFixedHeight(height)
         self.date_field.setCalendarPopup(True)
         self.date_field.setDate(QDate.currentDate())
         self.date_field.setStyleSheet("QDateEdit { padding: 1px; }")
@@ -56,7 +56,6 @@ class TFDateEntry(QFrame):
         self.date_field.dateChanged.connect(self.value_changed.emit)
         
         layout.addWidget(self.label)
-        layout.addSpacing(-2)
         layout.addWidget(self.date_field)
         layout.addStretch()
 

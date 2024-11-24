@@ -34,6 +34,7 @@ class TFBaseFrame(QFrame, ComponentCreatorMixin):
     def _setup_ui(self, layout_type: type[QLayout]) -> None:
         self.main_layout = layout_type(self)
         self.main_layout.setContentsMargins(5, 5, 5, 5)
+        self.main_layout.setSpacing(10)
         self.setLayout(self.main_layout)
 
     def _setup_content(self) -> None:

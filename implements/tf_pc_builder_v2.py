@@ -1,11 +1,11 @@
 from typing import List
 
-from PyQt6.QtWidgets import QHBoxLayout, QLayout, QStackedWidget, QFrame, QVBoxLayout
+from PyQt6.QtWidgets import QHBoxLayout, QStackedWidget, QFrame
 
 from core.windows.tf_draggable_window import TFDraggableWindow
 from ui.components.tf_base_frame import TFBaseFrame
-from ui.tf_application import TFApplication
 from utils.registry.tf_tool_matadata import TFToolMetadata
+from implements.components.phase0 import Phase0
 from implements.components.phase1 import Phase1
 
 
@@ -22,6 +22,7 @@ class TFPcBuilderV2(TFDraggableWindow):
 
     def __init__(self, parent=None):
         self.p_data = {}
+        self.config = {}
         self.frames: List[TFBaseFrame] = []
         self.stacked_widget = None
 
@@ -59,9 +60,11 @@ class TFPcBuilderV2(TFDraggableWindow):
         pass
 
     def create_frames(self):
-        phase1 = Phase1(self.p_data, self.stacked_widget)
+        phase0 = Phase0(self.p_data, self.config, self.stacked_widget)
+        phase1 = Phase1(self.p_data, self.config, self.stacked_widget)
+        self.stacked_widget.addWidget(phase0)
         self.stacked_widget.addWidget(phase1)
-        self.frames = [phase1]
+        self.frames = [phase0]
 
 
 class ProgressFrame(TFBaseFrame):

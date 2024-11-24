@@ -1,6 +1,16 @@
 QLabel, QLineEdit, QTextEdit {
     color: #FFFFFF;
     border: none;
+    border-radius: 3px;
+}
+
+QLineEdit, QTextEdit, QDateEdit, QComboBox {
+    background-color: #4E5666
+}
+
+QComboBox {
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
 }
 
 QScrollArea {
