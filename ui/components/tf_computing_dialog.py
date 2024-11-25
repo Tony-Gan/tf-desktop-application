@@ -5,7 +5,6 @@ from PyQt6.QtCore import Qt
 from ui.components.tf_check_with_label import TFCheckWithLabel
 from ui.components.tf_date_entry import TFDateEntry
 from ui.components.tf_option_entry import TFOptionEntry
-from ui.components.tf_tooltip import TFTooltip
 from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_message_box import TFMessageBox
@@ -267,17 +266,6 @@ class TFComputingDialog(QDialog):
         check.setFixedHeight(height)
 
         return check
-    
-    def create_tooltip(
-            self,
-            tool_tip: str,
-    ) -> TFTooltip:
-        item = TFTooltip(
-            tool_tip,
-            self
-        )
-
-        return item
     
     def create_button(
         self,

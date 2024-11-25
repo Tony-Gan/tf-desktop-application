@@ -1,13 +1,14 @@
 from typing import Callable, List, Dict, Optional, Any
+
 from PyQt6.QtWidgets import QLabel, QLineEdit, QComboBox, QCheckBox, QCompleter
 from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QFont
 
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_check_with_label import TFCheckWithLabel
 from ui.components.tf_date_entry import TFDateEntry
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_value_entry import TFValueEntry
-from ui.components.tf_tooltip import TFTooltip
 from ui.components.tf_font import TEXT_FONT, LABEL_FONT, Merriweather
 
 DEBOUNCE_INTERVAL = 500
@@ -23,16 +24,48 @@ class ComponentCreatorMixin:
 
     def _register_component(self, name: str, component: Any) -> None:
         self._components[name] = component
-        if hasattr(component, 'textChanged'):
-            component.textChanged.connect(self._on_values_changed)
-        elif hasattr(component, 'currentTextChanged'):
-            component.currentTextChanged.connect(self._on_values_changed)
-        elif hasattr(component, 'stateChanged'):
-            component.stateChanged.connect(self._on_values_changed)
-        elif hasattr(component, 'value_changed'):
-            component.value_changed.connect(self._on_values_changed)
-        elif hasattr(component, 'values_changed'):
-            component.values_changed.connect(self._on_values_changed)
+        self._connect_component_signals(component)
+
+    def _connect_component_signals(self, component: Any) -> None:
+        signal_mappings = {
+            'textChanged': self._on_values_changed,
+            'currentTextChanged': self._on_values_changed,
+            'stateChanged': self._on_values_changed,
+            'value_changed': self._on_values_changed,
+            'values_changed': self._on_values_changed
+        }
+        
+        for signal_name, handler in signal_mappings.items():
+            if hasattr(component, signal_name):
+                getattr(component, signal_name).connect(handler)
+
+    def update_component_value(self, name: str, value: Any) -> None:
+        if name not in self._components:
+            return
+            
+        component = self._components[name]
+        self._set_component_value(component, value)
+
+    def update_components_from_values(self, values: dict) -> None:
+        for name, value in values.items():
+            self.update_component_value(name, value)
+
+    def _set_component_value(self, component: Any, value: Any) -> None:
+        method_mappings = {
+            'setText': str,
+            'setCurrentText': str,
+            'setChecked': bool,
+            'set_value': lambda x: x,
+            'set_values': lambda x: x
+        }
+        
+        for method_name, converter in method_mappings.items():
+            if hasattr(component, method_name):
+                try:
+                    getattr(component, method_name)(converter(value))
+                    break
+                except (ValueError, TypeError):
+                    continue
 
     def _on_values_changed(self) -> None:
         self._debounce_timer.start(DEBOUNCE_INTERVAL)
@@ -43,23 +76,33 @@ class ComponentCreatorMixin:
         if hasattr(self, 'values_changed'):
             self.values_changed.emit(values)
 
+    def get_component_value(self, name: str) -> Any:
+        if name not in self._components:
+            return None
+            
+        component = self._components[name]
+        return self._get_component_value(component)
+
+    def _get_component_value(self, component: Any) -> Any:
+        if hasattr(component, 'text'):
+            if isinstance(component, QCheckBox):
+                return component.isChecked()
+            return component.text()
+        elif hasattr(component, 'currentText'):
+            return component.currentText()
+        elif hasattr(component, 'isChecked'):
+            return component.isChecked()
+        elif hasattr(component, 'get_values'):
+            return component.get_values()
+        elif hasattr(component, 'get_value'):
+            return component.get_value()
+        return None
+    
     def get_values(self) -> Dict[str, Any]:
-        values = {}
-        for name, component in self._components.items():
-            if hasattr(component, 'text'):
-                if isinstance(component, QCheckBox):
-                    values[name] = component.isChecked()
-                else:
-                    values[name] = component.text()
-            elif hasattr(component, 'currentText'):
-                values[name] = component.currentText()
-            elif hasattr(component, 'isChecked'):
-                values[name] = component.isChecked()
-            elif hasattr(component, 'get_values'):
-                values[name] = component.get_values()
-            elif hasattr(component, 'get_value'):
-                values[name] = component.get_value()
-        return values
+        return {
+            name: self.get_component_value(name)
+            for name in self._components
+        }
 
     def create_value_entry(
             self,
@@ -68,19 +111,25 @@ class ComponentCreatorMixin:
             value_text: str = "",
             label_size: int = 80,
             value_size: int = 36,
+            label_font: QFont = LABEL_FONT,
+            value_font: QFont = TEXT_FONT,
             height: int = 24,
             number_only: bool = False,
             allow_decimal: bool = True,
             allow_negative: bool = False,
             expanding: bool = False,
             expanding_text_width: int = 300,
-            expanding_text_height: int = 100
+            expanding_text_height: int = 100,
+            show_tooltip: bool = False,
+            tooltip_text: str = ""
     ) -> TFValueEntry:
         entry = TFValueEntry(
             label_text=label_text,
             value_text=value_text,
             label_size=label_size,
             value_size=value_size,
+            label_font=label_font,
+            value_font=value_font,
             height=height,
             number_only=number_only,
             allow_decimal=allow_decimal,
@@ -88,6 +137,8 @@ class ComponentCreatorMixin:
             expanding=expanding,
             expanding_text_width=expanding_text_width,
             expanding_text_height=expanding_text_height,
+            show_tooltip=show_tooltip,
+            tooltip_text=tooltip_text,
             parent=self
         )
         self._register_component(name, entry)
@@ -101,9 +152,13 @@ class ComponentCreatorMixin:
             current_value: str = "",
             label_size: int = 80,
             value_size: int = 36,
+            label_font: QFont = LABEL_FONT,
+            value_font: QFont = TEXT_FONT,
             height: int = 24,
             extra_value_width: Optional[int] = None,
-            enable_filter: bool = False
+            enable_filter: bool = False,
+            show_tooltip: bool = False,
+            tooltip_text: str = ""
     ) -> TFOptionEntry:
         entry = TFOptionEntry(
             label_text=label_text,
@@ -111,9 +166,13 @@ class ComponentCreatorMixin:
             current_value=current_value,
             label_size=label_size,
             value_size=value_size,
+            label_font=label_font,
+            value_font=value_font,
             height=height,
             extra_value_width=extra_value_width,
             enable_filter=enable_filter,
+            show_tooltip=show_tooltip,
+            tooltip_text=tooltip_text,
             parent=self
         )
         self._register_component(name, entry)
@@ -141,15 +200,21 @@ class ComponentCreatorMixin:
             self,
             name: str,
             label_text: str,
+            label_font: QFont,
             checked: bool = False,
             height: int = 24,
-            spacing: int = 6
+            spacing: int = 6,
+            show_tooltip: bool = False,
+            tooltip_text: str = ""
     ) -> TFCheckWithLabel:
         entry = TFCheckWithLabel(
             label_text=label_text,
+            label_font=label_font,
             checked=checked,
             height=height,
             spacing=spacing,
+            show_tooltip=show_tooltip,
+            tooltip_text=tooltip_text,
             parent=self
         )
         self._register_component(name, entry)
@@ -235,12 +300,6 @@ class ComponentCreatorMixin:
         check.setFixedHeight(height)
         self._register_component(name, check)
         return check
-
-    def create_tooltip(
-            self,
-            tool_tip: str,
-    ) -> TFTooltip:
-        return TFTooltip(tool_tip, self)
 
     def create_button(
             self,

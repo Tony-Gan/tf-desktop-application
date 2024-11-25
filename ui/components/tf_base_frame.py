@@ -12,6 +12,7 @@ LEVEL_COLORS = {
 
 class TFBaseFrame(QFrame, ComponentCreatorMixin):
     values_changed = pyqtSignal(dict)
+    parent_values_updated = pyqtSignal(dict)
 
     def __init__(self, layout_type: type[QLayout] = QVBoxLayout, level: int = 0, radius: int = 5,parent=None):
         QFrame.__init__(self, parent)
@@ -23,6 +24,7 @@ class TFBaseFrame(QFrame, ComponentCreatorMixin):
         self.parent = parent
         self.level = level
         self.radius = radius
+        self._children = {}
         
         self.setProperty("frameLevel", level)
         self.setProperty("frameRadius", radius)
@@ -42,5 +44,17 @@ class TFBaseFrame(QFrame, ComponentCreatorMixin):
 
     def add_child(self, name: str, child: "TFBaseFrame") -> None:
         self._register_component(name, child)
+        self._children[name] = child
         self.layout().addWidget(child)
         
+        child.values_changed.connect(lambda values: self._handle_child_values_changed(name, values))
+        
+        self.parent_values_updated.connect(child.handle_parent_update)
+
+    def _handle_child_values_changed(self, child_name: str, child_values: dict) -> None:
+        all_values = self.get_values()
+        self.values_changed.emit(all_values)
+
+    def handle_parent_update(self, parent_values: dict) -> None:
+        self.update_components_from_values(parent_values)
+        self.parent_values_updated.emit(parent_values)

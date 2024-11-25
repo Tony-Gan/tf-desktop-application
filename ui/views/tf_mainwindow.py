@@ -35,7 +35,7 @@ class TFMainWindow(QMainWindow):
             }
         """)
 
-        self.setGeometry(100, 100, 1920, 1080)
+        self.setGeometry(100, 100, 1600, 900)
 
         self.dragging = False
         self.resizing = False

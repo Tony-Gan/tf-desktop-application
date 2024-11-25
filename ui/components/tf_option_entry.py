@@ -1,7 +1,11 @@
 from typing import Optional, List
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QFrame, QLineEdit, QCompleter, QVBoxLayout, QGraphicsOpacityEffect
+
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QFrame, QLineEdit, QCompleter, QVBoxLayout
 from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QEvent
-from ui.components.tf_font import LABEL_FONT, TEXT_FONT, Merriweather
+from PyQt6.QtGui import QFont
+
+from ui.components.tf_font import LABEL_FONT, TEXT_FONT
+from ui.components.tf_tooltip import TFTooltip
 from ui.tf_application import TFApplication
 
 class TFOptionEntry(QFrame):
@@ -14,9 +18,13 @@ class TFOptionEntry(QFrame):
             current_value: str = "",
             label_size: int = 80,
             value_size: int = 36,
+            label_font: QFont = LABEL_FONT,
+            value_font: QFont = TEXT_FONT,
             height: int = 24,
             extra_value_width: Optional[int] = None,
             enable_filter: bool = False,
+            show_tooltip: bool = False,
+            tooltip_text: str = "",
             parent: Optional[QFrame] = None
     ) -> None:
         super().__init__(parent)
@@ -25,9 +33,11 @@ class TFOptionEntry(QFrame):
         self.options = options or []
         self._setup_ui(
             label_text, current_value,
-            label_size, value_size, height, enable_filter
+            label_size, value_size, label_font, value_font,
+            height, enable_filter,
+            show_tooltip, tooltip_text
         )
-        self.dropdown = TFDropDownFrame(self.options, self)
+        self.dropdown = TFDropDownFrame(self.options, value_font, self)
         self.dropdown.option_selected.connect(self.on_option_selected)
         self.dropdown.hide()
 
@@ -39,8 +49,12 @@ class TFOptionEntry(QFrame):
             current_value: str,
             label_size: int,
             value_size: int,
+            label_font: QFont,
+            value_font: QFont,
             height: int,
-            enable_filter: bool
+            enable_filter: bool,
+            show_tooltip: bool,
+            tooltip_text: str
     ) -> None:
         self.setFixedHeight(height)
         self.setFrameShape(QFrame.Shape.NoFrame)
@@ -50,12 +64,12 @@ class TFOptionEntry(QFrame):
         layout.setSpacing(0)
 
         self.label = QLabel(label_text)
-        self.label.setFont(LABEL_FONT)
+        self.label.setFont(label_font)
         self.label.setFixedWidth(label_size)
         self.label.setFixedHeight(height)
 
         self.value_field = QLineEdit()
-        self.value_field.setFont(TEXT_FONT)
+        self.value_field.setFont(value_font)
         self.value_field.setText(current_value)
         self.value_field.setFixedHeight(height)
         self.value_field.setFixedWidth(value_size)
@@ -68,6 +82,13 @@ class TFOptionEntry(QFrame):
         layout.addWidget(self.label)
         layout.addSpacing(2)
         layout.addWidget(self.value_field)
+
+        if show_tooltip and tooltip_text:
+            icon_size = height - 4
+            self.tooltip_icon = TFTooltip(icon_size, tooltip_text)
+            layout.addSpacing(2)
+            layout.addWidget(self.tooltip_icon)
+
         layout.addStretch()
 
     def eventFilter(self, obj, event) -> bool:
@@ -139,9 +160,10 @@ class TFOptionEntry(QFrame):
 class OptionItem(QFrame):
     clicked = pyqtSignal(str)
 
-    def __init__(self, text: str, parent=None):
+    def __init__(self, text: str, font: QFont, parent=None):
         super().__init__(parent)
         self.text = text
+        self.font = font
         self.setup_ui()
 
     def setup_ui(self):
@@ -149,7 +171,7 @@ class OptionItem(QFrame):
         layout.setContentsMargins(5, 2, 5, 2)
         
         label = QLabel(self.text)
-        label.setFont(TEXT_FONT)
+        label.setFont(self.font)
         layout.addWidget(label)
         
         self.setFrameStyle(QFrame.Shape.NoFrame)
@@ -163,11 +185,13 @@ class OptionItem(QFrame):
 class TFDropDownFrame(QFrame):
     option_selected = pyqtSignal(str)
 
-    def __init__(self, options: List[str], parent=None) -> None:
+    def __init__(self, options: List[str], font: QFont, parent=None) -> None:
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Raised)
         self.setLineWidth(1)
+
+        self.font = font
         
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -177,7 +201,7 @@ class TFDropDownFrame(QFrame):
             self.add_option(option)
 
     def add_option(self, text: str):
-        item = OptionItem(text, self)
+        item = OptionItem(text, self.font, self)
         item.clicked.connect(self.option_selected)
         self.layout.addWidget(item)
 

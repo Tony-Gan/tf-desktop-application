@@ -8,6 +8,14 @@ QLineEdit, QTextEdit, QDateEdit, QComboBox {
     background-color: #4E5666
 }
 
+QLabel:disabled, QLineEdit:disabled, QTextEdit:disabled {
+    color: #5F6673;
+}
+
+QLineEdit:disabled, QTextEdit:disabled, QDateEdit:disabled, QComboBox:disabled {
+    background-color: #3A414D;
+}
+
 QComboBox {
     border-top-left-radius: 3px;
     border-bottom-left-radius: 3px;
