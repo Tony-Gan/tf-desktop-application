@@ -1,7 +1,7 @@
 from typing import Dict
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QStackedWidget, QHBoxLayout
+from PyQt6.QtWidgets import QStackedWidget, QHBoxLayout, QFrame
 
 from ui.components.tf_base_button import TFPreviousButton, TFResetButton, TFNextButton
 from ui.components.tf_base_frame import TFBaseFrame
@@ -24,7 +24,7 @@ class BasePhase(TFBaseFrame):
     def _setup_content(self) -> None:
         self.contents_frame = ContentsFrame(self.p_data, self.config, self)
         self.buttons_frame = ButtonsFrame(self)
-        self.buttons_frame.setFixedHeight(40)
+        self.buttons_frame.setFixedHeight(50)
 
         self.main_layout.addWidget(self.contents_frame)
         self.main_layout.addWidget(self.buttons_frame)
@@ -70,19 +70,36 @@ class ContentsFrame(TFBaseFrame):
 class ButtonsFrame(TFBaseFrame):
 
     def __init__(self, parent=None):
+        self.left_layout = QHBoxLayout()
+        self.right_layout = QHBoxLayout()
+        self.left_layout.setSpacing(40)
+        self.right_layout.setSpacing(40)
+        self.left_layout.setContentsMargins(0, 0, 0, 0)
+        self.right_layout.setContentsMargins(0, 0, 0, 0)
         super().__init__(layout_type=QHBoxLayout, level=0, radius=0, parent=parent)
 
     def _setup_content(self) -> None:
-        self.main_layout.setSpacing(40)
+        left_widget = QFrame()
+        left_widget.setLayout(self.left_layout)
+        self.main_layout.addWidget(left_widget)
+
+        self.main_layout.addStretch()
+
+        right_widget = QFrame()
+        right_widget.setLayout(self.right_layout)
+        self.main_layout.addWidget(right_widget)
 
         self.prev_button = TFPreviousButton(self, height=35, on_clicked=self.go_previous)
         self.reset_button = TFResetButton(self, height=35, on_clicked=self.on_reset)
         self.next_button = TFNextButton(self, height=35, on_clicked=self.go_next)
 
-        self.main_layout.addStretch()
-        self.main_layout.addWidget(self.prev_button)
-        self.main_layout.addWidget(self.reset_button)
-        self.main_layout.addWidget(self.next_button)
+        self.right_layout.addStretch()
+        self.right_layout.addWidget(self.prev_button)
+        self.right_layout.addWidget(self.reset_button)
+        self.right_layout.addWidget(self.next_button)
+
+    def add_custom_button(self, button):
+        self.left_layout.addWidget(button)
 
     def go_next(self):
         current_index = self.parent.parent.currentIndex()

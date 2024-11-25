@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import QGridLayout, QVBoxLayout
+from PyQt6.QtWidgets import QGridLayout
 
 from implements.components.base_phase import BasePhase
+from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.components.tf_font import Merriweather
 
@@ -11,7 +12,16 @@ class Phase0(BasePhase):
         super()._setup_content()
 
         self.contents_frame.main_layout.setContentsMargins(10, 10, 10, 10)
-        self.contents_frame.main_layout.setSpacing(30)
+        self.contents_frame.main_layout.setSpacing(40)
+
+        self.special_button = TFBaseButton(
+            parent=self.buttons_frame, 
+            text="Generate Token", 
+            height=35,
+            width=150,
+            on_clicked=self._on_special_button_clicked
+        )
+        self.buttons_frame.add_custom_button(self.special_button)
 
         """
         TOKEN:
@@ -62,12 +72,17 @@ class Phase0(BasePhase):
     def check_dependencies(self):
         pass
 
+    def _on_special_button_clicked(self):
+        print(123)
+
 
 class BaseEntry(TFBaseFrame):
     def __init__(self,  parent=None):
         super().__init__(radius=10, parent=parent)
 
     def _setup_content(self) -> None:
+        self.main_layout.setSpacing(20)
+
         self.mode_entry = self.create_option_entry(
             name="mode",
             label_text="Mode:",
@@ -114,6 +129,8 @@ class PointsEntry(TFBaseFrame):
         super().__init__(QGridLayout, radius=10, parent=parent)
 
     def _setup_content(self) -> None:
+        self.main_layout.setSpacing(20)
+
         self.points_available_entry = self.create_value_entry(
             name="points_available",
             label_text="Points Available:",
@@ -164,9 +181,11 @@ class PointsEntry(TFBaseFrame):
 
 class DestinyEntry(TFBaseFrame):
     def __init__(self,  parent=None):
-        super().__init__(QVBoxLayout, radius=10, parent=parent)
+        super().__init__(QGridLayout, radius=10, parent=parent)
 
     def _setup_content(self) -> None:
+        self.main_layout.setSpacing(20)
+
         self.dice_count_entry = self.create_value_entry(
             name="dice_count",
             label_text="Dice Count:",
@@ -202,9 +221,9 @@ class DestinyEntry(TFBaseFrame):
             height=24
         )
 
-        self.main_layout.addWidget(self.dice_count_entry)
-        self.main_layout.addWidget(self.allow_stats_exchange_entry)
-        self.main_layout.addWidget(self.exchange_count_entry)
+        self.main_layout.addWidget(self.dice_count_entry, 0, 0)
+        self.main_layout.addWidget(self.allow_stats_exchange_entry, 1, 0)
+        self.main_layout.addWidget(self.exchange_count_entry, 1, 1)
 
         self.exchange_count_entry.set_enable(False)
 
@@ -217,6 +236,8 @@ class GeneralEntry(TFBaseFrame):
         super().__init__(QGridLayout, radius=10, parent=parent)
 
     def _setup_content(self) -> None:
+        self.main_layout.setSpacing(20)
+
         self.occupation_skill_limit_entry = self.create_value_entry(
             name="occupation_skill_limit",
             label_text="Occupation Skill Limit:",
