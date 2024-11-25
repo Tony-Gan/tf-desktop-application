@@ -4,13 +4,14 @@ from PyQt6.QtWidgets import QHBoxLayout, QLabel, QFrame, QLineEdit
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 
+from ui.components.if_state_controll import IStateContoller
 from ui.components.tf_expanding_input import TFExpandingInput
 from ui.components.tf_font import LABEL_FONT, TEXT_FONT
 from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_tooltip import TFTooltip
 
 
-class TFValueEntry(QFrame):
+class TFValueEntry(QFrame, IStateContoller):
     value_changed = pyqtSignal(str)
 
     def __init__(
@@ -27,6 +28,7 @@ class TFValueEntry(QFrame):
             number_only: bool = False,
             allow_decimal: bool = True,
             allow_negative: bool = False,
+            max_digits: Optional[int] = None,
             expanding: bool = False,
             expanding_text_width: int = 300,
             expanding_text_height: int = 100,
@@ -34,12 +36,13 @@ class TFValueEntry(QFrame):
             tooltip_text: str = "", 
             parent: Optional[QFrame] = None
     ) -> None:
-        super().__init__(parent)
+        QFrame.__init__(self, parent)
+        IStateContoller.__init__(self)
 
         self._setup_ui(
             label_text, value_text, label_size, value_size, label_font, value_font,
             height, alignment, label_alignment, number_only, allow_decimal, allow_negative,
-            expanding, expanding_text_width, expanding_text_height,
+            max_digits, expanding, expanding_text_width, expanding_text_height,
             show_tooltip, tooltip_text
         )
 
@@ -57,6 +60,7 @@ class TFValueEntry(QFrame):
             number_only: bool,
             allow_decimal: bool,
             allow_negative: bool,
+            max_digits: Optional[int],
             expanding: bool,
             expanding_text_width: int,
             expanding_text_height: int,
@@ -83,6 +87,7 @@ class TFValueEntry(QFrame):
                 font=value_font,
                 allow_decimal=allow_decimal,
                 allow_negative=allow_negative,
+                max_digits=max_digits,
                 parent=self
             )
         elif expanding:
@@ -103,7 +108,6 @@ class TFValueEntry(QFrame):
             self.value_field.setText(str(value_text))
 
         self.value_field.setFixedWidth(value_size)
-        self.value_field.setStyleSheet("QLineEdit { padding: 1px; }")
 
         self.value_field.textChanged.connect(self.value_changed.emit)
 

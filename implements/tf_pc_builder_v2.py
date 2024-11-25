@@ -64,7 +64,7 @@ class TFPcBuilderV2(TFDraggableWindow):
         phase1 = Phase1(self.p_data, self.config, self.stacked_widget)
         self.stacked_widget.addWidget(phase0)
         self.stacked_widget.addWidget(phase1)
-        self.frames = [phase0]
+        self.frames = [phase0, phase1]
 
 
 class ProgressFrame(TFBaseFrame):

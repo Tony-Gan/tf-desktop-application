@@ -1,8 +1,9 @@
-from typing import Dict
+from typing import Dict, List, Tuple
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QStackedWidget, QHBoxLayout, QFrame
 
+from ui.components.if_state_controll import IStateContoller
 from ui.components.tf_base_button import TFPreviousButton, TFResetButton, TFNextButton
 from ui.components.tf_base_frame import TFBaseFrame
 
@@ -39,6 +40,8 @@ class BasePhase(TFBaseFrame):
 
     def on_exit(self):
         self.save_state()
+        print(self.config)
+        print(self.p_data)
 
     def reset_contents(self):
         pass
@@ -54,6 +57,18 @@ class BasePhase(TFBaseFrame):
 
     def check_dependencies(self):
         pass
+
+    def validate(self) -> List[Tuple[IStateContoller, str]]:
+        return []
+        
+    def reset_validation_state(self) -> None:
+        def reset_state(widget):
+            if isinstance(widget, IStateContoller):
+                widget.set_state(0)
+            for child in widget.findChildren(QFrame):
+                reset_state(child)
+                
+        reset_state(self.contents_frame)
 
 
 class ContentsFrame(TFBaseFrame):
@@ -91,7 +106,7 @@ class ButtonsFrame(TFBaseFrame):
 
         self.prev_button = TFPreviousButton(self, height=35, on_clicked=self.go_previous)
         self.reset_button = TFResetButton(self, height=35, on_clicked=self.on_reset)
-        self.next_button = TFNextButton(self, height=35, on_clicked=self.go_next)
+        self.next_button = TFNextButton(self, height=35, on_clicked=self.try_go_next, enabled=True)
 
         self.right_layout.addStretch()
         self.right_layout.addWidget(self.prev_button)
@@ -101,15 +116,36 @@ class ButtonsFrame(TFBaseFrame):
     def add_custom_button(self, button):
         self.left_layout.addWidget(button)
 
+    def try_go_next(self):
+        self.parent.reset_validation_state()
+        
+        invalid_items = self.parent.validate()
+        if not invalid_items:
+            self.go_next()
+        else:
+            for widget, error_msg in invalid_items:
+                widget.set_state(1)
+            
+            for _, error_msg in invalid_items:
+                print(f"- {error_msg}")
+
     def go_next(self):
         current_index = self.parent.parent.currentIndex()
         if current_index < self.parent.parent.count() - 1:
-            self.navigate.emit(current_index + 1)
+            self.parent.on_exit()
+            self.parent.parent.setCurrentIndex(current_index + 1)
+            next_phase = self.parent.parent.widget(current_index + 1)
+            next_phase.on_enter()
+            self.parent.navigate.emit(current_index + 1)
 
     def go_previous(self):
         current_index = self.parent.parent.currentIndex()
         if current_index > 0:
-            self.navigate.emit(current_index - 1)
+            self.parent.on_exit()
+            self.parent.parent.setCurrentIndex(current_index - 1)
+            prev_phase = self.parent.parent.widget(current_index - 1)
+            prev_phase.on_enter()
+            self.parent.navigate.emit(current_index - 1)
 
     def on_reset(self):
         self.parent.reset_contents()

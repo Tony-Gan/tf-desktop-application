@@ -14,7 +14,7 @@ from ui.components.tf_font import TEXT_FONT, LABEL_FONT, Merriweather
 DEBOUNCE_INTERVAL = 500
 
 
-class ComponentCreatorMixin:
+class IComponentCreator:
 
     def __init__(self):
         self._components: Dict[str, Any] = {}
@@ -117,6 +117,7 @@ class ComponentCreatorMixin:
             number_only: bool = False,
             allow_decimal: bool = True,
             allow_negative: bool = False,
+            max_digits:int = None,
             expanding: bool = False,
             expanding_text_width: int = 300,
             expanding_text_height: int = 100,
@@ -134,6 +135,7 @@ class ComponentCreatorMixin:
             number_only=number_only,
             allow_decimal=allow_decimal,
             allow_negative=allow_negative,
+            max_digits=max_digits,
             expanding=expanding,
             expanding_text_width=expanding_text_width,
             expanding_text_height=expanding_text_height,

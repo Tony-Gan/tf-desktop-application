@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QVBoxLayout, QFrame, QLayout
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QColor
 
-from ui.components.component_creator_mixin import ComponentCreatorMixin
+from ui.components.if_component_creator import IComponentCreator
 
 LEVEL_COLORS = {
     0: QColor("#181C26"),
@@ -10,13 +10,13 @@ LEVEL_COLORS = {
 }
 
 
-class TFBaseFrame(QFrame, ComponentCreatorMixin):
+class TFBaseFrame(QFrame, IComponentCreator):
     values_changed = pyqtSignal(dict)
     parent_values_updated = pyqtSignal(dict)
 
     def __init__(self, layout_type: type[QLayout] = QVBoxLayout, level: int = 0, radius: int = 5,parent=None):
         QFrame.__init__(self, parent)
-        ComponentCreatorMixin.__init__(self)
+        IComponentCreator.__init__(self)
 
         if not issubclass(layout_type, QLayout):
             raise TypeError(f"Invalid layout_type: {layout_type}. Expected a subclass of QLayout.")

@@ -4,11 +4,12 @@ from PyQt6.QtWidgets import QHBoxLayout, QLabel, QFrame, QCheckBox
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 
+from ui.components.if_state_controll import IStateContoller
 from ui.components.tf_font import TEXT_FONT
 from ui.components.tf_tooltip import TFTooltip
 
 
-class TFCheckWithLabel(QFrame):
+class TFCheckWithLabel(QFrame, IStateContoller):
     value_changed = pyqtSignal(bool)
 
     def __init__(
@@ -23,7 +24,9 @@ class TFCheckWithLabel(QFrame):
             tooltip_text: str = "",
             parent: Optional[QFrame] = None
     ) -> None:
-        super().__init__(parent)
+        QFrame.__init__(self, parent)
+        IStateContoller.__init__(self)
+
         self._setup_ui(
             label_text,
             label_font,
@@ -78,3 +81,6 @@ class TFCheckWithLabel(QFrame):
 
     def get_value(self) -> bool:
         return self.check.isChecked()
+    
+    def set_checked(self, checked) -> None:
+        self.check.setChecked(checked)
