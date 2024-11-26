@@ -15,10 +15,6 @@ from ui.components.tf_font import Merriweather
 from ui.tf_application import TFApplication
 
 
-# TODO: 神秘Bug - Destiny Mode选择属性后，回到Phase0，修改为Points Mode重新进入，会导致程序崩溃
-# TODO: Destiny Mode Reset后选项没有消失
-
-
 class Phase1(BasePhase):
 
     def _setup_content(self) -> None:
@@ -52,7 +48,6 @@ class Phase1(BasePhase):
             self.lower_frame.basic_stats_group.hide()
             if self.lower_frame.dice_result_frame:
                 self.lower_frame.dice_result_frame.show()
-                self.lower_frame.reset_mode()
         else:
             stats = self.lower_frame.basic_stats_group.stats_entries
             for entry in stats.values():
@@ -85,9 +80,8 @@ class Phase1(BasePhase):
         pass
 
     def check_dependencies(self):
-        self.lower_frame.stats_info_group.update_from_config(self.config)
-
         mode = self.config.get("mode", "Destiny")
+        self.lower_frame.stats_info_group.update_from_config(self.config)
         self.lower_frame.handle_mode_change(mode, self.config)
 
 
@@ -128,11 +122,10 @@ class LowerFrame(TFBaseFrame):
         if mode == "Points":
             if self.dice_result_frame:
                 self.dice_result_frame.hide()
-            for entry in self.basic_stats_group.stats_entries.values():
-                entry.set_value("0")
-                entry.set_enable(True)
-            self.basic_stats_group._update_derived_stats()
             self.basic_stats_group.show()
+            for entry in self.basic_stats_group.stats_entries.values():
+                entry.set_enable(True)
+                self.basic_stats_group._update_points_available()
                 
         elif mode == "Destiny":
             self.basic_stats_group.hide()
@@ -142,22 +135,11 @@ class LowerFrame(TFBaseFrame):
                 self.dice_result_frame = DiceResultFrame(dice_count, self)
                 self.dice_result_frame.values_changed.connect(self._handle_dice_result_confirmed)
                 self.layout().addWidget(self.dice_result_frame)
+                
+                if self.selected_stats_index >= 0:
+                    self.dice_result_frame.radio_group.radio_buttons[self.selected_stats_index].set_checked(True)
             else:
-                current_dice_count = len(self.dice_result_frame.rolls_data)
-                if current_dice_count != dice_count:
-                    self.dice_result_frame.update_rolls(dice_count)
                 self.dice_result_frame.show()
-
-            if self.selected_stats_index >= 0:
-                self.dice_result_frame.radio_group.radio_buttons[self.selected_stats_index].set_checked(True)
-
-    def reset_mode(self) -> None:
-        self.selected_stats_index = -1
-        if self.dice_result_frame:
-            for btn in self.dice_result_frame.radio_group.radio_buttons:
-                btn.blockSignals(True)
-                btn.set_checked(False)
-                btn.blockSignals(False)
 
     def _handle_dice_result_confirmed(self, values: dict) -> None:
         selected_stats = values.get("selected_stats", {})
@@ -686,58 +668,12 @@ class DiceResultFrame(TFBaseFrame):
             name="dice_results",
             options=options,
             label_font=Merriweather,
-            height=48,
             spacing=5
         )
         
         for btn in self.radio_group.radio_buttons:
             btn.value_changed.connect(self._on_selection_changed)
         
-        self.main_layout.addWidget(self.radio_group)
-
-    def update_rolls(self, new_dice_count: int) -> None:
-        old_rolls = self.rolls_data
-        stats = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUK']
-        if new_dice_count > len(old_rolls):
-            for _ in range(new_dice_count - len(old_rolls)):
-                roll = {}
-                for stat in stats:
-                    roll[stat] = self._roll_stat(stat)
-                old_rolls.append(roll)
-        else:
-            del old_rolls[new_dice_count:]
-            
-        self.rolls_data = old_rolls
-        
-        options = []
-        for roll in self.rolls_data:
-            base_stats = []
-            total_without_luck = 0
-            for stat, value in roll.items():
-                if stat != 'LUK':
-                    base_stats.append(f"{stat}:{value}")
-                    total_without_luck += value
-            total_with_luck = total_without_luck + roll['LUK']
-            
-            base_stats_text = " ".join(base_stats)
-            stats_text = f"{base_stats_text}\nTotals(base/with luck): {total_without_luck}/{total_with_luck}"
-            options.append(stats_text)
-
-        if hasattr(self, 'radio_group'):
-            self.radio_group.setParent(None)
-            self.radio_group.deleteLater()
-            
-        self.radio_group = self.create_radio_group(
-            name="dice_results",
-            options=options,
-            label_font=Merriweather,
-            height=48,
-            spacing=5
-        )
-        
-        for btn in self.radio_group.radio_buttons:
-            btn.value_changed.connect(self._on_selection_changed)
-            
         self.main_layout.addWidget(self.radio_group)
 
     def _on_selection_changed(self, checked: bool) -> None:
