@@ -31,7 +31,7 @@ class TFWindowContainer(QWidget):
         if current_count >= window_class.metadata.max_instances:
             message = (f"Cannot add more '{window_class.metadata.window_title}'. "
                       f"Maximum count of {window_class.metadata.max_instances} reached.")
-            self.app.show_message(message, 3000, 'green')
+            self.app.show_message(message, 5000, 'yellow')
             return
 
         window = window_class(parent=self)

@@ -1,7 +1,7 @@
 from typing import ClassVar, Dict
 
 
-class IStateContoller:
+class IStateController:
 
     STATE_STYLES: ClassVar[Dict[int, str]] = {
         0: "border: none;",

@@ -1,12 +1,11 @@
 from time import time
 from PyQt6.QtWidgets import QFrame, QLabel, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt6.QtGui import QMouseEvent, QFont
+from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
 from ui.components.tf_animated_button import TFAnimatedButton
 from utils.registry.tf_tool_matadata import TFToolMetadata
 from ui.tf_application import TFApplication
-from ui.components.tf_settings_widget import TFCloseButton, TFMenuButton, TFIconButton
-from utils.helper import resource_path
+from ui.components.tf_settings_widget import TFCloseButton, TFMenuButton
 from ui.components.tf_font import Merriweather
 
 CONTENT_PADDING_LEFT = 10

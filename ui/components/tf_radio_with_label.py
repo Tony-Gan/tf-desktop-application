@@ -1,6 +1,6 @@
 from typing import Optional
 
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QFrame, QCheckBox
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QFrame, QRadioButton
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 
@@ -9,7 +9,7 @@ from ui.components.tf_font import TEXT_FONT
 from ui.components.tf_tooltip import TFTooltip
 
 
-class TFCheckWithLabel(QFrame, IStateController):
+class TFRadioWithLabel(QFrame, IStateController):
     value_changed = pyqtSignal(bool)
 
     def __init__(
@@ -56,16 +56,16 @@ class TFCheckWithLabel(QFrame, IStateController):
         layout.setContentsMargins(2, 0, 2, 0)
         layout.setSpacing(spacing)
 
-        self.check = QCheckBox()
-        self.check.setChecked(checked)
-        self.check.stateChanged.connect(lambda state: self.value_changed.emit(bool(state)))
+        self.radio = QRadioButton()
+        self.radio.setChecked(checked)
+        self.radio.toggled.connect(self._on_toggled)
 
         self.label = QLabel(label_text)
         self.label.setFont(label_font)
         self.label.setAlignment(label_alignment)
         self.label.mousePressEvent = self._on_label_clicked
 
-        layout.addWidget(self.check)
+        layout.addWidget(self.radio)
         layout.addWidget(self.label)
 
         if show_tooltip and tooltip_text:
@@ -77,10 +77,16 @@ class TFCheckWithLabel(QFrame, IStateController):
         layout.addStretch()
 
     def _on_label_clicked(self, event) -> None:
-        self.check.setChecked(not self.check.isChecked())
+        self.radio.setChecked(True)
+
+    def _on_toggled(self, checked: bool) -> None:
+        self.value_changed.emit(checked)
 
     def get_value(self) -> bool:
-        return self.check.isChecked()
+        return self.radio.isChecked()
     
-    def set_checked(self, checked) -> None:
-        self.check.setChecked(checked)
+    def set_checked(self, checked: bool) -> None:
+        self.radio.setChecked(checked)
+        
+    def get_text(self) -> str:
+        return self.label.text()

@@ -47,6 +47,7 @@ class TFBaseButton(QPushButton):
         checkable: bool = False,
         object_name: str = None,
         tooltip: str = None,
+        border_radius: int = 15,
         on_clicked=None
     ):
         """
@@ -68,20 +69,18 @@ class TFBaseButton(QPushButton):
         super().__init__(text, parent)
 
         self.setObjectName("TFBaseButton")
-        
-        # Set fixed size
         self.setFixedWidth(width)
         if height:
             self.setFixedHeight(height)
             
-        # Set font
         font = QFont(font_family)
         font.setPointSize(font_size)
         self.setFont(font)
         
-        # Set properties
         self.setEnabled(enabled)
         self.setCheckable(checkable)
+
+        self.radius = border_radius
         
         if object_name:
             self.setObjectName(object_name)
@@ -134,7 +133,6 @@ class TFBaseButton(QPushButton):
         self._bg_animation.setEndValue(QColor("#858585"))
         self._bg_animation.start()
         
-        # 文字颜色动画
         self._text_animation.stop()
         self._text_animation.setStartValue(QColor("#FFFFFF"))
         self._text_animation.setEndValue(QColor("#FFFFFF"))
@@ -174,7 +172,7 @@ class TFBaseButton(QPushButton):
         
         painter.setBrush(self._bg_color)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawRoundedRect(self.rect(), 15, 15)
+        painter.drawRoundedRect(self.rect(), self.radius, self.radius)
         
         painter.setPen(self._text_color)
         painter.setFont(self.font())

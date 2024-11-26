@@ -59,6 +59,11 @@ QFrame#TFDraggableWindow > QWidget {
     border: none;
 }
 
+QDialog {
+    background-color: #181C26;
+    border-radius: 15px;
+}
+
 TFBaseFrame[frameLevel="0"][frameRadius="5"] {
     background-color: #181C26;
     border-radius: 5px;

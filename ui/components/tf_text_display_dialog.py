@@ -1,7 +1,7 @@
-from ui.components.tf_computing_dialog import TFComputingDialog
+from ui.components.tf_base_dialog import TFBaseDialog
 
 
-class TextDisplayDialog(TFComputingDialog):
+class TextDisplayDialog(TFBaseDialog):
     def __init__(self, title: str, content: dict, parent=None):
         self.content = content
         button_config = [

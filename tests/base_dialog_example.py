@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLa
 from PyQt6.QtCore import Qt
 
 from ui.components.tf_base_button import TFBaseButton
-from ui.components.tf_computing_dialog import TFComputingDialog
+from ui.components.tf_base_dialog import TFComputingDialog
 from utils.validator.tf_validation_rules import TFBasicRule, TFCustomRule, TFAndRule
 
 class UserInputDialog(TFComputingDialog):

@@ -1,13 +1,15 @@
 from typing import Callable, List, Dict, Optional, Any
 
-from PyQt6.QtWidgets import QLabel, QLineEdit, QComboBox, QCheckBox, QCompleter
+from PyQt6.QtWidgets import QLabel, QLineEdit, QComboBox, QCheckBox, QCompleter, QVBoxLayout
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
 
 from ui.components.tf_base_button import TFBaseButton
+from ui.components.tf_button_entry import TFButtonEntry
 from ui.components.tf_check_with_label import TFCheckWithLabel
 from ui.components.tf_date_entry import TFDateEntry
 from ui.components.tf_option_entry import TFOptionEntry
+from ui.components.tf_radio_group import TFRadioGroup
 from ui.components.tf_value_entry import TFValueEntry
 from ui.components.tf_font import TEXT_FONT, LABEL_FONT, Merriweather
 
@@ -221,6 +223,72 @@ class IComponentCreator:
         )
         self._register_component(name, entry)
         return entry
+    
+    def create_button_entry(
+            self,
+            name: str,
+            button_text: str = "Confirm",
+            entry_text: str = "",
+            entry_size: int = 100,
+            button_size: int = 100,
+            entry_font: QFont = TEXT_FONT,
+            height: int = 24,
+            placeholder_text: str = "",
+            alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+            button_enabled: bool = True,
+            button_tooltip: str = "",
+            button_callback: Optional[Callable] = None,
+            show_tooltip: bool = False,
+            tooltip_text: str = "",
+            reverse: bool = False,
+            border_radius: int = 10
+    ) -> TFButtonEntry:
+        entry = TFButtonEntry(
+            button_text=button_text,
+            entry_text=entry_text,
+            entry_size=entry_size,
+            button_size=button_size,
+            entry_font=entry_font,
+            height=height,
+            placeholder_text=placeholder_text,
+            alignment=alignment,
+            button_enabled=button_enabled,
+            button_tooltip=button_tooltip,
+            button_callback=button_callback,
+            show_tooltip=show_tooltip,
+            tooltip_text=tooltip_text,
+            reverse=reverse,
+            border_radius=border_radius,
+            parent=self
+        )
+        self._register_component(name, entry)
+        return entry
+    
+    def create_radio_group(
+            self,
+            name: str,
+            options: List[str],
+            current_value: Optional[str] = None,
+            label_font: QFont = TEXT_FONT,
+            layout_type: type = QVBoxLayout,
+            height: int = 24,
+            spacing: int = 6,
+            show_tooltip: bool = False,
+            tooltip_text: str = "",
+    ) -> TFRadioGroup:
+        radio_group = TFRadioGroup(
+            options=options,
+            current_value=current_value,
+            label_font=label_font,
+            layout_type=layout_type,
+            height=height,
+            spacing=spacing,
+            show_tooltip=show_tooltip,
+            tooltip_text=tooltip_text,
+            parent=self
+        )
+        self._register_component(name, radio_group)
+        return radio_group
 
     def create_label(
             self,
@@ -309,7 +377,6 @@ class IComponentCreator:
             text: str,
             width: int = 100,
             height: Optional[int] = None,
-            font_family: str = "Inconsolata SemiCondensed",
             font_size: int = 10,
             enabled: bool = True,
             checkable: bool = False,
@@ -322,7 +389,6 @@ class IComponentCreator:
             parent=self,
             width=width,
             height=height,
-            font_family=font_family,
             font_size=font_size,
             enabled=enabled,
             checkable=checkable,

@@ -4,14 +4,14 @@ from PyQt6.QtWidgets import QHBoxLayout, QLabel, QFrame, QLineEdit
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 
-from ui.components.if_state_controll import IStateContoller
+from ui.components.if_state_controll import IStateController
 from ui.components.tf_expanding_input import TFExpandingInput
 from ui.components.tf_font import LABEL_FONT, TEXT_FONT
 from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_tooltip import TFTooltip
 
 
-class TFValueEntry(QFrame, IStateContoller):
+class TFValueEntry(QFrame, IStateController):
     value_changed = pyqtSignal(str)
 
     def __init__(
@@ -37,7 +37,7 @@ class TFValueEntry(QFrame, IStateContoller):
             parent: Optional[QFrame] = None
     ) -> None:
         QFrame.__init__(self, parent)
-        IStateContoller.__init__(self)
+        IStateController.__init__(self)
 
         self._setup_ui(
             label_text, value_text, label_size, value_size, label_font, value_font,

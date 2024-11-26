@@ -4,12 +4,12 @@ from PyQt6.QtWidgets import QHBoxLayout, QLabel, QFrame, QLineEdit, QCompleter, 
 from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QEvent
 from PyQt6.QtGui import QFont
 
-from ui.components.if_state_controll import IStateContoller
+from ui.components.if_state_controll import IStateController
 from ui.components.tf_font import LABEL_FONT, TEXT_FONT
 from ui.components.tf_tooltip import TFTooltip
 from ui.tf_application import TFApplication
 
-class TFOptionEntry(QFrame, IStateContoller):
+class TFOptionEntry(QFrame, IStateController):
     value_changed = pyqtSignal(str)
 
     def __init__(
@@ -29,7 +29,7 @@ class TFOptionEntry(QFrame, IStateContoller):
             parent: Optional[QFrame] = None
     ) -> None:
         QFrame.__init__(self, parent)
-        IStateContoller.__init__(self)
+        IStateController.__init__(self)
 
         self.extra_value_width = extra_value_width
         self.options = options or []

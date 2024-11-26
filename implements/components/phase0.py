@@ -2,7 +2,7 @@ from typing import List, Tuple
 from PyQt6.QtWidgets import QGridLayout, QSizePolicy, QSpacerItem
 
 from implements.components.base_phase import BasePhase
-from ui.components.if_state_controll import IStateContoller
+from ui.components.if_state_controll import IStateController
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.components.tf_font import Merriweather
@@ -114,7 +114,7 @@ class Phase0(BasePhase):
     def check_dependencies(self):
         pass
 
-    def validate(self) -> List[Tuple[IStateContoller, str]]:
+    def validate(self) -> List[Tuple[IStateController, str]]:
         invalid_items = []
         base_values = self.contents_frame.get_values().get('base_entry', {})
         mode = base_values.get('mode', 'None')
@@ -127,10 +127,10 @@ class Phase0(BasePhase):
             points_values = self.contents_frame.get_values().get('points_entry', {})
             
             points = int(points_values.get('points_available', 480))
-            if points < 300 or points > 600:
+            if points < 300 or points > 680:
                 invalid_items.append(
                     (self.points_entry.points_available_entry, 
-                     "Points available must be between 300 and 600")
+                     "Points available must be between 300 and 680")
                 )
             
             upper = int(points_values.get('states_upper_limit', 80))
@@ -144,15 +144,23 @@ class Phase0(BasePhase):
                     (self.points_entry.stats_lower_limit_entry,
                      "Lower limit must be less than upper limit")
                 )
+            if upper > 90:
+                invalid_items.append(
+                    self.points_entry.stats_upper_limit_entry, "Upper limit can't exceed 90"
+                )
+            if lower < 10:
+                invalid_items.append(
+                    self.points_entry.stats_lower_limit_entry, "Lower limit cant't less than 10"
+                )
                 
         elif mode == 'Destiny':
             destiny_values = self.contents_frame.get_values().get('destiny_entry', {})
             
             dice_count = int(destiny_values.get('dice_count', '3'))
-            if dice_count < 1 or dice_count > 5:
+            if dice_count < 1 or dice_count > 7:
                 invalid_items.append(
                     (self.destiny_entry.dice_count_entry,
-                     "Dice count must be between 1 and 5")
+                     "Dice count must be between 1 and 7")
                 )
             
             if destiny_values.get('stats_exchange', False):
@@ -166,14 +174,14 @@ class Phase0(BasePhase):
         general_values = self.contents_frame.get_values().get('general_entry', {})
         
         occupation_limit = int(general_values.get('occupation_skill_limit', 80))
-        if occupation_limit < 50 or occupation_limit > 90:
+        if occupation_limit < 50 or occupation_limit > 95:
             invalid_items.append(
                 (self.general_entry.occupation_skill_limit_entry,
-                 "Occupation skill limit must be between 50 and 90")
+                 "Occupation skill limit must be between 50 and 95")
             )
             
         interest_limit = int(general_values.get('interest_skill_limit', 60))
-        if interest_limit < 40 or interest_limit > 80:
+        if interest_limit < 30 or interest_limit > 90:
             invalid_items.append(
                 (self.general_entry.interest_skill_limit_entry,
                  "Interest skill limit must be between 40 and 80")
@@ -187,9 +195,9 @@ class Phase0(BasePhase):
         if token:
             try:
                 TFApplication.clipboard().setText(token)
-                print(f"Token has been copied to clipboard: {token}")
-            except Exception as e:
-                print(f"Generated token (copy manually): {token}")
+                TFApplication.show_message(f"Token has been copied to clipboard: {token}", 5000)
+            except Exception:
+                TFApplication.show_message(f"Generated token (copy manually): {token}", 5000)
 
     def _generate_token(self, values: dict) -> str:
         base_values = values.get('base_entry', {})

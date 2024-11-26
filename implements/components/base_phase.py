@@ -3,9 +3,10 @@ from typing import Dict, List, Tuple
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QStackedWidget, QHBoxLayout, QFrame
 
-from ui.components.if_state_controll import IStateContoller
+from ui.components.if_state_controll import IStateController
 from ui.components.tf_base_button import TFPreviousButton, TFResetButton, TFNextButton
 from ui.components.tf_base_frame import TFBaseFrame
+from ui.tf_application import TFApplication
 
 
 class BasePhase(TFBaseFrame):
@@ -58,13 +59,11 @@ class BasePhase(TFBaseFrame):
     def check_dependencies(self):
         pass
 
-    def validate(self) -> List[Tuple[IStateContoller, str]]:
+    def validate(self) -> List[Tuple[IStateController, str]]:
         return []
         
     def reset_validation_state(self) -> None:
         def reset_state(widget):
-            if isinstance(widget, IStateContoller):
-                widget.set_state(0)
             for child in widget.findChildren(QFrame):
                 reset_state(child)
                 
@@ -123,11 +122,10 @@ class ButtonsFrame(TFBaseFrame):
         if not invalid_items:
             self.go_next()
         else:
-            for widget, error_msg in invalid_items:
-                widget.set_state(1)
-            
+            message = []
             for _, error_msg in invalid_items:
-                print(f"- {error_msg}")
+                message.append(error_msg)
+            TFApplication.instance().show_message("\n".join(message), 5000, "yellow")
 
     def go_next(self):
         current_index = self.parent.parent.currentIndex()
