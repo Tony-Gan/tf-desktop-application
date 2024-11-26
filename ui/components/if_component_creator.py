@@ -85,19 +85,22 @@ class IComponentCreator:
         return self._get_component_value(component)
 
     def _get_component_value(self, component: Any) -> Any:
-        if hasattr(component, 'text'):
-            if isinstance(component, QCheckBox):
+        try:
+            if hasattr(component, 'text'):
+                if isinstance(component, QCheckBox):
+                    return component.isChecked()
+                return component.text()
+            elif hasattr(component, 'currentText'):
+                return component.currentText()
+            elif hasattr(component, 'isChecked'):
                 return component.isChecked()
-            return component.text()
-        elif hasattr(component, 'currentText'):
-            return component.currentText()
-        elif hasattr(component, 'isChecked'):
-            return component.isChecked()
-        elif hasattr(component, 'get_values'):
-            return component.get_values()
-        elif hasattr(component, 'get_value'):
-            return component.get_value()
-        return None
+            elif hasattr(component, 'get_values'):
+                return component.get_values()
+            elif hasattr(component, 'get_value'):
+                return component.get_value()
+            return None
+        except RuntimeError:
+            return None
     
     def get_values(self) -> Dict[str, Any]:
         return {
