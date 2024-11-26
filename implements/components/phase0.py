@@ -10,6 +10,7 @@ from ui.tf_application import TFApplication
 
 
 class Phase0(BasePhase):
+
     def _setup_content(self) -> None:
         super()._setup_content()
 

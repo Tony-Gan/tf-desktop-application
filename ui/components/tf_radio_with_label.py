@@ -90,3 +90,6 @@ class TFRadioWithLabel(QFrame, IStateController):
         
     def get_text(self) -> str:
         return self.label.text()
+    
+    def is_checked(self) -> bool:
+        return self.radio.isChecked()

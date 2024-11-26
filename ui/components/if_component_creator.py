@@ -11,7 +11,7 @@ from ui.components.tf_date_entry import TFDateEntry
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_radio_group import TFRadioGroup
 from ui.components.tf_value_entry import TFValueEntry
-from ui.components.tf_font import TEXT_FONT, LABEL_FONT, Merriweather
+from ui.components.tf_font import TEXT_FONT, Merriweather
 
 DEBOUNCE_INTERVAL = 500
 
@@ -74,7 +74,6 @@ class IComponentCreator:
 
     def _emit_values_changed(self) -> None:
         values = self.get_values()
-        print(values)
         if hasattr(self, 'values_changed'):
             self.values_changed.emit(values)
 
@@ -113,8 +112,9 @@ class IComponentCreator:
             value_text: str = "",
             label_size: int = 80,
             value_size: int = 36,
-            label_font: QFont = LABEL_FONT,
+            label_font: QFont = Merriweather,
             value_font: QFont = TEXT_FONT,
+            enable: bool = True,
             height: int = 24,
             number_only: bool = False,
             allow_decimal: bool = True,
@@ -133,6 +133,7 @@ class IComponentCreator:
             value_size=value_size,
             label_font=label_font,
             value_font=value_font,
+            enable=enable,
             height=height,
             number_only=number_only,
             allow_decimal=allow_decimal,
@@ -156,7 +157,7 @@ class IComponentCreator:
             current_value: str = "",
             label_size: int = 80,
             value_size: int = 36,
-            label_font: QFont = LABEL_FONT,
+            label_font: QFont = Merriweather,
             value_font: QFont = TEXT_FONT,
             height: int = 24,
             extra_value_width: Optional[int] = None,
@@ -204,7 +205,7 @@ class IComponentCreator:
             self,
             name: str,
             label_text: str,
-            label_font: QFont,
+            label_font: QFont = Merriweather,
             checked: bool = False,
             height: int = 24,
             spacing: int = 6,
@@ -227,6 +228,10 @@ class IComponentCreator:
     def create_button_entry(
             self,
             name: str,
+            label_text: str = "",
+            label_font: QFont = Merriweather,
+            label_size: int = 100,
+            label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
             button_text: str = "Confirm",
             entry_text: str = "",
             entry_size: int = 100,
@@ -237,13 +242,17 @@ class IComponentCreator:
             alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
             button_enabled: bool = True,
             button_tooltip: str = "",
+            button_space: int = 10,
             button_callback: Optional[Callable] = None,
             show_tooltip: bool = False,
             tooltip_text: str = "",
-            reverse: bool = False,
             border_radius: int = 10
     ) -> TFButtonEntry:
         entry = TFButtonEntry(
+            label_text=label_text,
+            label_font=label_font,
+            label_size=label_size,
+            label_alignment=label_alignment,
             button_text=button_text,
             entry_text=entry_text,
             entry_size=entry_size,
@@ -254,10 +263,10 @@ class IComponentCreator:
             alignment=alignment,
             button_enabled=button_enabled,
             button_tooltip=button_tooltip,
+            button_space=button_space,
             button_callback=button_callback,
             show_tooltip=show_tooltip,
             tooltip_text=tooltip_text,
-            reverse=reverse,
             border_radius=border_radius,
             parent=self
         )
@@ -269,7 +278,7 @@ class IComponentCreator:
             name: str,
             options: List[str],
             current_value: Optional[str] = None,
-            label_font: QFont = TEXT_FONT,
+            label_font: QFont = Merriweather,
             layout_type: type = QVBoxLayout,
             height: int = 24,
             spacing: int = 6,
@@ -316,7 +325,7 @@ class IComponentCreator:
     ) -> QLineEdit:
         edit = QLineEdit(self)
         edit.setText(text)
-        edit.setFont(TEXT_FONT)
+        edit.setFont(Merriweather)
         if width:
             edit.setFixedWidth(width)
         edit.setFixedHeight(height)
@@ -336,7 +345,7 @@ class IComponentCreator:
     ) -> QComboBox:
         combo = QComboBox(self)
         combo.addItems(items)
-        combo.setFont(TEXT_FONT)
+        combo.setFont(Merriweather)
         if width:
             combo.setFixedWidth(width)
         combo.setFixedHeight(height)
@@ -363,7 +372,7 @@ class IComponentCreator:
             height: int = 24
     ) -> QCheckBox:
         check = QCheckBox(text, self)
-        check.setFont(TEXT_FONT)
+        check.setFont(Merriweather)
         check.setChecked(checked)
         if width:
             check.setFixedWidth(width)
@@ -381,7 +390,8 @@ class IComponentCreator:
             enabled: bool = True,
             checkable: bool = False,
             object_name: Optional[str] = None,
-            tooltip: Optional[str] = None,
+            tooltip: str = "",
+            border_radius: int = 5,
             on_clicked: Optional[Callable] = None
     ) -> TFBaseButton:
         button = TFBaseButton(
@@ -394,6 +404,7 @@ class IComponentCreator:
             checkable=checkable,
             object_name=object_name,
             tooltip=tooltip,
+            border_radius=border_radius,
             on_clicked=on_clicked
         )
         self._register_component(name, button)

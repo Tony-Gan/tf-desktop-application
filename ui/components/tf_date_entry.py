@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QDateEdit
 from PyQt6.QtCore import QDate, pyqtSignal
 from typing import Optional
 
-from ui.components.tf_font import LABEL_FONT, TEXT_FONT
+from ui.components.tf_font import Merriweather
 
 
 class TFDateEntry(QFrame):
@@ -39,13 +39,13 @@ class TFDateEntry(QFrame):
         layout.setSpacing(0)
 
         self.label = QLabel(label_text)
-        self.label.setFont(LABEL_FONT)
+        self.label.setFont(Merriweather)
         self.label.setFixedHeight(height)
         if label_size:
             self.label.setFixedWidth(label_size)
 
         self.date_field = QDateEdit()
-        self.date_field.setFont(TEXT_FONT)
+        self.date_field.setFont(Merriweather)
         self.date_field.setFixedHeight(height)
         self.date_field.setCalendarPopup(True)
         self.date_field.setDate(QDate.currentDate())

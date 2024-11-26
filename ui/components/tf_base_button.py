@@ -35,6 +35,24 @@ class TFBaseButton(QPushButton):
         consistent appearance and behavior. The class automatically sets strong
         focus policy for proper keyboard navigation.
     """
+    LEVEL_COLORS = {
+        0: {
+            'idle_bg': QColor("#242831"),
+            'hover_bg': QColor("#858585"),
+            'disabled_bg': QColor("#4D4D4D"),
+            'idle_text': QColor("#FFFFFF"),
+            'hover_text': QColor("#FFFFFF"),
+            'disabled_text': QColor("#808080")
+        },
+        1: {
+            'idle_bg': QColor("#2C3340"),
+            'hover_bg': QColor("#959595"), 
+            'disabled_bg': QColor("#575757"),
+            'idle_text': QColor("#FFFFFF"),
+            'hover_text': QColor("#FFFFFF"),
+            'disabled_text': QColor("#808080")
+        }
+    }
     def __init__(
         self,
         text: str,
@@ -48,6 +66,7 @@ class TFBaseButton(QPushButton):
         object_name: str = None,
         tooltip: str = None,
         border_radius: int = 15,
+        level: int = 1,
         on_clicked=None
     ):
         """
@@ -68,6 +87,7 @@ class TFBaseButton(QPushButton):
         """
         super().__init__(text, parent)
 
+        self.level = level
         self.setObjectName("TFBaseButton")
         self.setFixedWidth(width)
         if height:
@@ -93,12 +113,13 @@ class TFBaseButton(QPushButton):
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
+        colors = self.LEVEL_COLORS.get(level, self.LEVEL_COLORS[0])
         if not enabled:
-            self._bg_color = QColor("#4D4D4D")
-            self._text_color = QColor("#808080")
+            self._bg_color = colors['disabled_bg']
+            self._text_color = colors['disabled_text']
         else:
-            self._bg_color = QColor("#242831")
-            self._text_color = QColor("#FFFFFF")
+            self._bg_color = colors['idle_bg']
+            self._text_color = colors['idle_text']
         
         self._bg_animation = QPropertyAnimation(self, b"backgroundColor", self)
         self._bg_animation.setDuration(200)
@@ -128,14 +149,16 @@ class TFBaseButton(QPushButton):
         if not self.isEnabled():
             return super().enterEvent(event)
             
+        colors = self.LEVEL_COLORS.get(self.level, self.LEVEL_COLORS[0])
+        
         self._bg_animation.stop()
-        self._bg_animation.setStartValue(QColor("#242831"))
-        self._bg_animation.setEndValue(QColor("#858585"))
+        self._bg_animation.setStartValue(colors['idle_bg'])
+        self._bg_animation.setEndValue(colors['hover_bg'])
         self._bg_animation.start()
         
         self._text_animation.stop()
-        self._text_animation.setStartValue(QColor("#FFFFFF"))
-        self._text_animation.setEndValue(QColor("#FFFFFF"))
+        self._text_animation.setStartValue(colors['idle_text'])
+        self._text_animation.setEndValue(colors['hover_text'])
         self._text_animation.start()
         
         super().enterEvent(event)
@@ -144,26 +167,29 @@ class TFBaseButton(QPushButton):
         if not self.isEnabled():
             return super().leaveEvent(event)
             
+        colors = self.LEVEL_COLORS.get(self.level, self.LEVEL_COLORS[0])
+        
         self._bg_animation.stop()
-        self._bg_animation.setStartValue(QColor("#858585"))
-        self._bg_animation.setEndValue(QColor("#242831"))
+        self._bg_animation.setStartValue(colors['hover_bg'])
+        self._bg_animation.setEndValue(colors['idle_bg'])
         self._bg_animation.start()
         
         self._text_animation.stop()
-        self._text_animation.setStartValue(QColor("#FFFFFF"))
-        self._text_animation.setEndValue(QColor("#FFFFFF"))
+        self._text_animation.setStartValue(colors['hover_text'])
+        self._text_animation.setEndValue(colors['idle_text'])
         self._text_animation.start()
         
         super().leaveEvent(event)
 
     def setEnabled(self, enabled: bool):
         super().setEnabled(enabled)
+        colors = self.LEVEL_COLORS.get(self.level, self.LEVEL_COLORS[0])
         if not enabled:
-            self._bg_color = QColor("#4D4D4D")
-            self._text_color = QColor("#808080")
+            self._bg_color = colors['disabled_bg']
+            self._text_color = colors['disabled_text']
         else:
-            self._bg_color = QColor("#242831")
-            self._text_color = QColor("#FFFFFF")
+            self._bg_color = colors['idle_bg']
+            self._text_color = colors['idle_text']
         self.update()
 
     def paintEvent(self, event):

@@ -22,6 +22,7 @@ class TFValueEntry(QFrame, IStateController):
             value_size: int = 36,
             label_font: QFont = LABEL_FONT,
             value_font: QFont = TEXT_FONT,
+            enable: bool = True,
             height: int = 24,
             alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
             label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
@@ -40,7 +41,7 @@ class TFValueEntry(QFrame, IStateController):
         IStateController.__init__(self)
 
         self._setup_ui(
-            label_text, value_text, label_size, value_size, label_font, value_font,
+            label_text, value_text, label_size, value_size, label_font, value_font, enable,
             height, alignment, label_alignment, number_only, allow_decimal, allow_negative,
             max_digits, expanding, expanding_text_width, expanding_text_height,
             show_tooltip, tooltip_text
@@ -54,6 +55,7 @@ class TFValueEntry(QFrame, IStateController):
             value_size: int,
             label_font: QFont,
             value_font: QFont,
+            enable: bool,
             height: int,
             alignment: Qt.AlignmentFlag,
             label_alignment: Qt.AlignmentFlag,
@@ -121,6 +123,8 @@ class TFValueEntry(QFrame, IStateController):
             layout.addWidget(self.tooltip_icon)
             layout.addSpacing(2)
         layout.addStretch()
+
+        self.value_field.setEnabled(enable)
 
     def get_value(self) -> str:
         if isinstance(self.value_field, TFExpandingInput):
