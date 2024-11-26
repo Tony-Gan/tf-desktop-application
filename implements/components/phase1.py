@@ -43,17 +43,22 @@ class Phase1(BasePhase):
         char_info.residence_entry.set_value("")
         char_info.birthpalce_entry.set_value("")
         char_info.language_own_entry.set_text("")
-        
-        if self.config.get("mode") == "Destiny":
-            self.lower_frame.basic_stats_group.hide()
+
+        mode = self.config.get("mode")
+        if mode == "Destiny":
+            if self.lower_frame.basic_stats_group:
+                self.lower_frame.basic_stats_group.hide()
             if self.lower_frame.dice_result_frame:
                 self.lower_frame.dice_result_frame.show()
-        else:
-            stats = self.lower_frame.basic_stats_group.stats_entries
-            for entry in stats.values():
-                entry.set_value("0")
-                
-            self.lower_frame.basic_stats_group._update_derived_stats()
+        elif mode == "Points":
+            if self.lower_frame.dice_result_frame:
+                self.lower_frame.dice_result_frame.hide()
+            if self.lower_frame.basic_stats_group:
+                self.lower_frame.basic_stats_group.show()
+                stats = self.lower_frame.basic_stats_group.stats_entries
+                for entry in stats.values():
+                    entry.set_value("0")
+                self.lower_frame.basic_stats_group._update_derived_stats()
 
     def initialize(self):
         self.check_dependencies()
@@ -125,21 +130,17 @@ class LowerFrame(TFBaseFrame):
             self.basic_stats_group.show()
             for entry in self.basic_stats_group.stats_entries.values():
                 entry.set_enable(True)
-                self.basic_stats_group._update_points_available()
-                
+                entry.set_value("0")
+
         elif mode == "Destiny":
             self.basic_stats_group.hide()
-            
-            dice_count = int(config.get("destiny", {}).get("dice_count", 3))
-            if not self.dice_result_frame:
+            if self.dice_result_frame:
+                self.dice_result_frame.show()
+            else:
+                dice_count = int(config.get("destiny", {}).get("dice_count", 3))
                 self.dice_result_frame = DiceResultFrame(dice_count, self)
                 self.dice_result_frame.values_changed.connect(self._handle_dice_result_confirmed)
                 self.layout().addWidget(self.dice_result_frame)
-                
-                if self.selected_stats_index >= 0:
-                    self.dice_result_frame.radio_group.radio_buttons[self.selected_stats_index].set_checked(True)
-            else:
-                self.dice_result_frame.show()
 
     def _handle_dice_result_confirmed(self, values: dict) -> None:
         selected_stats = values.get("selected_stats", {})
