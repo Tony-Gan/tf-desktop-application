@@ -70,6 +70,40 @@ class BasePhase(TFBaseFrame):
         reset_state(self.contents_frame)
 
 
+    def try_go_next(self):
+        self.reset_validation_state()
+        
+        invalid_items = self.validate()
+        if not invalid_items:
+            self.go_next()
+        else:
+            message = []
+            for _, error_msg in invalid_items:
+                message.append(error_msg)
+            TFApplication.instance().show_message("\n".join(message), 5000, "yellow")
+
+    def go_next(self):
+        current_index = self.parent.currentIndex()
+        if current_index < self.parent.count() - 1:
+            self.on_exit()
+            self.parent.setCurrentIndex(current_index + 1)
+            next_phase = self.parent.widget(current_index + 1)
+            next_phase.on_enter()
+            self.navigate.emit(current_index + 1)
+
+    def go_previous(self):
+        current_index = self.parent.currentIndex()
+        if current_index > 0:
+            self.on_exit()
+            self.parent.setCurrentIndex(current_index - 1)
+            prev_phase = self.parent.widget(current_index - 1)
+            prev_phase.on_enter()
+            self.navigate.emit(current_index - 1)
+
+    def on_reset(self):
+        self.reset_contents()
+
+
 class ContentsFrame(TFBaseFrame):
 
     def __init__(self, p_data: Dict, config: Dict, parent=None):
@@ -103,9 +137,9 @@ class ButtonsFrame(TFBaseFrame):
         right_widget.setLayout(self.right_layout)
         self.main_layout.addWidget(right_widget)
 
-        self.prev_button = TFPreviousButton(self, height=35, on_clicked=self.go_previous)
-        self.reset_button = TFResetButton(self, height=35, on_clicked=self.on_reset)
-        self.next_button = TFNextButton(self, height=35, on_clicked=self.try_go_next, enabled=True)
+        self.prev_button = TFPreviousButton(self, height=35, on_clicked=self.parent.go_previous)
+        self.reset_button = TFResetButton(self, height=35, on_clicked=self.parent.on_reset)
+        self.next_button = TFNextButton(self, height=35, on_clicked=self.parent.try_go_next, enabled=True)
 
         self.right_layout.addStretch()
         self.right_layout.addWidget(self.prev_button)
@@ -114,36 +148,3 @@ class ButtonsFrame(TFBaseFrame):
 
     def add_custom_button(self, button):
         self.left_layout.addWidget(button)
-
-    def try_go_next(self):
-        self.parent.reset_validation_state()
-        
-        invalid_items = self.parent.validate()
-        if not invalid_items:
-            self.go_next()
-        else:
-            message = []
-            for _, error_msg in invalid_items:
-                message.append(error_msg)
-            TFApplication.instance().show_message("\n".join(message), 5000, "yellow")
-
-    def go_next(self):
-        current_index = self.parent.parent.currentIndex()
-        if current_index < self.parent.parent.count() - 1:
-            self.parent.on_exit()
-            self.parent.parent.setCurrentIndex(current_index + 1)
-            next_phase = self.parent.parent.widget(current_index + 1)
-            next_phase.on_enter()
-            self.parent.navigate.emit(current_index + 1)
-
-    def go_previous(self):
-        current_index = self.parent.parent.currentIndex()
-        if current_index > 0:
-            self.parent.on_exit()
-            self.parent.parent.setCurrentIndex(current_index - 1)
-            prev_phase = self.parent.parent.widget(current_index - 1)
-            prev_phase.on_enter()
-            self.parent.navigate.emit(current_index - 1)
-
-    def on_reset(self):
-        self.parent.reset_contents()

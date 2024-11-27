@@ -1,3 +1,4 @@
+import math
 import os
 from pathlib import Path
 import random
@@ -6,7 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QFileDialog, QVBoxLayout
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QPainter, QPen, QFont, QColor
 
 from implements.components.base_phase import BasePhase
 from ui.components.tf_base_dialog import TFBaseDialog
@@ -19,6 +20,8 @@ class Phase1(BasePhase):
 
     def _setup_content(self) -> None:
         super()._setup_content()
+
+        self.buttons_frame.prev_button.hide()
 
         self.upper_frame = UpperFrame(self)
         self.lower_frame = LowerFrame(self)
@@ -117,11 +120,13 @@ class LowerFrame(TFBaseFrame):
     def _setup_content(self) -> None:
         self.stats_info_group = StatsInformationGroup(self)
         self.basic_stats_group = BasicStatsGroup(self)
+        self.radar_graph = RadarGraph(self)
 
         self.basic_stats_group.hide()
 
         self.add_child("stats_info_entry", self.stats_info_group)
         self.add_child("basic_stats_entry", self.basic_stats_group)
+        self.main_layout.addWidget(self.radar_graph)
 
     def handle_mode_change(self, mode: str, config: dict) -> None:
         if mode == "Points":
@@ -134,10 +139,12 @@ class LowerFrame(TFBaseFrame):
 
         elif mode == "Destiny":
             self.basic_stats_group.hide()
+            dice_count = int(config.get("destiny", {}).get("dice_count", 3))
+            
             if self.dice_result_frame:
+                self.dice_result_frame.update_dice_count(dice_count)
                 self.dice_result_frame.show()
             else:
-                dice_count = int(config.get("destiny", {}).get("dice_count", 3))
                 self.dice_result_frame = DiceResultFrame(dice_count, self)
                 self.dice_result_frame.values_changed.connect(self._handle_dice_result_confirmed)
                 self.layout().addWidget(self.dice_result_frame)
@@ -519,6 +526,7 @@ class BasicStatsGroup(TFBaseFrame):
             )
             entry.value_changed.connect(self._update_derived_stats)
             entry.value_changed.connect(self._update_points_available)
+            entry.value_changed.connect(self._update_radar_stats)
             self.stats_entries[stat] = entry
             self.main_layout.addWidget(entry, row, col)
 
@@ -640,6 +648,14 @@ class BasicStatsGroup(TFBaseFrame):
         points_entry = self.parent.stats_info_group.entries.get('points_available')
         points_entry.set_value(str(points_remaining))
 
+    def _update_radar_stats(self) -> None:
+        stats = {}
+        for stat, entry in self.stats_entries.items():
+            value = entry.get_value()
+            stats[stat.upper()] = float(value) if value else 0
+
+        self.parent.radar_graph.update_stats(stats)
+
 
 class DiceResultFrame(TFBaseFrame):
     
@@ -669,6 +685,7 @@ class DiceResultFrame(TFBaseFrame):
             name="dice_results",
             options=options,
             label_font=Merriweather,
+            height=48,
             spacing=5
         )
         
@@ -676,6 +693,64 @@ class DiceResultFrame(TFBaseFrame):
             btn.value_changed.connect(self._on_selection_changed)
         
         self.main_layout.addWidget(self.radio_group)
+
+    def update_dice_count(self, new_count: int) -> None:
+        old_count = len(self.rolls_data)
+        if new_count <= old_count:
+            self.rolls_data = self.rolls_data[:new_count]
+        else:
+            additional_count = new_count - old_count
+            self.rolls_data.extend(self._generate_additional_rolls(additional_count))
+            
+        options = []
+        for roll in self.rolls_data:
+            base_stats = []
+            total_without_luck = 0
+            for stat, value in roll.items():
+                if stat != 'LUK':
+                    base_stats.append(f"{stat}:{value}")
+                    total_without_luck += value
+            total_with_luck = total_without_luck + roll['LUK']
+            
+            base_stats_text = " ".join(base_stats)
+            stats_text = f"{base_stats_text}\nTotals(base/with luck): {total_without_luck}/{total_with_luck}"
+            options.append(stats_text)
+            
+        old_selection = next(
+            (i for i, btn in enumerate(self.radio_group.radio_buttons) if btn.is_checked()),
+            -1
+        )
+        
+        self.radio_group.setParent(None)
+        self.radio_group.deleteLater()
+        
+        self.radio_group = self.create_radio_group(
+            name="dice_results",
+            options=options,
+            label_font=Merriweather,
+            height=48,
+            spacing=5
+        )
+        
+        for btn in self.radio_group.radio_buttons:
+            btn.value_changed.connect(self._on_selection_changed)
+            
+        if old_selection >= 0 and old_selection < len(options):
+            self.radio_group.radio_buttons[old_selection].set_checked(True)
+            
+        self.main_layout.addWidget(self.radio_group)
+        
+    def _generate_additional_rolls(self, count: int) -> List[Dict[str, int]]:
+        stats = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUK']
+        rolls = []
+        
+        for _ in range(count):
+            roll = {}
+            for stat in stats:
+                roll[stat] = self._roll_stat(stat)
+            rolls.append(roll)
+            
+        return rolls
 
     def _on_selection_changed(self, checked: bool) -> None:
         if checked:
@@ -763,3 +838,143 @@ class LanguageSelectionDialog(TFBaseDialog):
 
     def get_validated_data(self) -> Optional[str]:
         return self.language_group.get_value()
+    
+
+class RadarGraph(TFBaseFrame):
+    def __init__(self, parent=None):
+        super().__init__(level=1, radius=10, parent=parent)
+        self.stats = {}
+        self.stats_order = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUK']
+        
+        self.grid_color = QColor("#3A414D")
+        self.stat_color = QColor("#4E5666")
+        self.text_color = QColor("#FFFFFF")
+        
+    def _setup_content(self) -> None:
+        self.setFixedSize(300, 300)
+        
+    def update_stats(self, stats: dict) -> None:
+        self.stats = stats
+        self.update()
+        
+    def paintEvent(self, event):
+        if not self.stats:
+            return
+            
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        width = self.width()
+        height = self.height()
+        center_x = width / 2
+        center_y = height / 2
+        radius = min(width, height) / 2 - 40
+        
+        self._draw_grid(painter, center_x, center_y, radius)
+        
+        self._draw_stats(painter, center_x, center_y, radius)
+        
+        self._draw_labels(painter, center_x, center_y, radius)
+        
+    def _draw_grid(self, painter: QPainter, center_x: float, center_y: float, radius: float) -> None:
+        grid_pen = QPen(self.grid_color)
+        grid_pen.setWidth(1)
+        
+        for i in range(5):
+            current_radius = radius * (i + 1) / 5
+            points = []
+            for j in range(9):
+                angle = j * 2 * math.pi / 9 - math.pi / 2
+                x = center_x + current_radius * math.cos(angle)
+                y = center_y + current_radius * math.sin(angle)
+                points.append((x, y))
+            
+            painter.setPen(grid_pen)
+            
+            for j in range(9):
+                painter.drawLine(
+                    int(points[j][0]), 
+                    int(points[j][1]), 
+                    int(points[(j + 1) % 9][0]), 
+                    int(points[(j + 1) % 9][1])
+                )
+            
+            if i < 4:
+                value = (i + 1) * 20
+                text_pen = QPen(self.text_color)
+                painter.setPen(text_pen)
+                painter.drawText(
+                    int(center_x - 10), 
+                    int(center_y - current_radius - 5),
+                    str(value)
+                )
+                
+        painter.setPen(grid_pen)
+        for i in range(9):
+            angle = i * 2 * math.pi / 9 - math.pi / 2
+            end_x = center_x + radius * math.cos(angle)
+            end_y = center_y + radius * math.sin(angle)
+            painter.drawLine(
+                int(center_x),
+                int(center_y),
+                int(end_x),
+                int(end_y)
+            )
+            
+    def _draw_stats(self, painter: QPainter, center_x: float, center_y: float, radius: float) -> None:
+        stat_pen = QPen(self.stat_color)
+        stat_pen.setWidth(2)
+        painter.setPen(stat_pen)
+        
+        points = []
+        for i, stat in enumerate(self.stats_order):
+            value = float(self.stats.get(stat, 0))
+            value = min(value, 100)
+            current_radius = radius * value / 100
+            angle = i * 2 * math.pi / 9 - math.pi / 2
+            x = center_x + current_radius * math.cos(angle)
+            y = center_y + current_radius * math.sin(angle)
+            points.append((x, y))
+        
+        for i in range(len(points)):
+            painter.drawLine(
+                int(points[i][0]),
+                int(points[i][1]),
+                int(points[(i + 1) % 9][0]),
+                int(points[(i + 1) % 9][1])
+            )
+            
+    def _draw_labels(self, painter: QPainter, center_x: float, center_y: float, radius: float) -> None:
+        text_pen = QPen(self.text_color)
+        painter.setPen(text_pen)
+        
+        font = Merriweather
+        font.setPointSize(9)
+        painter.setFont(font)
+        
+        for i, stat in enumerate(self.stats_order):
+            value = float(self.stats.get(stat, 0))
+            value = min(value, 100)
+            angle = i * 2 * math.pi / 9 - math.pi / 2
+            
+            label_radius = radius + 20
+            label_x = center_x + label_radius * math.cos(angle)
+            label_y = center_y + label_radius * math.sin(angle)
+            
+            text = f"{stat}:{int(value)}"
+            painter.drawText(
+                int(label_x - 20), 
+                int(label_y + 5), 
+                text
+            )
+            
+    def get_values(self) -> dict:
+        return self.stats
+        
+    def update_component_value(self, name: str, value: str) -> None:
+        if name in self.stats_order:
+            try:
+                self.stats[name] = float(value)
+                self.update()
+            except (ValueError, TypeError):
+                self.stats[name] = 0

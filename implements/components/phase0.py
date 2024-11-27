@@ -14,6 +14,8 @@ class Phase0(BasePhase):
     def _setup_content(self) -> None:
         super()._setup_content()
 
+        self.buttons_frame.prev_button.hide()
+
         self.contents_frame.main_layout.setContentsMargins(10, 10, 10, 10)
         self.contents_frame.main_layout.setSpacing(40)
 
@@ -244,6 +246,21 @@ class Phase0(BasePhase):
         ])
 
         return ''.join(token_parts)
+    
+    def go_next(self):
+        response = TFApplication.instance().show_question(
+            "Confirmation Required",
+            "Once you proceed, all settings will be locked and cannot be changed.",
+            buttons=["Proceed", "Cancel"]
+        )
+        if response != "Proceed":
+            return
+
+        self.base_entry.setEnabled(False)
+        self.points_entry.setEnabled(False)
+        self.destiny_entry.setEnabled(False)
+        self.general_entry.setEnabled(False)
+        super().go_next()
 
 
 class BaseEntry(TFBaseFrame):
