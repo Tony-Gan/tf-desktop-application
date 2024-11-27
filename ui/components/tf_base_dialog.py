@@ -69,7 +69,7 @@ class TFBaseDialog(QDialog, IComponentCreator):
             for _, error_msg in invalid_items:
                 error_messages.append(error_msg)
             
-            TFApplication.instance().show_message("\n".join(error_messages), "yellow")
+            TFApplication.instance().show_message("\n".join(error_messages), 5000, "yellow")
             return
 
         try:

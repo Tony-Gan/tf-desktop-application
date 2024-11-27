@@ -1,15 +1,16 @@
 import math
 import os
-from pathlib import Path
 import random
 import shutil
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QFileDialog, QVBoxLayout, QStackedWidget
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QPainter, QPen, QFont, QColor
+from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor
 
 from implements.components.base_phase import BasePhase
+from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.components.tf_font import Merriweather
@@ -22,6 +23,33 @@ class Phase1(BasePhase):
         super()._setup_content()
 
         self.buttons_frame.prev_button.hide()
+
+        self.show_character_description_button = TFBaseButton(
+            parent=self.buttons_frame, 
+            text="Char. Info", 
+            height=35,
+            width=120,
+            on_clicked=self._on_show_character_description_clicked
+        )
+        self.age_reduction_button = TFBaseButton(
+            parent=self.buttons_frame, 
+            text="Age Reduction", 
+            height=35,
+            width=120,
+            on_clicked=self._on_age_reduction_clicked
+        )
+        self.stats_exchange_button = TFBaseButton(
+            parent=self.buttons_frame, 
+            text="Stats Exchange", 
+            height=35,
+            width=120,
+            on_clicked=self._on_stats_exchange_clicked
+        )
+        self.buttons_frame.add_custom_button(self.show_character_description_button)
+        self.buttons_frame.add_custom_button(self.age_reduction_button)
+        self.buttons_frame.add_custom_button(self.stats_exchange_button)
+
+        self.stats_exchange_button.hide()
 
         self.upper_frame = UpperFrame(self)
         self.lower_frame = LowerFrame(self)
@@ -41,11 +69,14 @@ class Phase1(BasePhase):
         char_info = self.upper_frame.character_info_group
         char_info.char_name_entry.set_value("")
         char_info.age_entry.set_value("")
+        char_info.age_entry.set_enable(True)
         char_info.gender_entry.set_value("None")
         char_info.natinality_entry.set_value("")
         char_info.residence_entry.set_value("")
         char_info.birthpalce_entry.set_value("")
         char_info.language_own_entry.set_text("")
+
+        self.age_reduction_button.setEnabled(True)
 
         mode = self.config.get("mode")
         if mode == "Destiny":
@@ -96,6 +127,261 @@ class Phase1(BasePhase):
         self.lower_frame.stats_info_group.update_from_config(self.config)
         self.lower_frame.handle_mode_change(mode, self.config)
 
+        if mode == "Destiny":
+            destiny_config = self.config.get("destiny", {})
+            allow_exchange = destiny_config.get("allow_exchange", False)
+            self.stats_exchange_button.setVisible(allow_exchange)
+        else:
+            self.stats_exchange_button.hide()
+
+    def validate(self):
+        invalid_items = []
+        
+        player_info = self.upper_frame.player_info_group
+        if not player_info.player_name_entry.get_value():
+            invalid_items.append((player_info.player_name_entry, "Player name cannot be empty"))
+        if player_info.era_entry.get_value() == "None":
+            invalid_items.append((player_info.era_entry, "Please select an era"))
+            
+        char_info = self.upper_frame.character_info_group
+        if not char_info.char_name_entry.get_value():
+            invalid_items.append((char_info.char_name_entry, "Character name cannot be empty"))
+        if not char_info.age_entry.get_value():
+            invalid_items.append((char_info.age_entry, "Age cannot be empty"))
+        elif int(char_info.age_entry.get_value()) < 15 or int(char_info.age_entry.get_value()) > 90:
+            invalid_items.append((char_info.age_entry, "Age should be set within 15 to 90"))
+        if char_info.gender_entry.get_value() == "None":
+            invalid_items.append((char_info.gender_entry, "Please select a gender"))
+        if not char_info.natinality_entry.get_value():
+            invalid_items.append((char_info.natinality_entry, "Nationality cannot be empty"))
+        if not char_info.residence_entry.get_value():
+            invalid_items.append((char_info.residence_entry, "Residence cannot be empty"))
+        if not char_info.birthpalce_entry.get_value():
+            invalid_items.append((char_info.birthpalce_entry, "Birthplace cannot be empty"))
+        if not char_info.language_own_entry.get_text():
+            invalid_items.append((char_info.language_own_entry, "Please select a language"))
+
+        mode = self.config.get("mode")
+        if mode == "Destiny":
+            if not self.lower_frame.basic_stats_group.isVisible():
+                invalid_items.append((
+                    self.lower_frame.dice_result_frame, 
+                    "Please select a set of dice results"
+                ))
+        elif mode == "Points":
+            points_config = self.config.get("points", {})
+            lower_limit = points_config.get("lower_limit", 30)
+            upper_limit = points_config.get("upper_limit", 80)
+            
+            basic_stats = self.lower_frame.basic_stats_group
+            for stat, entry in basic_stats.stats_entries.items():
+                try:
+                    value = int(entry.get_value())
+                    if value < lower_limit:
+                        invalid_items.append((
+                            entry,
+                            f"{stat} must be at least {lower_limit} (current: {value})"
+                        ))
+                    elif value > upper_limit:
+                        invalid_items.append((
+                            entry,
+                            f"{stat} cannot exceed {upper_limit} (current: {value})"
+                        ))
+                except ValueError:
+                    invalid_items.append((entry, f"Invalid value for {stat}"))
+        
+        return invalid_items
+
+    def _on_show_character_description_clicked(self):
+        for stat, entry in self.lower_frame.basic_stats_group.stats_entries.items():
+            if not entry.get_value() or int(entry.get_value()) == 0:
+                TFApplication.instance().show_message("Please set all attributes before viewing character description", 5000, "yellow")
+                return
+        
+        stats = {}
+        for stat, entry in self.lower_frame.basic_stats_group.stats_entries.items():
+            stats[stat] = int(entry.get_value())
+            
+        CharacterDescriptionDialog.get_input(self, stats=stats)
+
+    def _on_age_reduction_clicked(self):
+        if not self.upper_frame.character_info_group.age_entry.get_value().isdigit():
+            TFApplication.instance().show_message("Enter your age before age reduction.", 5000, "yellow")
+            return
+        
+        if not self.lower_frame.basic_stats_group.isVisible():
+            TFApplication.instance().show_message("Select your basic stats before proceeding.", 5000, "yellow")
+            return
+
+        if self.lower_frame.stats_info_group.entries["dice_mode"].get_value() == "Points":
+            if not int(self.lower_frame.stats_info_group.entries["points_available"].get_value()) == 0:
+                TFApplication.instance().show_message("Allocate all points before proceeding", 5000, "yellow")
+                return
+
+        modifications = []
+        stats_group = self.lower_frame.basic_stats_group
+
+        age = int(self.upper_frame.character_info_group.get_values()["age"])
+
+        total_reduction, reduction_stats = self._calculate_total_reduction(age)
+        if total_reduction != 0:
+            current_stats = {
+                stat: int(self.lower_frame.basic_stats_group.stats_entries[stat].get_value())
+                for stat in reduction_stats
+            }
+            success, results = AgeReductionDialog.get_input(
+                self,
+                reduction_stats=reduction_stats,
+                total_reduction=total_reduction,
+                current_stats=current_stats
+            )
+            
+            if not success:
+                return
+            
+            for stat, reduction in results.items():
+                if reduction > 0:
+                    old_value = int(stats_group.stats_entries[stat].get_value())
+                    new_value = max(1, old_value - reduction)
+                    stats_group.stats_entries[stat].set_value(str(new_value))
+                    modifications.append(f"{stat} reduced by {reduction} points ({old_value} → {new_value})")
+
+
+        edu_message = self._process_edu_improvement(age, stats_group)
+        app_message = self._process_app_reduction(age, stats_group)
+
+        if edu_message:
+            modifications.extend(edu_message)
+        if app_message:
+            modifications.extend(app_message)
+
+
+        self.age_reduction_button.setEnabled(False)
+        self.upper_frame.character_info_group.age_entry.set_enable(False)
+        self.lower_frame.basic_stats_group.setEnabled(False)
+        if modifications:
+            TFApplication.instance().show_message("\n".join(modifications), 5000, "green")
+
+        stats_group._update_derived_stats()
+        stats_group._update_radar_stats()
+
+    def _on_stats_exchange_clicked(self):
+        if not self.lower_frame.basic_stats_group.isVisible():
+            TFApplication.instance().show_message("Please select your basic stats before exchanging", 5000, "yellow")
+            return
+        
+        current_stats = {}
+        for stat, entry in self.lower_frame.basic_stats_group.stats_entries.items():
+            if stat != 'LUK':
+                current_stats[stat] = int(entry.get_value() or '0')
+                
+        destiny_config = self.config.get("destiny", {})
+        exchange_count = int(destiny_config.get("exchange_count", "1"))
+        
+        success, result = StatExchangeDialog.get_input(
+            self,
+            remaining_times=exchange_count,
+            current_stats=current_stats
+        )
+        
+        if success and result:
+            stat1, stat2 = result
+            val1 = self.lower_frame.basic_stats_group.stats_entries[stat1].get_value()
+            val2 = self.lower_frame.basic_stats_group.stats_entries[stat2].get_value()
+            self.lower_frame.basic_stats_group.stats_entries[stat1].set_value(val2)
+            self.lower_frame.basic_stats_group.stats_entries[stat2].set_value(val1)
+            
+            destiny_config["exchange_count"] = str(exchange_count - 1)
+            if int(destiny_config["exchange_count"]) == 0:
+                self.stats_exchange_button.setEnabled(False)
+                
+            self.lower_frame.basic_stats_group._update_derived_stats()
+            self.lower_frame.basic_stats_group._update_radar_stats()
+
+    def _calculate_total_reduction(self, age: int):
+        if age >= 80:
+            total_reduction = 80
+            reduction_stats = ['STR', 'CON', 'DEX']
+        elif age >= 70:
+            total_reduction = 40
+            reduction_stats = ['STR', 'CON', 'DEX']
+        elif age >= 60:
+            total_reduction = 20
+            reduction_stats = ['STR', 'CON', 'DEX']
+        elif age >= 50:
+            total_reduction = 10
+            reduction_stats = ['STR', 'CON', 'DEX']
+        elif age >= 40:
+            total_reduction = 5
+            reduction_stats = ['STR', 'CON', 'DEX']
+        elif age < 20:
+            total_reduction = 5
+            reduction_stats = ['STR', 'SIZ']
+        else:
+            total_reduction = 0
+            reduction_stats = []
+
+        return total_reduction, reduction_stats
+    
+    def _process_edu_improvement(self, age: int, stats_group):
+        edu_message = []
+
+        if age >= 70:
+            edu_checks = 4
+        elif age >= 60:
+            edu_checks = 3
+        elif age >= 50:
+            edu_checks = 2
+        elif age >= 40:
+            edu_checks = 1
+        else:
+            edu_checks = 0
+
+        old_edu = int(stats_group.stats_entries['EDU'].get_value())
+        curr_edu = old_edu
+        for _ in range(edu_checks):
+            check = random.randint(1, 100)
+            if check > curr_edu:
+                improvement = random.randint(1, 10)
+                curr_edu = min(99, curr_edu + improvement)
+
+        if edu_checks:
+            stats_group.stats_entries['EDU'].set_value(str(curr_edu))
+            if curr_edu > old_edu:
+                edu_message.append(f"Education improved from {old_edu} to {curr_edu}")
+
+        return edu_message
+    
+    def _process_app_reduction(self, age: int, stats_group):
+        app_message = []
+
+        if age >= 80:
+            app_reduction = 25
+        elif age >= 70:
+            app_reduction = 15
+        elif age >= 60:
+            app_reduction = 10
+        elif age >= 50:
+            app_reduction = 10
+        elif age >= 40:
+            app_reduction = 5
+        else:
+            app_reduction = 0
+
+        if app_reduction > 0:
+            old_app = int(stats_group.stats_entries['APP'].get_value())
+            new_app = max(1, old_app - app_reduction)
+            stats_group.stats_entries['APP'].set_value(str(new_app))
+            app_message.append(f"APP reduced by {app_reduction} points due to age ({old_app} → {new_app})")
+
+        return app_message
+
+    def try_go_next(self):
+        if self.age_reduction_button.isEnabled():
+            self._on_age_reduction_clicked()
+            
+        super().try_go_next()
+
 
 class UpperFrame(TFBaseFrame):
 
@@ -136,9 +422,22 @@ class LowerFrame(TFBaseFrame):
     def handle_mode_change(self, mode: str, config: dict) -> None:
         if mode == "Points":
             self.middle_stack.setCurrentWidget(self.basic_stats_group)
-            for entry in self.basic_stats_group.stats_entries.values():
+            points_config = config.get("points", {})
+            allow_custom_luck = points_config.get("custom_luck", False)
+            available_points = points_config.get("available", 480)
+
+            self.basic_stats_group.total_points = available_points
+
+            for stat, entry in self.basic_stats_group.stats_entries.items():
                 entry.set_enable(True)
                 entry.set_value("0")
+                if stat == 'LUK' and not allow_custom_luck:
+                    entry.set_enable(False)
+                    dice_result = sum(random.randint(1, 6) for _ in range(3)) * 5
+                    entry.set_value(str(dice_result))
+                    self.basic_stats_group.total_points += dice_result
+                    self.basic_stats_group._update_points_available()
+                    TFApplication.instance().show_message(f"Dice Result for LUC: {dice_result}", 5000, "green")
 
         elif mode == "Destiny":
             dice_count = int(config.get("destiny", {}).get("dice_count", 3))
@@ -524,6 +823,7 @@ class BasicStatsGroup(TFBaseFrame):
                 label_size=40,
                 number_only=True,
                 allow_decimal=False,
+                max_digits=2
             )
             entry.value_changed.connect(self._update_derived_stats)
             entry.value_changed.connect(self._update_points_available)
@@ -798,47 +1098,6 @@ class DiceResultFrame(TFBaseFrame):
             if selected_index >= 0:
                 values["selected_stats"] = self.rolls_data[selected_index]
         return values
-
-
-class LanguageSelectionDialog(TFBaseDialog):
-    def __init__(self, parent=None):
-        super().__init__(
-            title="Select Language",
-            layout_type=QGridLayout,
-            parent=parent
-        )
-
-    def _setup_content(self) -> None:
-        languages = [
-            "English", "Spanish", "French", "German", "Italian",
-            "Chinese", "Japanese", "Korean", "Russian", "Arabic",
-            "Portuguese", "Dutch", "Swedish", "Greek", "Turkish",
-            "Hindi", "Thai", "Vietnamese", "Polish", "Hebrew",
-            "Bengali", "Persian", "Ukrainian", "Urdu", "Romanian",
-            "Malay", "Hungarian", "Czech", "Danish", "Finnish"
-        ]
-
-        self.language_group = self.create_radio_group(
-            name="language_selection",
-            options=languages[:30],
-            height=24,
-            spacing=10
-        )
-
-        for i, radio in enumerate(self.language_group.radio_buttons):
-            row = i // 5
-            if row >= 2:
-                row += 1
-            col = i % 5
-            self.main_layout.addWidget(radio, row, col)
-
-    def validate(self) -> List[Tuple[Any, str]]:
-        if not self.language_group.get_value():
-            return [(self.language_group, "Please select a language")]
-        return []
-
-    def get_validated_data(self) -> Optional[str]:
-        return self.language_group.get_value()
     
 
 class RadarGraph(TFBaseFrame):
@@ -979,3 +1238,335 @@ class RadarGraph(TFBaseFrame):
                 self.update()
             except (ValueError, TypeError):
                 self.stats[name] = 0
+
+
+class LanguageSelectionDialog(TFBaseDialog):
+    def __init__(self, parent=None):
+        super().__init__(title="Select Language", layout_type=QGridLayout, parent=parent)
+
+    def _setup_content(self) -> None:
+        languages = [
+            "English", "Spanish", "French", "German", "Italian",
+            "Chinese", "Japanese", "Korean", "Russian", "Arabic",
+            "Portuguese", "Dutch", "Swedish", "Greek", "Turkish",
+            "Hindi", "Thai", "Vietnamese", "Polish", "Hebrew",
+            "Bengali", "Persian", "Ukrainian", "Urdu", "Romanian",
+            "Malay", "Hungarian", "Czech", "Danish", "Finnish"
+        ]
+
+        self.language_group = self.create_radio_group(
+            name="language_selection",
+            options=languages[:30],
+            height=24,
+            spacing=10
+        )
+
+        for i, radio in enumerate(self.language_group.radio_buttons):
+            row = i // 5
+            if row >= 2:
+                row += 1
+            col = i % 5
+            self.main_layout.addWidget(radio, row, col)
+
+    def validate(self) -> List[Tuple[Any, str]]:
+        if not self.language_group.get_value():
+            return [(self.language_group, "Please select a language")]
+        return []
+
+    def get_validated_data(self) -> Optional[str]:
+        return self.language_group.get_value()
+    
+
+class AgeReductionDialog(TFBaseDialog):
+    def __init__(self, parent=None, reduction_stats: List[str] = None, 
+                 total_reduction: int = 0, current_stats: Dict[str, int] = None):
+        self.total_reduction = total_reduction
+        self.reduction_stats = reduction_stats or []
+        self.current_stats = current_stats or {}
+        self.stat_entries = {}
+        
+        super().__init__(
+            title=f"Age Reduction: {total_reduction} Points",
+            parent=parent,
+            button_config=[
+                {"text": "Apply", "callback": self._on_ok_clicked},
+                {"text": "Cancel", "callback": self.reject, "role": "reject"}
+            ]
+        )
+
+    def _setup_content(self) -> None:
+        self.info_label = self.create_value_entry(
+            name="info",
+            label_text="Please allocate the following points for attribute reduction:",
+            value_text=str(self.total_reduction),
+            label_size=400,
+            value_size=60,
+            enable=False
+        )
+        self.main_layout.addWidget(self.info_label)
+
+        self.stat_entries = {}
+        for stat in self.reduction_stats:
+            current_value = self.current_stats.get(stat, 0)
+            entry = self.create_value_entry(
+                name=f"deduct_{stat.lower()}",
+                label_text=f"{stat} Reduction (Current: {current_value}):",
+                value_text="0",
+                label_size=180,
+                value_size=100,
+                number_only=True,
+                allow_decimal=False,
+                allow_negative=False,
+                max_digits=2
+            )
+            entry.value_changed.connect(self._update_remaining)
+            self.stat_entries[stat] = entry
+            self.main_layout.addWidget(entry)
+
+    def _update_remaining(self) -> None:
+        total_allocated = sum(
+            int(entry.get_value() or '0')
+            for entry in self.stat_entries.values()
+        )
+        remaining = max(0, self.total_reduction - total_allocated)
+        self.info_label.set_value(str(remaining))
+
+    def validate(self) -> List[Tuple[Any, str]]:
+        errors = []
+        total = 0
+
+        for stat, entry in self.stat_entries.items():
+            try:
+                value = int(entry.get_value() or '0')
+                current_value = self.current_stats.get(stat, 0)
+                
+                if value < 0:
+                    errors.append((entry, f"{stat} reduction cannot be negative"))
+                elif current_value - value < 1:
+                    errors.append((entry, f"{stat} cannot be reduced below 1 (Current: {current_value})"))
+                total += value
+            except ValueError:
+                errors.append((entry, f"Invalid value for {stat}"))
+
+        if total != self.total_reduction:
+            errors.append((
+                self.info_label,
+                f"Total reduction must equal {self.total_reduction} (current: {total})"
+            ))
+
+        return errors
+
+    def get_validated_data(self) -> Dict[str, int]:
+        return {
+            stat: int(entry.get_value() or '0')
+            for stat, entry in self.stat_entries.items()
+        }
+
+
+class CharacterDescriptionDialog(TFBaseDialog):
+    def __init__(self, parent=None, stats: Dict[str, int] = None):
+        self.stats = stats or {}
+        super().__init__(
+            title="Character Description",
+            layout_type=QGridLayout,
+            parent=parent,
+            button_config=[{"text": "OK", "callback": self.accept}]
+        )
+        self.resize(800, 600)
+
+    def _setup_content(self) -> None:
+        descriptions = {
+            'STR': ('Strength', self._get_str_description),
+            'CON': ('Constitution', self._get_con_description),
+            'SIZ': ('Size', self._get_siz_description),
+            'DEX': ('Dexterity', self._get_dex_description),
+            'APP': ('Appearance', self._get_app_description),
+            'INT': ('Intelligence', self._get_int_description),
+            'POW': ('Power', self._get_pow_description),
+            'EDU': ('Education', self._get_edu_description),
+            'LUK': ('Luck', self._get_luck_description),
+        }
+
+        for idx, (stat, (full_name, desc_func)) in enumerate(descriptions.items()):
+            stat_frame = TFBaseFrame(parent=self)
+            
+            header = stat_frame.create_label(
+                text=f"{stat} ({full_name}): {self.stats[stat]}",
+                height=24
+            )
+            
+            description = stat_frame.create_label(
+                text=desc_func(self.stats[stat]),
+                height=48,
+            )
+            
+            stat_frame.main_layout.addWidget(header)
+            stat_frame.main_layout.addWidget(description)
+            
+            row = idx // 2
+            col = idx % 2
+            self.main_layout.addWidget(stat_frame, row, col)
+
+    def _get_str_description(self, value: int) -> str:
+        if value <= 15:
+            return "Struggles with even basic physical tasks"
+        elif value <= 40:
+            return "Notably weak, has difficulty with manual labor"
+        elif value <= 60:
+            return "Possesses average human strength"
+        elif value <= 80:
+            return "Remarkably strong, could be a successful athlete"
+        else:
+            return "Exceptionally powerful, rivals professional strongmen"
+
+    def _get_con_description(self, value: int) -> str:
+        if value <= 20:
+            return "Chronically ill, requires frequent medical attention"
+        elif value <= 40:
+            return "Often sick, has a weak constitution"
+        elif value <= 60:
+            return "Generally healthy with normal resilience"
+        elif value <= 80:
+            return "Robust health, rarely gets sick"
+        else:
+            return "Iron constitution, seems immune to illness"
+
+    def _get_siz_description(self, value: int) -> str:
+        if value <= 20:
+            return "Child-sized, very small and thin"
+        elif value <= 40:
+            return "Small and slight of build"
+        elif value <= 60:
+            return "Average height and build"
+        elif value <= 80:
+            return "Notably tall or broad"
+        elif value <= 100:
+            return "Exceptionally large, stands out in any crowd"
+        else:
+            return "Giant-like proportions, possibly record-breaking"
+
+    def _get_dex_description(self, value: int) -> str:
+        if value <= 20:
+            return "Severely uncoordinated, struggles with basic motor tasks"
+        elif value <= 40:
+            return "Clumsy and awkward in movement"
+        elif value <= 60:
+            return "Average coordination and reflexes"
+        elif value <= 80:
+            return "Graceful and agile, excellent physical coordination"
+        else:
+            return "Exceptional agility, could be a professional acrobat"
+
+    def _get_app_description(self, value: int) -> str:
+        if value <= 20:
+            return "Appearance causes discomfort in others"
+        elif value <= 40:
+            return "Plain, tends to blend into the background"
+        elif value <= 60:
+            return "Average appearance, neither striking nor forgettable"
+        elif value <= 80:
+            return "Attractive, draws positive attention"
+        else:
+            return "Stunning beauty, could be a professional model"
+
+    def _get_int_description(self, value: int) -> str:
+        if value <= 20:
+            return "Severe cognitive limitations"
+        elif value <= 40:
+            return "Below average mental capacity"
+        elif value <= 60:
+            return "Average intelligence, capable of normal reasoning"
+        elif value <= 80:
+            return "Sharp mind, quick to understand complex concepts"
+        else:
+            return "Genius-level intellect"
+
+    def _get_pow_description(self, value: int) -> str:
+        if value <= 20:
+            return "Weak-willed, easily manipulated"
+        elif value <= 40:
+            return "Lacks mental fortitude"
+        elif value <= 60:
+            return "Normal willpower and determination"
+        elif value <= 80:
+            return "Strong-willed, difficult to influence"
+        elif value <= 100:
+            return "Exceptional mental fortitude, almost unshakeable"
+        else:
+            return "Superhuman willpower, possibly psychically sensitive"
+
+    def _get_edu_description(self, value: int) -> str:
+        if value <= 20:
+            return "Minimal formal education"
+        elif value <= 40:
+            return "Basic education, equivalent to elementary school"
+        elif value <= 60:
+            return "High school level education"
+        elif value <= 80:
+            return "University graduate, well-educated"
+        else:
+            return "Scholarly excellence, extensive knowledge in many fields"
+
+    def _get_luck_description(self, value: int) -> str:
+        if value <= 20:
+            return "Seems to attract misfortune"
+        elif value <= 40:
+            return "Often experiences bad luck"
+        elif value <= 60:
+            return "Average fortune in life"
+        elif value <= 80:
+            return "Notably lucky, things tend to work out well"
+        else:
+            return "Incredibly fortunate, seems blessed by fate"
+
+
+class StatExchangeDialog(TFBaseDialog):
+    def __init__(self, parent=None, remaining_times: int = 0, current_stats: Dict[str, int] = None):
+        self.remaining_times = remaining_times
+        self.current_stats = current_stats or {}
+        self.stat_entries = {}
+        
+        super().__init__(
+            title="Exchange Stats",
+            parent=parent,
+            button_config=[
+                {"text": "Exchange", "callback": self._on_ok_clicked},
+                {"text": "Cancel", "callback": self.reject, "role": "reject"}
+            ]
+        )
+
+    def _setup_content(self) -> None:
+        times_label = self.create_label(
+            text=f"Remaining exchange times: {self.remaining_times}",
+            height=24
+        )
+        self.main_layout.addWidget(times_label)
+        
+        stats = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU']
+        for stat in stats:
+            checkbox = self.create_check_with_label(
+                name=stat,
+                label_text=f"{stat}: {self.current_stats.get(stat, 0)}",
+                height=24
+            )
+            self.stat_entries[stat] = checkbox
+            self.main_layout.addWidget(checkbox)
+
+    def validate(self) -> List[Tuple[Any, str]]:
+        selected = [
+            stat for stat, entry in self.stat_entries.items()
+            if entry.get_value()
+        ]
+        
+        if len(selected) != 2:
+            return [(self.stat_entries[selected[0]] if selected else None,
+                    "Please select exactly two stats to exchange")]
+        return []
+
+    def get_validated_data(self) -> Tuple[str, str]:
+        selected = [
+            stat for stat, entry in self.stat_entries.items()
+            if entry.get_value()
+        ]
+        return tuple(selected)
+    

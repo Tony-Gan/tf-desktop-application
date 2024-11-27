@@ -19,14 +19,14 @@ class Phase0(BasePhase):
         self.contents_frame.main_layout.setContentsMargins(10, 10, 10, 10)
         self.contents_frame.main_layout.setSpacing(40)
 
-        self.special_button = TFBaseButton(
+        self.generate_token_button = TFBaseButton(
             parent=self.buttons_frame, 
             text="Generate Token", 
             height=35,
             width=150,
             on_clicked=self._on_token_generate_clicked
         )
-        self.buttons_frame.add_custom_button(self.special_button)
+        self.buttons_frame.add_custom_button(self.generate_token_button)
 
         self.points_entry = PointsEntry(self)
         self.destiny_entry = DestinyEntry(self)
