@@ -11,6 +11,8 @@ from ui.tf_application import TFApplication
 
 class Phase0(BasePhase):
 
+    # TODO: 新增的自定义职业没加入TOKEN
+
     def _setup_content(self) -> None:
         super()._setup_content()
 
@@ -67,6 +69,7 @@ class Phase0(BasePhase):
         general_entry.allow_mythos_entry.set_checked(False)
         general_entry.custom_weapon_type_entry.set_checked(False)
         general_entry.completed_mode_entry.set_checked(False)
+        general_entry.custom_occupation_entry(False)
         general_entry.instruction_mode_entry.set_checked(False)
         general_entry.setEnabled(False)
 
@@ -104,7 +107,8 @@ class Phase0(BasePhase):
             'allow_mythos': general_values.get('allow_mythos', False),
             'custom_weapon_type': general_values.get('custom_weapon_type', False),
             'completed_mode': general_values.get('completed_mode', False),
-            'instruction_mode': general_values.get('instruction_mode', False)
+            'instruction_mode': general_values.get('instruction_mode', False),
+            'custom_occupation': general_values.get('custom_occupation', False),
         }
 
         if 'metadata' not in self.p_data:
@@ -591,6 +595,16 @@ class GeneralEntry(TFBaseFrame):
             tooltip_text="Checking this option will display uncommon settings for new cards, such as spells."
         )
 
+        self.custom_occupation_entry = self.create_check_with_label(
+            name="custom_occupation",
+            label_text="Custom Occupation",
+            label_font=Merriweather,
+            checked=False,
+            height=24,
+            show_tooltip=True,
+            tooltip_text="Checking this option allows full customization of occupation."
+        )
+
         self.instruction_mode_entry = self.create_check_with_label(
             name="instruction_mode",
             label_text="Instruction Mode",
@@ -607,4 +621,5 @@ class GeneralEntry(TFBaseFrame):
         self.main_layout.addWidget(self.allow_mythos_entry, 1, 0)
         self.main_layout.addWidget(self.custom_weapon_type_entry, 1, 1)
         self.main_layout.addWidget(self.completed_mode_entry, 1, 2)
-        self.main_layout.addWidget(self.instruction_mode_entry, 2, 0)
+        self.main_layout.addWidget(self.custom_occupation_entry, 2, 0)
+        self.main_layout.addWidget(self.instruction_mode_entry, 2, 1)

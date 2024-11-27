@@ -36,28 +36,28 @@
     },
     {
         "name": "Assassin",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "disguise,electrical_repair,fighting:any,firearms:any,locksmith,mechanical_repair,stealth,psychology",
         "category": ["Criminal", "Adventurer", "Police & Military"],
         "credit_rating": "30-60"
     },
     {
         "name": "Asylum Attendant",
-        "skill_points_formula": "EDU*2+MAX(STR*2,DEX*2)",
+        "skill_points_formula": "EDU*2+MAX(STR,DEX)*2",
         "occupation_skills": "dodge,fighting:brawl,first_aid,interpersonal_skill:any,interpersonal_skill:any,listen,psychology,stealth",
         "category": ["Service Industry", "Labor", "Police & Military"],
         "credit_rating": "8-20"
     },
     {
         "name": "Athlete",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "climb,jump,fighting:brawl,ride,interpersonal_skill:any,swin,throw,any",
         "category": ["Sports & Athletics", "Adventurer", "Service Industry"],
         "credit_rating": "9-70"
     },
     {
         "name": "Agency Detective",
-        "skill_points_formula": "EDU*2+MAX(STR*2,DEX*2)",
+        "skill_points_formula": "EDU*2+MAX(STR,DEX)*2",
         "occupation_skills": "interpersonal_skill:any,fighting:brawl,firearms:any,law,library_use,psychology,stealth,track",
         "category": ["Police & Military", "Business", "Adventurer"],
         "credit_rating": "20-45"
@@ -71,7 +71,7 @@
     },
     {
         "name": "Animal Trainer",
-        "skill_points_formula": "EDU*2+MAX(APP*2,POW*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,POW)*2",
         "occupation_skills": "jump,listen,natural_world,psychology,science:zoology,stealth,track",
         "category": ["Service Industry", "Adventurer", "Academic"],
         "credit_rating": "10-40"
@@ -120,7 +120,7 @@
     },
     {
         "name": "Bank Robber",
-        "skill_points_formula": "EDU*2+MAX(STR*2,DEX*2)",
+        "skill_points_formula": "EDU*2+MAX(STR,DEX)*2",
         "occupation_skills": "drive_auto,electrical_repair|mechanical_repair,fighting:any,firearms:any,intimidate,locksmith,operate_heavy_machinery,any",
         "category": ["Criminal", "Transport", "Adventurer"],
         "credit_rating": "5-75"
@@ -134,7 +134,7 @@
     },
     {
         "name": "Big Game Hunter",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "firearms:any,listen|spot_hidden,natural_world,navigate,language:any|survival:any,science:biology|science:botany,stealth,track",
         "category": ["Adventurer", "Sports & Athletics", "Criminal"],
         "credit_rating": "20-50"
@@ -162,7 +162,7 @@
     },
     {
         "name": "Bounty Hunter",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "drive_auto,electronics|electrical_repair,fighting:any|firearms:any,interpersonal_skill:any,law,psychology,track,stealth",
         "category": ["Police & Military", "Adventurer", "Criminal"],
         "credit_rating": "9-30"
@@ -218,7 +218,7 @@
     },
     {
         "name": "Cowboy/girl",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "dodge,fighting:any|firearms:any,first_aid|natural_world,jump,ride,survival:any,throw,track",
         "category": ["Adventurer", "Labor", "Sports & Athletics"],
         "credit_rating": "9-20"
@@ -232,7 +232,7 @@
     },
     {
         "name": "Criminal (freelance/solo)",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,APP*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,APP)*2",
         "occupation_skills": "art:acting|disguise,appraise,interpersonal_skill:any,fighting:any|firearms:any,locksmith|mechanical_repair,stealth,psychology,spot_hidden",
         "category": ["Criminal", "Adventurer", "Service Industry"],
         "credit_rating": "5-65"
@@ -309,14 +309,14 @@
     },
     {
         "name": "Drifter",
-        "skill_points_formula": "EDU*2+MAX(APP*2,DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,DEX,STR)*2",
         "occupation_skills": "climb,jump,listen,navigate,interpersonal_skill:any,stealth,any,any",
         "category": ["Adventurer", "Labor", "Service Industry"],
         "credit_rating": "0-5"
     },
     {
         "name": "Driver",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "accounting,drive_auto,listen,interpersonal_skill:any,mechanical_repair,navigate,psychology,any",
         "category": ["Transport", "Labor", "Adventurer"],
         "credit_rating": "9-20"
@@ -365,14 +365,14 @@
     },
     {
         "name": "Explorer [Classic]",
-        "skill_points_formula": "EDU*2+MAX(APP*2,DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,DEX,STR)*2",
         "occupation_skills": "climb|swim,firearms:any,history,jump,natural_world,navigate,language:any,survival:any",
         "category": ["Adventurer", "Academic", "Service Industry"],
         "credit_rating": "55-80"
     },
     {
         "name": "Farmer",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "art:farming,drive_auto|wagon,interpersonal_skill:any,mechanical_repair,natural_world,operate_heavy_machinery,track,any",
         "category": ["Labor", "Service Industry", "Adventurer"],
         "credit_rating": "9-30"
@@ -393,7 +393,7 @@
     },
     {
         "name": "Feng Shui Consultant",
-        "skill_points_formula": "EDU*2+MAX(APP*2,POW*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,POW)*2",
         "occupation_skills": "occult,psychology,fast_talk,interpersonal_skill:any,natural_world,spot_hidden,library_use,any",
         "category": ["Occult & Mystic", "Business", "Service Industry"],
         "credit_rating": "10-50"
@@ -407,7 +407,7 @@
     },
     {
         "name": "Firefighter",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "climb,dodge,drive_auto,first_aid,jump,mechanical_repair,operate_heavy_machinery,throw",
         "category": ["Labor", "Police & Military", "Service Industry"],
         "credit_rating": "9-30"
@@ -442,7 +442,7 @@
     },
     {
         "name": "Gambler",
-        "skill_points_formula": "EDU*2+MAX(APP*2,DEX*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
         "occupation_skills": "accounting,art:acting,interpersonal_skill:any,interpersonal_skill:any,listen,psychology,sleight_of_hand,spot_hidden",
         "category": ["Criminal", "Business", "Service Industry"],
         "credit_rating": "8-50"
@@ -456,7 +456,7 @@
     },
     {
         "name": "Gangster Underling",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "drive_auto,fighting:any,firearms:any,interpersonal_skill:any,interpersonal_skill:any,psychology,any,any",
         "category": ["Criminal", "Transport", "Adventurer"],
         "credit_rating": "9-20"
@@ -477,7 +477,7 @@
     },
     {
         "name": "Hobo",
-        "skill_points_formula": "EDU*2+MAX(APP*2,DEX*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
         "occupation_skills": "art:any,climb,jump,listen,locksmith|sleight_of_hand,navigate,stealth,any",
         "category": ["Adventurer", "Labor", "Service Industry"],
         "credit_rating": "0-5"
@@ -512,14 +512,14 @@
     },
     {
         "name": "Laborer, Unskilled",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "drive_auto,electrical_repair,fighting:any,first_aid,mechanical_repair,operate_heavy_machinery,throw,any",
         "category": ["Labor", "Service Industry", "Transport"],
         "credit_rating": "9-30"
     },
     {
         "name": "Lumberjack",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "climb,dodge,fighting:chainsaw,first_aid,jump,mechanical_repair,natural_world|science:biology|science:botany,throw",
         "category": ["Labor", "Adventurer", "Service Industry"],
         "credit_rating": "9-30"
@@ -547,7 +547,7 @@
     },
     {
         "name": "Military Officer",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "accounting,firearms:any,navigate,first_aid,interpersonal_skill:any,interpersonal_skill:any,psychology,any",
         "category": ["Police & Military", "Adventurer", "Business"],
         "credit_rating": "20-70"
@@ -561,7 +561,7 @@
     },
     {
         "name": "Miner",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "climb,geology,jump,mechanical_repair,operate_heavy_machinery,stealth,spot_hidden,any",
         "category": ["Labor", "Science & Technology", "Service Industry"],
         "credit_rating": "9-30"
@@ -575,7 +575,7 @@
     },
     {
         "name": "Mountain Climber",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "climb,first_aid,jump,listen,navigate,language:any,survival:mountain,track",
         "category": ["Adventurer", "Sports & Athletics", "Service Industry"],
         "credit_rating": "30-60"
@@ -589,7 +589,7 @@
     },
     {
         "name": "Musician",
-        "skill_points_formula": "EDU*2+MAX(APP*2,DEX*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
         "occupation_skills": "art:instrument,interpersonal_skill:any,listen,psychology,any,any,any,any",
         "category": ["Service Industry", "Occult & Mystic", "Adventurer"],
         "credit_rating": "9-30"
@@ -610,7 +610,7 @@
     },
     {
         "name": "Outdoorsman/woman",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "firearms:any,first_aid,listen,natural_world,navigate,spot_hidden,survival:any,track",
         "category": ["Adventurer", "Labor", "Service Industry"],
         "credit_rating": "5-20"
@@ -652,14 +652,14 @@
     },
     {
         "name": "Police Detective",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "art:acting|disguise,firearms:any,law,listen,interpersonal_skill:any,psychology,spot_hidden,any",
         "category": ["Police & Military", "Adventurer", "Service Industry"],
         "credit_rating": "20-50"
     },
     {
         "name": "Private Investigator",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "art:photography,disguise,law,library_use,interpersonal_skill:any,psychology,spot_hidden,any",
         "category": ["Adventurer", "Service Industry", "Police & Military"],
         "credit_rating": "9-30"
@@ -673,7 +673,7 @@
     },
     {
         "name": "Prospector",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "climb,first_aid,history,mechanical_repair,navigate,science:geology,spot_hidden,any",
         "category": ["Labor", "Adventurer", "Service Industry"],
         "credit_rating": "0-10"
@@ -715,14 +715,14 @@
     },
     {
         "name": "Sailor, Naval",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "electrical_repair|mechanical_repair,fighting:any,firearms:any,first_aid,navigate,pilot:boat,survival:sea,swim",
         "category": ["Police & Military", "Transport", "Adventurer"],
         "credit_rating": "9-30"
     },
     {
         "name": "Sailor, Commercial",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "first_aid,mechanical_repair,natural_world,navigate,interpersonal_skill:any,pilot:boat,spot_hidden,swim",
         "category": ["Transport", "Labor", "Criminal"],
         "credit_rating": "20-40"
@@ -743,21 +743,21 @@
     },
     {
         "name": "Secretary",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,APP*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,APP)*2",
         "occupation_skills": "accounting,art:typing|shorthand,interpersonal_skill:any,interpersonal_skill:any,language_own,library_use|computer_use,psychology,any",
         "category": ["Service Industry", "Business", "Academic"],
         "credit_rating": "9-30"
     },
     {
         "name": "Shopkeeper",
-        "skill_points_formula": "EDU*2+MAX(APP*2,DEX*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
         "occupation_skills": "accounting,interpersonal_skill:any,interpersonal_skill:any,electrical_repair,listen,mechanical_repair,psychology,spot_hidden",
         "category": ["Business", "Service Industry", "Labor"],
         "credit_rating": "20-40"
     },
     {
         "name": "Smuggler",
-        "skill_points_formula": "EDU*2+MAX(APP*2,DEX*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
         "occupation_skills": "firearms:any,listen,navigate,interpersonal_skill:any,drive_auto|pilot:any,psychology,sleight_of_hand,spot_hidden",
         "category": ["Criminal", "Transport", "Adventurer"],
         "credit_rating": "20-60"
@@ -771,7 +771,7 @@
     },
     {
         "name": "Soldier/Marine",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "climb|swim,dodge,fighting:any,firearms:any,stealth,survival:any,first_aid|mechanical_repair|language:any,first_aid|mechanical_repair|language:any",
         "category": ["Police & Military", "Adventurer", "Labor"],
         "credit_rating": "9-30"
@@ -785,7 +785,7 @@
     },
     {
         "name": "Spy",
-        "skill_points_formula": "EDU*2+MAX(APP*2,DEX*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
         "occupation_skills": "art:acting|disguise,firearms:any,listen,language:any,interpersonal_skill:any,psychology,sleight_of_hand,stealth",
         "category": ["Adventurer", "Police & Military", "Occult & Mystic"],
         "credit_rating": "20-60"
@@ -799,7 +799,7 @@
     },
     {
         "name": "Street Punk",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "climb,interpersonal_skill:any,fighting:any,firearms:any,jump,sleight_of_hand,stealth,throw",
         "category": ["Criminal", "Adventurer", "Labor"],
         "credit_rating": "3-10"
@@ -813,7 +813,7 @@
     },
     {
         "name": "Stuntman",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "climb,dodge,electrical_repair|mechanical_repair,fighting:any,first_aid,jump,swim,diving|drive_auto|pilot:any|ride",
         "category": ["Sports & Athletics", "Adventurer", "Service Industry"],
         "credit_rating": "10-50"
@@ -834,7 +834,7 @@
     },
     {
         "name": "Tribe Member",
-        "skill_points_formula": "EDU*2+DEX*2+STR*2",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "climb,fighting:any|throw,listen,natural_world,occult,spot_hidden,swim,survival:any",
         "category": ["Occult & Mystic", "Adventurer", "Labor"],
         "credit_rating": "0-15"
@@ -855,7 +855,7 @@
     },
     {
         "name": "Uniformed Police Officer",
-        "skill_points_formula": "EDU*2+MAX(DEX*2,STR*2)",
+        "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
         "occupation_skills": "fighting:brawl,firearms:any,first_aid,interpersonal_skill:any,law,psychology,spot_hidden,drive_auto|ride",
         "category": ["Police & Military", "Service Industry", "Adventurer"],
         "credit_rating": "9-30"
@@ -869,7 +869,7 @@
     },
     {
         "name": "Waitress/Waiter",
-        "skill_points_formula": "EDU*2+MAX(APP*2,DEX*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
         "occupation_skills": "accounting,art:any,dodge,listen,interpersonal_skill:any,interpersonal_skill:any,psychology,any",
         "category": ["Service Industry", "Business", "Criminal"],
         "credit_rating": "9-20"
@@ -890,7 +890,7 @@
     },
     {
         "name": "Zealot",
-        "skill_points_formula": "EDU*2+MAX(APP*2,POW*2)",
+        "skill_points_formula": "EDU*2+MAX(APP,POW)*2",
         "occupation_skills": "history,interpersonal_skill:any,interpersonal_skill:any,psychology,stealth,any",
         "category": ["Occult & Mystic", "Adventurer", "Service Industry"],
         "credit_rating": "0-30"

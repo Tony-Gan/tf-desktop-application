@@ -16,7 +16,7 @@ class TFBaseDialog(QDialog, IComponentCreator):
         
         self._result = None
         self._children = {}
-        self.button_config = button_config or self.default_button_config()
+        self.button_config = button_config if button_config is not None else self.default_button_config()
         
         self._setup_ui(layout_type)
         self._setup_content()

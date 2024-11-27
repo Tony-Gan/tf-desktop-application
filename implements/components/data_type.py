@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import Optional, Dict
+from typing import List, Optional, Dict
 
 from implements.components.data_enum import Penetration, Category
 
@@ -251,10 +251,6 @@ class Spell:
     casting_time: str
     description: str
 
-
-from dataclasses import dataclass
-from typing import Dict, List
-
 @dataclass
 class Occupation:
     name: str
@@ -267,7 +263,7 @@ class Occupation:
         return f"{self.name} ({self.category[0]})" 
 
     def format_formula_for_display(self) -> str:
-        return self.skill_points_formula.replace('*', '×').replace('MAX', 'max')
+        return self.skill_points_formula.replace('*', ' × ').replace('+', ' + ').replace(',', ', ')
     
     def _calculate_max_stats(self, formula_part: str, stats: Dict[str, int]) -> int:
         parts = [part.strip() for part in formula_part.split(',')]
@@ -283,10 +279,6 @@ class Occupation:
                 
         return max(results)
 
-    def _calculate_max_stats(self, stats_str: str, stats: Dict[str, int]) -> int:
-        stats_list = [s.strip() for s in stats_str.split(',')]
-        return max(stats.get(stat, 0) for stat in stats_list)
-
     def calculate_skill_points(self, stats: Dict[str, int]) -> int:
         formula = self.skill_points_formula
         parts = [p.strip() for p in formula.split('+')]
@@ -295,7 +287,11 @@ class Occupation:
         for part in parts:
             if 'MAX(' in part:
                 max_content = part[part.find('(') + 1:part.find(')')].strip()
-                total += self._calculate_max_stats(max_content, stats)
+                max_value = self._calculate_max_stats(max_content, stats)
+                if '*' in part:
+                    multiplier = int(part.split('*')[-1])
+                    max_value *= multiplier
+                total += max_value
             else:
                 if '*' in part:
                     stat, multiplier = part.split('*')
@@ -319,7 +315,7 @@ class Occupation:
         skills = self.occupation_skills.split(',')
         formatted_skills = []
         
-        for skill in skills:
+        for i, skill in enumerate(skills):
             skill = skill.strip()
             
             if '|' in skill:
@@ -327,10 +323,21 @@ class Occupation:
                 formatted = ' / '.join(sub_skills)
             else:
                 formatted = self._format_single_skill(skill)
-                
+            
             formatted_skills.append(formatted)
+            if i == 3:
+                formatted_skills.append('\n')
         
-        return ', '.join(formatted_skills)
+        result = ''
+        for i, skill in enumerate(formatted_skills):
+            if skill == '\n':
+                result += skill
+            elif result.endswith('\n'):
+                result += skill
+            else:
+                result += (', ' if i > 0 else '') + skill
+        
+        return result
 
     def _format_single_skill(self, skill: str) -> str:
         if ':' in skill:
@@ -348,7 +355,7 @@ class Occupation:
             name=data["name"],
             skill_points_formula=data["skill_points_formula"], 
             occupation_skills=data["occupation_skills"],
-            category=data["category"] if isinstance(data["category"], list) else [data["category"]],  # 处理新旧两种格式
+            category=data["category"] if isinstance(data["category"], list) else [data["category"]],
             credit_rating=data["credit_rating"]
         )
 

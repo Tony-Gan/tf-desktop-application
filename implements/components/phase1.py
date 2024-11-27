@@ -216,6 +216,8 @@ class Phase1(BasePhase):
         CharacterDescriptionDialog.get_input(self, stats=stats)
 
     def _on_age_reduction_clicked(self):
+        mode = self.lower_frame.stats_info_group.entries["dice_mode"].get_value()
+
         if not self.upper_frame.character_info_group.age_entry.get_value().isdigit():
             TFApplication.instance().show_message("Enter your age before age reduction.", 5000, "yellow")
             return
@@ -224,7 +226,7 @@ class Phase1(BasePhase):
             TFApplication.instance().show_message("Select your basic stats before proceeding.", 5000, "yellow")
             return
 
-        if self.lower_frame.stats_info_group.entries["dice_mode"].get_value() == "Points":
+        if mode == "Points":
             if not int(self.lower_frame.stats_info_group.entries["points_available"].get_value()) == 0:
                 TFApplication.instance().show_message("Allocate all points before proceeding", 5000, "yellow")
                 return
@@ -260,6 +262,13 @@ class Phase1(BasePhase):
 
         edu_message = self._process_edu_improvement(age, stats_group)
         app_message = self._process_app_reduction(age, stats_group)
+
+        if age < 20 and mode == "Destiny" or (mode == "Points" and not self.config["points"]["custom_luck"]):
+            dice_result = sum(random.randint(1, 6) for _ in range(3)) * 5
+            curr_luk = int(self.lower_frame.basic_stats_group.stats_entries["LUK"].get_value() )
+            if dice_result > curr_luk:
+                self.lower_frame.basic_stats_group.stats_entries["LUK"].set_value(str(dice_result))
+                modifications.append(f"Luck improved from {curr_luk} to {dice_result}")
 
         if edu_message:
             modifications.extend(edu_message)
@@ -830,7 +839,7 @@ class BasicStatsGroup(TFBaseFrame):
                 name=stat.lower(),
                 label_text=f"{stat}:",
                 value_text="0",
-                value_size=40,
+                value_size=30,
                 label_size=40,
                 number_only=True,
                 allow_decimal=False,
@@ -859,7 +868,7 @@ class BasicStatsGroup(TFBaseFrame):
                 name=label_text.lower(),
                 label_text=label_text + ":",
                 value_text="N/A",
-                value_size=40,
+                value_size=30,
                 label_size=40,
                 number_only=True,
                 enable=False
