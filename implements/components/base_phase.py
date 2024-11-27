@@ -41,7 +41,6 @@ class BasePhase(TFBaseFrame):
 
     def on_exit(self):
         self.save_state()
-        print(self.config)
         print(self.p_data)
 
     def reset_contents(self):

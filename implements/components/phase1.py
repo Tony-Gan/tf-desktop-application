@@ -54,8 +54,8 @@ class Phase1(BasePhase):
         self.upper_frame = UpperFrame(self)
         self.lower_frame = LowerFrame(self)
 
-        self.contents_frame.main_layout.addWidget(self.upper_frame)
-        self.contents_frame.main_layout.addWidget(self.lower_frame)
+        self.contents_frame.add_child("upper_frame", self.upper_frame)
+        self.contents_frame.add_child("lower_frame", self.lower_frame)
 
     def reset_contents(self):
         self.upper_frame.avatar_frame.avatar_label.clear()
@@ -102,22 +102,33 @@ class Phase1(BasePhase):
         self.check_dependencies()
 
     def save_state(self):
-        values = self.contents_frame.get_values()
+        if 'player_info' not in self.p_data:
+            self.p_data['player_info'] = {}
+        player_info_values = self.upper_frame.player_info_group.get_values()
+        self.p_data['player_info'].update(player_info_values)
         
-        player_info = values.get('player_info_entry', {})
-        if player_info:
-            self.p_data['player_info'] = player_info
+        if 'character_info' not in self.p_data:
+            self.p_data['character_info'] = {}
+        character_info_values = self.upper_frame.character_info_group.get_values()
+        character_info_values['language_own'] = self.upper_frame.character_info_group.language_own_entry.get_text()
+        self.p_data['character_info'].update(character_info_values)
+        
+        avatar_values = self.upper_frame.avatar_frame.get_values()
+        if avatar_values.get('avatar_path'):
+            self.p_data['character_info']['avatar_path'] = avatar_values['avatar_path']
             
-        character_info = values.get('character_info_entry', {})
-        avatar_info = values.get('avatar_entry', {})
-        if avatar_info.get('avatar_path'):
-            character_info['avatar_path'] = avatar_info['avatar_path']
-        if character_info:
-            self.p_data['character_info'] = character_info
+        if 'basic_stats' not in self.p_data:
+            self.p_data['basic_stats'] = {}
             
-        basic_stats = values.get('basic_stats_entry', {})
-        if basic_stats:
-            self.p_data['basic_stats'] = basic_stats
+        basic_stats = {}
+        for stat, entry in self.lower_frame.basic_stats_group.stats_entries.items():
+            basic_stats[stat.lower()] = entry.get_value()
+        
+        for key, entry in self.lower_frame.basic_stats_group.derived_entries.items():
+            if entry.get_value() != "N/A":
+                basic_stats[key.lower()] = entry.get_value()
+                
+        self.p_data['basic_stats'].update(basic_stats)
 
     def restore_state(self):
         pass
@@ -415,9 +426,9 @@ class LowerFrame(TFBaseFrame):
 
         self.middle_stack.addWidget(self.basic_stats_group)
 
-        self.main_layout.addWidget(self.stats_info_group)
+        self.add_child("stats_info", self.stats_info_group)
         self.main_layout.addWidget(self.middle_stack)
-        self.main_layout.addWidget(self.radar_graph)
+        self.add_child("radar_graph", self.radar_graph)
 
     def handle_mode_change(self, mode: str, config: dict) -> None:
         if mode == "Points":
@@ -588,8 +599,8 @@ class PlayerInfoGroup(TFBaseFrame):
         self.era_entry = self.create_option_entry(
             name="era",
             label_text="Era:",
-            options=["None", "1920s", "Modern"],
-            current_value="None",
+            options=["1920s", "Modern"],
+            current_value="Modern",
             label_size=90,
             value_size=70,
             height=24
