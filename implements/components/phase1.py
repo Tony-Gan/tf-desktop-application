@@ -55,6 +55,8 @@ class Phase1(BasePhase):
                     entry.set_value("0")
                     entry.set_enable(True)
                 self.lower_frame.basic_stats_group._update_derived_stats()
+                self.lower_frame.basic_stats_group.hide()
+                self.lower_frame.dice_result_frame.show()
                 self.lower_frame.middle_stack.setCurrentWidget(self.lower_frame.dice_result_frame)
         elif mode == "Points":
             if self.lower_frame.middle_stack:
