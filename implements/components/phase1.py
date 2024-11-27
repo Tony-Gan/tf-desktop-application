@@ -5,7 +5,7 @@ import random
 import shutil
 from typing import Any, Dict, List, Optional, Tuple
 
-from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QFileDialog, QVBoxLayout
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QFileDialog, QVBoxLayout, QStackedWidget
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QFont, QColor
 
@@ -49,15 +49,11 @@ class Phase1(BasePhase):
 
         mode = self.config.get("mode")
         if mode == "Destiny":
-            if self.lower_frame.basic_stats_group:
-                self.lower_frame.basic_stats_group.hide()
-            if self.lower_frame.dice_result_frame:
-                self.lower_frame.dice_result_frame.show()
+            if self.lower_frame.middle_stack:
+                self.lower_frame.middle_stack.setCurrentWidget(self.lower_frame.dice_result_frame)
         elif mode == "Points":
-            if self.lower_frame.dice_result_frame:
-                self.lower_frame.dice_result_frame.hide()
-            if self.lower_frame.basic_stats_group:
-                self.lower_frame.basic_stats_group.show()
+            if self.lower_frame.middle_stack:
+                self.lower_frame.middle_stack.setCurrentWidget(self.lower_frame.basic_stats_group)
                 stats = self.lower_frame.basic_stats_group.stats_entries
                 for entry in stats.values():
                     entry.set_value("0")
@@ -118,36 +114,33 @@ class LowerFrame(TFBaseFrame):
         super().__init__(QHBoxLayout, radius=10, parent=parent)
 
     def _setup_content(self) -> None:
+        self.middle_stack = QStackedWidget(self)
         self.stats_info_group = StatsInformationGroup(self)
         self.basic_stats_group = BasicStatsGroup(self)
         self.radar_graph = RadarGraph(self)
 
-        self.basic_stats_group.hide()
+        self.middle_stack.addWidget(self.basic_stats_group)
 
-        self.add_child("stats_info_entry", self.stats_info_group)
-        self.add_child("basic_stats_entry", self.basic_stats_group)
+        self.main_layout.addWidget(self.stats_info_group)
+        self.main_layout.addWidget(self.middle_stack)
         self.main_layout.addWidget(self.radar_graph)
 
     def handle_mode_change(self, mode: str, config: dict) -> None:
         if mode == "Points":
-            if self.dice_result_frame:
-                self.dice_result_frame.hide()
-            self.basic_stats_group.show()
+            self.middle_stack.setCurrentWidget(self.basic_stats_group)
             for entry in self.basic_stats_group.stats_entries.values():
                 entry.set_enable(True)
                 entry.set_value("0")
 
         elif mode == "Destiny":
-            self.basic_stats_group.hide()
             dice_count = int(config.get("destiny", {}).get("dice_count", 3))
-            
-            if self.dice_result_frame:
-                self.dice_result_frame.update_dice_count(dice_count)
-                self.dice_result_frame.show()
-            else:
+            if not self.dice_result_frame:
                 self.dice_result_frame = DiceResultFrame(dice_count, self)
                 self.dice_result_frame.values_changed.connect(self._handle_dice_result_confirmed)
-                self.layout().addWidget(self.dice_result_frame)
+                self.middle_stack.addWidget(self.dice_result_frame)
+            else:
+                self.dice_result_frame.update_dice_count(dice_count)
+            self.middle_stack.setCurrentWidget(self.dice_result_frame)
 
     def _handle_dice_result_confirmed(self, values: dict) -> None:
         selected_stats = values.get("selected_stats", {})
