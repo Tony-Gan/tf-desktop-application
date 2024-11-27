@@ -50,6 +50,11 @@ class Phase1(BasePhase):
         mode = self.config.get("mode")
         if mode == "Destiny":
             if self.lower_frame.middle_stack:
+                stats_entries = self.lower_frame.basic_stats_group.stats_entries
+                for entry in stats_entries.values():
+                    entry.set_value("0")
+                    entry.set_enable(True)
+                self.lower_frame.basic_stats_group._update_derived_stats()
                 self.lower_frame.middle_stack.setCurrentWidget(self.lower_frame.dice_result_frame)
         elif mode == "Points":
             if self.lower_frame.middle_stack:
@@ -57,6 +62,7 @@ class Phase1(BasePhase):
                 stats = self.lower_frame.basic_stats_group.stats_entries
                 for entry in stats.values():
                     entry.set_value("0")
+                    entry.set_enable(True)
                 self.lower_frame.basic_stats_group._update_derived_stats()
 
     def initialize(self):
@@ -384,13 +390,13 @@ class StatsInformationGroup(TFBaseFrame):
         super().__init__(radius=10, level=1, parent=parent)
 
     def _setup_content(self) -> None:
-        self.setFixedWidth(210)
+        self.setFixedWidth(180)
     
         self.entries['dice_mode'] = self.create_value_entry(
             name="dice_mode",
             label_text="Dice Mode:",
-            label_size=120,
-            value_size=70,
+            label_size=110,
+            value_size=50,
             height=24,
             enable=False
         )
@@ -422,9 +428,9 @@ class StatsInformationGroup(TFBaseFrame):
             self.entries['points_available'] = self.create_value_entry(
                 name="points_available",
                 label_text="Points Available:",
-                label_size=120,
+                label_size=110,
                 value_text=str(available_points),
-                value_size=70,
+                value_size=50,
                 height=24,
                 enable=False
             )
@@ -433,8 +439,8 @@ class StatsInformationGroup(TFBaseFrame):
             self.entries['stats_range'] = self.create_value_entry(
                 name="stats_range",
                 label_text="Stats Range:",
-                label_size=120,
-                value_size=70,
+                label_size=110,
+                value_size=50,
                 value_text=stats_range,
                 height=24,
                 enable=False
@@ -444,8 +450,8 @@ class StatsInformationGroup(TFBaseFrame):
             self.entries['allow_custom_luck'] = self.create_value_entry(
                 name="allow_custom_luck",
                 label_text="Custom Luck:",
-                label_size=120,
-                value_size=70,
+                label_size=110,
+                value_size=50,
                 value_text=custom_luck,
                 height=24,
                 enable=False
@@ -461,8 +467,8 @@ class StatsInformationGroup(TFBaseFrame):
             self.entries['dice_count'] = self.create_value_entry(
                 name="dice_count",
                 label_text="Dice Count:",
-                label_size=120,
-                value_size=70,
+                label_size=110,
+                value_size=50,
                 value_text=str(destiny_config.get("dice_count", "3")),
                 height=24,
                 enable=False
@@ -472,8 +478,8 @@ class StatsInformationGroup(TFBaseFrame):
             self.entries['allow_exchange'] = self.create_value_entry(
                 name="allow_stats_exchange",
                 label_text="Stats Exchange:",
-                label_size=120,
-                value_size=70,
+                label_size=110,
+                value_size=50,
                 value_text="Yes" if allow_exchange else "No",
                 height=24,
                 enable=False
@@ -483,8 +489,8 @@ class StatsInformationGroup(TFBaseFrame):
             self.entries['exchange_count'] = self.create_value_entry(
                 name="exchange_count",
                 label_text="Exchange Times:",
-                label_size=120,
-                value_size=70,
+                label_size=110,
+                value_size=50,
                 value_text=exchange_count,
                 height=24,
                 enable=False
@@ -528,9 +534,9 @@ class BasicStatsGroup(TFBaseFrame):
             ('HP', 'HP'),
             ('MP', 'MP'),
             ('SAN', 'San'),
-            ('MOV', 'Move'),
+            ('MOV', 'Mv.'),
             ('DB', 'DB'),
-            ('Build', 'Build')
+            ('Build', 'Bd.')
         ]
 
         for i, (stat_key, label_text) in enumerate(derived_stats):
