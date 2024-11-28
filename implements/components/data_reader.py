@@ -9,8 +9,7 @@ from utils.helper import resource_path
 def load_occupations_from_json() -> List[Occupation]:
     with open(resource_path("implements/data/occupations.json"), "r", encoding="utf-8") as f:
         data = json.load(f)
-    occupations = [Occupation.from_json(entry) for entry in data]
-    return occupations
+    return [Occupation.from_json(entry) for entry in data]
 
 def load_skills_from_json( dex: int, edu: int, language_own: str) -> List[Skill]:
     skills = []

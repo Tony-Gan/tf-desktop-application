@@ -18,7 +18,7 @@ class TFButtonEntry(QFrame, IStateController):
         label_text: str = "",
         label_font: QFont = Merriweather,
         label_size: int = 100,
-        label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+        label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
         button_text: str = "Confirm",
         entry_text: str = "",
         entry_size: int = 100,

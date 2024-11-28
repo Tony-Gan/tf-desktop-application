@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 
 from implements.components.data_enum import Penetration, Category
 
@@ -12,6 +12,7 @@ class Skill:
     is_occupation: bool = False
     occupation_point: int = 0
     interest_point: int = 0
+    is_abstract: bool = False
 
     @property
     def total_point(self) -> int:
@@ -24,6 +25,45 @@ class Skill:
             formatted_super_name = self.super_name.replace("_", " ").title()
             return f"{formatted_super_name} - {formatted_name}"
         return formatted_name
+    
+    @classmethod
+    def create_abstract(cls, name: str, super_name: str = "") -> 'Skill':
+        return cls(
+            name=name,
+            super_name=super_name,
+            default_point=0,
+            is_abstract=True
+        )
+
+    @property
+    def full_name(self) -> str:
+        if self.super_name:
+            return f"{self.super_name}:{self.name}"
+        return self.name
+    
+    def __eq__(self, other):
+        if not isinstance(other, Skill):
+            return False
+        return self.name == other.name and self.super_name == other.super_name
+    
+
+@dataclass
+class SkillCombination:
+    skills: List[Union[Skill, 'SkillCombination']]
+    
+    @property
+    def is_simple_choice(self) -> bool:
+        return all(isinstance(s, Skill) and not s.is_abstract for s in self.skills)
+
+    def format_display(self) -> str:
+        skill_displays = []
+        for skill in self.skills:
+            if isinstance(skill, Skill):
+                skill_displays.append(skill.display_name)
+            elif isinstance(skill, SkillCombination):
+                skill_displays.append(skill.format_display())
+        return " / ".join(skill_displays)
+    
 
 
 @dataclass
@@ -255,7 +295,7 @@ class Spell:
 class Occupation:
     name: str
     skill_points_formula: str
-    occupation_skills: str
+    occupation_skills: List[Union[Skill, SkillCombination]]
     category: List[str]
     credit_rating: str
 
@@ -283,7 +323,6 @@ class Occupation:
         formula = self.skill_points_formula
         parts = [p.strip() for p in formula.split('+')]
         total = 0
-
         for part in parts:
             if 'MAX(' in part:
                 max_content = part[part.find('(') + 1:part.find(')')].strip()
@@ -311,21 +350,19 @@ class Occupation:
     def get_credit_rating_max(self) -> int:
         return int(self.credit_rating.split('-')[1])
     
-    def format_skills(self) -> str:
-        skills = self.occupation_skills.split(',')
+    def get_skill_names(self) -> List[str]:
+        return self.occupation_skills.split(',')
+    
+    def format_skills(self, line_break: bool = False) -> str:
         formatted_skills = []
         
-        for i, skill in enumerate(skills):
-            skill = skill.strip()
+        for i, skill_item in enumerate(self.occupation_skills):
+            if isinstance(skill_item, Skill):
+                formatted_skills.append(skill_item.display_name)
+            elif isinstance(skill_item, SkillCombination):
+                formatted_skills.append(skill_item.format_display())
             
-            if '|' in skill:
-                sub_skills = [self._format_single_skill(s.strip()) for s in skill.split('|')]
-                formatted = ' / '.join(sub_skills)
-            else:
-                formatted = self._format_single_skill(skill)
-            
-            formatted_skills.append(formatted)
-            if i == 3:
+            if line_break and i == 3:
                 formatted_skills.append('\n')
         
         result = ''
@@ -338,24 +375,39 @@ class Occupation:
                 result += (', ' if i > 0 else '') + skill
         
         return result
-
-    def _format_single_skill(self, skill: str) -> str:
-        if ':' in skill:
-            category, subtype = skill.split(':')
-            if subtype == 'any':
-                return f"{category.replace('_', ' ').title()} - Any Skill"
-            return f"{category.replace('_', ' ').title()} - {subtype.replace('_', ' ').title()}"
-        if skill == 'any':
-            return "Any Skill"
-        return skill.replace('_', ' ').title()
+    
+    @classmethod
+    def parse_skill_entry(cls, skill_text: str) -> Union[Skill, SkillCombination]:
+        skill_text = skill_text.strip()
+        
+        if '|' in skill_text:
+            sub_skills = [cls.parse_skill_entry(s.strip()) for s in skill_text.split('|')]
+            return SkillCombination(skills=sub_skills)
+        
+        if skill_text == 'any':
+            return Skill.create_abstract(name='any')
+        elif ':' in skill_text:
+            super_name, name = skill_text.split(':')
+            if name == 'any':
+                return Skill.create_abstract(name='any', super_name=super_name)
+            else:
+                return Skill(name=name, super_name=super_name, default_point=0)
+        else:
+            return Skill(name=skill_text, super_name="", default_point=0)
 
     @classmethod
     def from_json(cls, data: Dict) -> 'Occupation':
+        skill_texts = data["occupation_skills"].split(',')
+        occupation_skills = [cls.parse_skill_entry(skill_text) for skill_text in skill_texts]
+        
+        categories = data["category"]
+        if not isinstance(categories, list):
+            categories = [categories]
+            
         return cls(
             name=data["name"],
-            skill_points_formula=data["skill_points_formula"], 
-            occupation_skills=data["occupation_skills"],
-            category=data["category"] if isinstance(data["category"], list) else [data["category"]],
+            skill_points_formula=data["skill_points_formula"],
+            occupation_skills=occupation_skills,
+            category=categories,
             credit_rating=data["credit_rating"]
         )
-

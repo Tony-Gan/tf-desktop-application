@@ -5,7 +5,7 @@ from PyQt6.QtGui import QFont
 
 from implements.components.base_phase import BasePhase
 from implements.components.data_reader import load_skills_from_json, load_occupations_from_json
-from implements.components.data_type import Occupation
+from implements.components.data_type import Occupation, Skill
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame
@@ -57,6 +57,8 @@ class UpperFrame(TFBaseFrame):
         super().__init__(QHBoxLayout, level=1, radius=10, parent=parent)
 
     def _setup_content(self) -> None:
+        self.setFixedHeight(160)
+
         self.basic_info_frame = BasicInformationFrame(self)
         self.occupation_skills_frame = OccupationSkillsFrame(self)
 
@@ -66,9 +68,10 @@ class UpperFrame(TFBaseFrame):
 
 class BasicInformationFrame(TFBaseFrame):
     def __init__(self,  parent=None):
-        super().__init__(QVBoxLayout, radius=10, parent=parent)
+        super().__init__(QGridLayout, radius=10, parent=parent)
 
     def _setup_content(self) -> None:
+        self.setFixedWidth(410)
         self.occupation_entry = self.create_button_entry(
             name="occupation",
             label_text="Occupation:",
@@ -76,34 +79,171 @@ class BasicInformationFrame(TFBaseFrame):
             button_text="Select",
             button_callback=self._on_occupation_select,
             button_size=75,
-            entry_size=75,
+            entry_size=160,
             border_radius=5
         )
 
-        self.main_layout.addWidget(self.occupation_entry)
+        self.occupation_points_entry = self.create_value_entry(
+            name="occupation_points",
+            label_text="Occupation Points:",
+            label_size=160,
+            value_size=35,
+            enable=False,
+            height=24
+        )
+
+        self.interest_points_entry = self.create_value_entry(
+            name="interest_points",
+            label_text="Interests Points:",
+            label_size=160,
+            value_size=35,
+            enable=False,
+            height=24
+        )
+
+        self.occupation_limit_entry = self.create_value_entry(
+            name="occupation_point_limit",
+            label_text="Occupation Point Limit:",
+            label_size=160,
+            value_size=35,
+            enable=False,
+            height=24
+        )
+
+        self.interest_limit_entry = self.create_value_entry(
+            name="interest_point_limit",
+            label_text="Interest Point Limit:",
+            label_size=160,
+            value_size=35,
+            enable=False,
+            height=24
+        )
+
+        self.allow_mix_point_entry = self.create_value_entry(
+            name="mix_point",
+            label_text="Allow Mixed Points:",
+            label_size=160,
+            value_size=35,
+            enable=False,
+            height=24
+        )
+
+        self.main_layout.addWidget(self.occupation_entry, 0, 0, 1, 2)
+        self.main_layout.addWidget(self.occupation_points_entry, 1, 0)
+        self.main_layout.addWidget(self.interest_points_entry, 1, 1)
+        self.main_layout.addWidget(self.occupation_limit_entry, 2, 0)
+        self.main_layout.addWidget(self.interest_limit_entry, 2, 1)
+        self.main_layout.addWidget(self.allow_mix_point_entry, 3, 0)
 
     def update_points_information(self):
-        # refresh information
-        pass
+        config = self.parent.parent.config
+        p_data = self.parent.parent.p_data
+        self.interest_points_entry.set_value(str(int(p_data['basic_stats']['int']) * 2))
+        self.occupation_limit_entry.set_value(str(config["general"]["occupation_skill_limit"]))
+        self.interest_limit_entry.set_value(str(config["general"]["interest_skill_limit"]))
+        self.allow_mix_point_entry.set_value(config["general"]["allow_mix_points"])
 
     def _on_occupation_select(self):
+        raw_stats = self.parent.parent.p_data["basic_stats"]
+        nine_stats = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu', 'luk']
+        basic_stats = {k.upper(): int(v) for k, v in raw_stats.items() if k in nine_stats}
         success, selected_occupation = OccupationListDialog.get_input(
             self,
             occupations=self.parent.parent.occupations,
-            basic_stats=self.parent.parent.p_data["basic_stats"]
+            basic_stats=basic_stats
         )
         if success and selected_occupation:
-            self.occupation_entry.set_text(selected_occupation.name)
+            self.parent.parent.reset_contents()
             self.parent.parent.selected_occupation = selected_occupation
+
+            self.occupation_entry.set_text(selected_occupation.name)
+            self.occupation_points_entry.set_value(selected_occupation.calculate_skill_points(basic_stats))
+
+            for s in self.parent.parent.skills:
+                for skill_item in selected_occupation.occupation_skills:
+                    if isinstance(skill_item, Skill) and s == skill_item:
+                        s.is_occupation = True
+                if s.name == 'credit_rating':
+                    s.is_occupation = True
+
+            self.parent.occupation_skills_frame.update_occupation_skills()
             # TODO: 触发其他需要的更新（预留占位符）
 
 
 class OccupationSkillsFrame(TFBaseFrame):
     def __init__(self,  parent=None):
+        self.skill_entries = []
         super().__init__(QGridLayout, radius=10, parent=parent)
 
     def _setup_content(self) -> None:
-        pass
+        self.main_layout.setSpacing(10)
+        self.main_layout.setContentsMargins(10, 10, 10, 10)
+
+    def update_occupation_skills(self):
+        for entry in self.skill_entries:
+            self.main_layout.removeWidget(entry)
+            entry.deleteLater()
+        self.skill_entries.clear()
+
+        selected_occupation = self.parent.parent.selected_occupation
+        if not selected_occupation:
+            return
+
+        for i, skill_item in enumerate(selected_occupation.occupation_skills[:9]):
+            row = i // 3
+            col = i % 3
+            
+            if isinstance(skill_item, Skill):
+                is_concrete = not skill_item.is_abstract
+                entry = OccupationSkillEntry(
+                    skill_text=skill_item.display_name,
+                    is_concrete=is_concrete,
+                    parent=self
+                )
+            else:
+                entry = OccupationSkillEntry(
+                    skill_text=skill_item.format_display(),
+                    is_concrete=False,
+                    parent=self
+                )
+            
+            self.main_layout.addWidget(entry, row, col)
+            self.skill_entries.append(entry)
+
+
+class OccupationSkillEntry(TFBaseFrame):
+    def __init__(self, skill_text: str, is_concrete: bool = True, parent=None):
+        self.skill_text = skill_text
+        self.is_concrete = is_concrete
+        super().__init__(QHBoxLayout, level=2, radius=5, parent=parent)
+
+    def _setup_content(self) -> None:
+        self.setFixedHeight(30)
+        self.main_layout.setContentsMargins(5, 0, 5, 0)
+        
+        self.skill_label = self.create_label(
+            text=self.skill_text,
+            alignment=Qt.AlignmentFlag.AlignLeft,
+            height=24,
+            serif=True
+        )
+        self.main_layout.addWidget(self.skill_label)
+        
+        if not self.is_concrete:
+            self.select_button = TFBaseButton(
+                text="Select",
+                parent=self,
+                width=60,
+                height=24,
+                font_size=9,
+                on_clicked=self._on_select_clicked
+            )
+            self.main_layout.addWidget(self.select_button)
+        else:
+            self.main_layout.addStretch()
+
+    def _on_select_clicked(self):
+        print("Yo!")
 
 
 class SkillsFrame(TFBaseFrame):
@@ -118,8 +258,7 @@ class OccupationListDialog(TFBaseDialog):
 
     def __init__(self, parent=None, occupations: List[Occupation] = None, basic_stats: Dict[str, str] = None):
         self.occupations = occupations
-        nine_stats = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu', 'luk']
-        self.basic_stats = {k.upper(): int(v) for k, v in basic_stats.items() if k in nine_stats}
+        self.basic_stats = basic_stats
         
         self.categories = set()
         for occupation in occupations:
@@ -301,7 +440,7 @@ class OccupationEntry(TFBaseFrame):
         self.main_layout.addWidget(points_entry)
 
         skills_label = self.create_label(
-            f"Skills: \n{self.occupation.format_skills()}",
+            f"Skills: \n{self.occupation.format_skills(line_break=True)}",
             height=60,
             serif=True
         )
