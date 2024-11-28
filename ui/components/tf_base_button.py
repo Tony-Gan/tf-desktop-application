@@ -1,40 +1,9 @@
 from PyQt6.QtWidgets import QPushButton
-from PyQt6.QtGui import QFont, QColor, QPainter
-from PyQt6.QtCore import Qt, QPropertyAnimation, pyqtProperty
+from PyQt6.QtGui import QFont, QColor, QPainter, QPixmap, QFontMetrics
+from PyQt6.QtCore import Qt, QPropertyAnimation, pyqtProperty, QRect
+
 
 class TFBaseButton(QPushButton):
-    """
-    A customized base button class that provides consistent styling and behavior
-    for buttons across the application.
-    
-    This class serves as the foundation for all application buttons, providing standard
-    styling, sizing, font settings and interaction behaviors. It extends QPushButton
-    with additional functionality like strong focus policy and simplified initialization.
-
-    The button automatically applies the application's standard styling and can be
-    further customized through stylesheet object names.
-
-    Args:
-        text (str): Text to display on the button
-        parent (QWidget, optional): Parent widget. Defaults to None.
-        width (int, optional): Fixed width in pixels. Defaults to 100.
-        height (int, optional): Fixed height in pixels. If None, uses default height.
-        font_family (str, optional): Font family name. Defaults to "Inconsolata SemiCondensed".
-        font_size (int, optional): Font size in points. Defaults to 10.
-        enabled (bool, optional): Initial enabled state. Defaults to True.
-        checkable (bool, optional): Whether button can be toggled. Defaults to False.
-        object_name (str, optional): Qt object name for styling. Defaults to None.
-        tooltip (str, optional): Hover tooltip text. Defaults to None.
-        on_clicked (callable, optional): Click event handler. Defaults to None.
-
-    Attributes:
-        clicked (Signal): Emitted when button is clicked.
-
-    Note:
-        All buttons in the application should inherit from this class to maintain
-        consistent appearance and behavior. The class automatically sets strong
-        focus policy for proper keyboard navigation.
-    """
     LEVEL_COLORS = {
         0: {
             'idle_bg': QColor("#242831"),
@@ -67,24 +36,9 @@ class TFBaseButton(QPushButton):
         tooltip: str = None,
         border_radius: int = 15,
         level: int = 1,
-        on_clicked=None
+        on_clicked=None,
+        icon_path: str = None
     ):
-        """
-        Initialize a TFBaseButton.
-
-        Args:
-            text (str): Button text
-            parent: Parent widget
-            width (int): Fixed width of the button
-            height (int): Fixed height of the button (optional)
-            font_family (str): Font family to use
-            font_size (int): Font size
-            enabled (bool): Whether the button is enabled initially
-            checkable (bool): Whether the button is checkable
-            object_name (str): Object name for the button
-            tooltip (str): Tooltip text for the button
-            on_clicked: Callback function for click events
-        """
         super().__init__(text, parent)
 
         self.level = level
@@ -126,6 +80,11 @@ class TFBaseButton(QPushButton):
         
         self._text_animation = QPropertyAnimation(self, b"textColor", self)
         self._text_animation.setDuration(200)
+
+        if icon_path:
+            self.icon = QPixmap(icon_path)
+        else:
+            self.icon = None
 
     @pyqtProperty(QColor)
     def backgroundColor(self):
@@ -195,15 +154,63 @@ class TFBaseButton(QPushButton):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
+
         painter.setBrush(self._bg_color)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRoundedRect(self.rect(), self.radius, self.radius)
-        
+
         painter.setPen(self._text_color)
         painter.setFont(self.font())
-        text_rect = self.rect()
-        painter.drawText(text_rect, Qt.AlignmentFlag.AlignCenter, self.text())
+
+        rect = self.rect()
+        margin = 5
+
+        font_metrics = QFontMetrics(self.font())
+        text_width = font_metrics.horizontalAdvance(self.text())
+        text_height = font_metrics.height()
+
+        icon_width = 0
+        icon_height = 0
+
+        if self.icon:
+            icon_size = self.icon.size()
+            icon_height = min(rect.height() - 2 * margin, icon_size.height())
+            icon_width = int(icon_size.width() * (icon_height / icon_size.height()))
+        else:
+            icon_height = 0
+
+        total_width = text_width + icon_width
+        if self.icon:
+            total_width += margin
+
+        start_x = (rect.width() - total_width) / 2
+        text_y = (rect.height() + text_height) / 2 - font_metrics.descent()
+
+        if self.icon:
+            icon_rect = QRect(
+                int(start_x),
+                int((rect.height() - icon_height) / 2),
+                icon_width,
+                icon_height
+            )
+            painter.drawPixmap(
+                icon_rect,
+                self.icon.scaled(
+                    icon_rect.size(),
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation
+                )
+            )
+            text_x = icon_rect.right() + margin
+        else:
+            text_x = start_x
+
+        # 绘制文本
+        painter.drawText(
+            QRect(int(text_x), 0, int(text_width), rect.height()),
+            Qt.AlignmentFlag.AlignVCenter,
+            self.text()
+        )
 
     def disable_animations(self):
         self._bg_color = QColor("#4D4D4D")
@@ -211,21 +218,6 @@ class TFBaseButton(QPushButton):
         self.update()
 
 class TFNextButton(TFBaseButton):
-    """
-    Standard "Next" button with predefined styling and behavior.
-    
-    A button typically used for navigating to the next step in a workflow or wizard.
-    Uses default text "Next" and standard dimensions.
-
-    Args:
-        parent (QWidget, optional): Parent widget. Defaults to None.
-        width (int, optional): Button width in pixels. Defaults to 100.
-        height (int, optional): Button height in pixels. Defaults to 30.
-        font_family (str, optional): Font family name. Defaults to "Inconsolata SemiCondensed".
-        font_size (int, optional): Font size in points. Defaults to 10.
-        on_clicked (callable, optional): Click event handler. Defaults to None.
-        tooltip (str, optional): Custom tooltip text. Defaults to "Next step".
-    """
     def __init__(
         self, 
         parent=None, 
@@ -253,21 +245,6 @@ class TFNextButton(TFBaseButton):
         self.setObjectName("TFNextButton")
 
 class TFPreviousButton(TFBaseButton):
-    """
-    Standard "Previous" button with predefined styling and behavior.
-    
-    A button typically used for navigating to the previous step in a workflow or wizard.
-    Uses default text "Previous" and standard dimensions.
-
-    Args:
-        parent (QWidget, optional): Parent widget. Defaults to None.
-        width (int, optional): Button width in pixels. Defaults to 100.
-        height (int, optional): Button height in pixels. Defaults to 30.
-        font_family (str, optional): Font family name. Defaults to "Inconsolata SemiCondensed".
-        font_size (int, optional): Font size in points. Defaults to 10.
-        on_clicked (callable, optional): Click event handler. Defaults to None.
-        tooltip (str, optional): Custom tooltip text. Defaults to "Previous step".
-    """
     def __init__(
         self, 
         parent=None, 
@@ -295,21 +272,6 @@ class TFPreviousButton(TFBaseButton):
         self.setObjectName("TFPreviousButton")
 
 class TFBackButton(TFBaseButton):
-    """
-    Standard "Back" button with predefined styling and behavior.
-    
-    A button typically used for returning to a previous view or canceling a workflow.
-    Uses default text "Back" and standard dimensions.
-
-    Args:
-        parent (QWidget, optional): Parent widget. Defaults to None.
-        width (int, optional): Button width in pixels. Defaults to 100.
-        height (int, optional): Button height in pixels. Defaults to 30.
-        font_family (str, optional): Font family name. Defaults to "Inconsolata SemiCondensed".
-        font_size (int, optional): Font size in points. Defaults to 10.
-        on_clicked (callable, optional): Click event handler. Defaults to None.
-        tooltip (str, optional): Custom tooltip text. Defaults to "Go back".
-    """
     def __init__(
         self, 
         parent=None, 
@@ -337,21 +299,6 @@ class TFBackButton(TFBaseButton):
         self.setObjectName("TFBackButton")
 
 class TFConfirmButton(TFBaseButton):
-    """
-    Standard "Confirm" button with predefined styling and behavior.
-    
-    A button typically used for confirming actions or accepting changes.
-    Uses default text "Confirm" and standard dimensions.
-
-    Args:
-        parent (QWidget, optional): Parent widget. Defaults to None.
-        width (int, optional): Button width in pixels. Defaults to 100.
-        height (int, optional): Button height in pixels. Defaults to 30.
-        font_family (str, optional): Font family name. Defaults to "Inconsolata SemiCondensed".
-        font_size (int, optional): Font size in points. Defaults to 10.
-        on_clicked (callable, optional): Click event handler. Defaults to None.
-        tooltip (str, optional): Custom tooltip text. Defaults to "Confirm action".
-    """
     def __init__(
         self, 
         parent=None, 
@@ -379,21 +326,6 @@ class TFConfirmButton(TFBaseButton):
         self.setObjectName("TFConfirmButton")
 
 class TFResetButton(TFBaseButton):
-    """
-    Standard "Reset" button with predefined styling and behavior.
-    
-    A button typically used for resetting form fields or reverting changes to default values.
-    Uses default text "Reset" and standard dimensions.
-
-    Args:
-        parent (QWidget, optional): Parent widget. Defaults to None.
-        width (int, optional): Button width in pixels. Defaults to 100.
-        height (int, optional): Button height in pixels. Defaults to 30.
-        font_family (str, optional): Font family name. Defaults to "Inconsolata SemiCondensed".
-        font_size (int, optional): Font size in points. Defaults to 10.
-        on_clicked (callable, optional): Click event handler. Defaults to None.
-        tooltip (str, optional): Custom tooltip text. Defaults to "Reset to default".
-    """
     def __init__(
         self, 
         parent=None, 
@@ -421,21 +353,6 @@ class TFResetButton(TFBaseButton):
         self.setObjectName("TFResetButton")
 
 class TFCancelButton(TFBaseButton):
-    """
-    Standard "Cancel" button with predefined styling and behavior.
-    
-    A button typically used for canceling operations or closing dialogs without saving.
-    Uses default text "Cancel" and standard dimensions.
-
-    Args:
-        parent (QWidget, optional): Parent widget. Defaults to None.
-        width (int, optional): Button width in pixels. Defaults to 100.
-        height (int, optional): Button height in pixels. Defaults to 30.
-        font_family (str, optional): Font family name. Defaults to "Inconsolata SemiCondensed".
-        font_size (int, optional): Font size in points. Defaults to 10.
-        on_clicked (callable, optional): Click event handler. Defaults to None.
-        tooltip (str, optional): Custom tooltip text. Defaults to "Cancel action".
-    """
     def __init__(
         self, 
         parent=None, 
@@ -463,21 +380,6 @@ class TFCancelButton(TFBaseButton):
         self.setObjectName("TFCancelButton")
 
 class TFSubmitButton(TFBaseButton):
-    """
-    Standard "Submit" button with predefined styling and behavior.
-    
-    A button typically used for submitting forms or finalizing data entry.
-    Uses default text "Submit" and standard dimensions.
-
-    Args:
-        parent (QWidget, optional): Parent widget. Defaults to None.
-        width (int, optional): Button width in pixels. Defaults to 100.
-        height (int, optional): Button height in pixels. Defaults to 30.
-        font_family (str, optional): Font family name. Defaults to "Inconsolata SemiCondensed".
-        font_size (int, optional): Font size in points. Defaults to 10.
-        on_clicked (callable, optional): Click event handler. Defaults to None.
-        tooltip (str, optional): Custom tooltip text. Defaults to "Submit form".
-    """
     def __init__(
         self, 
         parent=None, 

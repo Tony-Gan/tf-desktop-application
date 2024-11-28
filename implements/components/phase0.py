@@ -69,7 +69,7 @@ class Phase0(BasePhase):
         general_entry.allow_mythos_entry.set_checked(False)
         general_entry.custom_weapon_type_entry.set_checked(False)
         general_entry.completed_mode_entry.set_checked(False)
-        general_entry.custom_occupation_entry(False)
+        general_entry.custom_occupation_entry.set_checked(False)
         general_entry.instruction_mode_entry.set_checked(False)
         general_entry.setEnabled(False)
 

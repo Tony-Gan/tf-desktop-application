@@ -249,7 +249,8 @@ class IComponentCreator:
             button_callback: Optional[Callable] = None,
             show_tooltip: bool = False,
             tooltip_text: str = "",
-            border_radius: int = 10
+            border_radius: int = 10,
+            icon_path: str = None
     ) -> TFButtonEntry:
         entry = TFButtonEntry(
             label_text=label_text,
@@ -271,6 +272,7 @@ class IComponentCreator:
             show_tooltip=show_tooltip,
             tooltip_text=tooltip_text,
             border_radius=border_radius,
+            icon_path=icon_path,
             parent=self
         )
         self._register_component(name, entry)
@@ -395,6 +397,7 @@ class IComponentCreator:
             object_name: Optional[str] = None,
             tooltip: str = "",
             border_radius: int = 5,
+            icon_path: str = None,
             on_clicked: Optional[Callable] = None
     ) -> TFBaseButton:
         button = TFBaseButton(
@@ -408,6 +411,7 @@ class IComponentCreator:
             object_name=object_name,
             tooltip=tooltip,
             border_radius=border_radius,
+            icon_path=icon_path,
             on_clicked=on_clicked
         )
         self._register_component(name, button)

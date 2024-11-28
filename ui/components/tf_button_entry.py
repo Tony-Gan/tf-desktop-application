@@ -34,6 +34,7 @@ class TFButtonEntry(QFrame, IStateController):
         show_tooltip: bool = False,
         tooltip_text: str = "",
         border_radius: int = 5,
+        icon_path: str = None,
         parent: Optional[QFrame] = None
     ):
         QFrame.__init__(self, parent)
@@ -44,7 +45,7 @@ class TFButtonEntry(QFrame, IStateController):
             button_text, entry_text, entry_size, button_size,
             entry_font, height, placeholder_text, 
             alignment, button_enabled, button_tooltip, button_space, 
-            button_callback, show_tooltip, tooltip_text, border_radius
+            button_callback, show_tooltip, tooltip_text, border_radius, icon_path
         )
 
     def _setup_ui(
@@ -67,7 +68,8 @@ class TFButtonEntry(QFrame, IStateController):
             button_callback: Optional[Callable],
             show_tooltip: bool,
             tooltip_text: str,
-            border_radius: int
+            border_radius: int,
+            icon_path: str
     ) -> None:
         self.setFixedHeight(height)
         self.setFrameShape(QFrame.Shape.NoFrame)
@@ -101,6 +103,7 @@ class TFButtonEntry(QFrame, IStateController):
             tooltip=button_tooltip,
             border_radius=border_radius,
             on_clicked=button_callback,
+            icon_path=icon_path,
             parent=self
         )
         
