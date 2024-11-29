@@ -21,7 +21,7 @@ class Skill:
     @property
     def display_name(self) -> str:
         formatted_name = self.name.replace("_", " ").title()
-        if self.super_name:
+        if self.super_name and not self.is_abstract:
             formatted_super_name = self.super_name.replace("_", " ").title()
             return f"{formatted_super_name} - {formatted_name}"
         return formatted_name

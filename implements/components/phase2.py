@@ -2,6 +2,7 @@ from typing import Dict, List, Optional
 from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QScrollArea, QFrame
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
+from pygame.examples.moveit import HEIGHT
 
 from implements.components.base_phase import BasePhase
 from implements.components.data_reader import load_skills_from_json, load_occupations_from_json
@@ -80,14 +81,15 @@ class BasicInformationFrame(TFBaseFrame):
             button_callback=self._on_occupation_select,
             button_size=75,
             entry_size=160,
-            border_radius=5
+            border_radius=5,
+            height=24
         )
 
         self.occupation_points_entry = self.create_value_entry(
             name="occupation_points",
             label_text="Occupation Points:",
-            label_size=160,
-            value_size=35,
+            label_size=145,
+            value_size=40,
             enable=False,
             height=24
         )
@@ -95,35 +97,26 @@ class BasicInformationFrame(TFBaseFrame):
         self.interest_points_entry = self.create_value_entry(
             name="interest_points",
             label_text="Interests Points:",
-            label_size=160,
-            value_size=35,
+            label_size=145,
+            value_size=40,
             enable=False,
             height=24
         )
 
-        self.occupation_limit_entry = self.create_value_entry(
-            name="occupation_point_limit",
-            label_text="Occupation Point Limit:",
-            label_size=160,
-            value_size=35,
+        self.limit_entry = self.create_value_entry(
+            name="point_limit",
+            label_text="Occ/Int Point Limit:",
+            label_size=145,
+            value_size=40,
             enable=False,
-            height=24
-        )
-
-        self.interest_limit_entry = self.create_value_entry(
-            name="interest_point_limit",
-            label_text="Interest Point Limit:",
-            label_size=160,
-            value_size=35,
-            enable=False,
-            height=24
+            height=24,
         )
 
         self.allow_mix_point_entry = self.create_value_entry(
             name="mix_point",
             label_text="Allow Mixed Points:",
-            label_size=160,
-            value_size=35,
+            label_size=145,
+            value_size=40,
             enable=False,
             height=24
         )
@@ -131,16 +124,16 @@ class BasicInformationFrame(TFBaseFrame):
         self.main_layout.addWidget(self.occupation_entry, 0, 0, 1, 2)
         self.main_layout.addWidget(self.occupation_points_entry, 1, 0)
         self.main_layout.addWidget(self.interest_points_entry, 1, 1)
-        self.main_layout.addWidget(self.occupation_limit_entry, 2, 0)
-        self.main_layout.addWidget(self.interest_limit_entry, 2, 1)
-        self.main_layout.addWidget(self.allow_mix_point_entry, 3, 0)
+        self.main_layout.addWidget(self.limit_entry, 2, 0)
+        self.main_layout.addWidget(self.allow_mix_point_entry, 2, 1)
 
     def update_points_information(self):
         config = self.parent.parent.config
         p_data = self.parent.parent.p_data
         self.interest_points_entry.set_value(str(int(p_data['basic_stats']['int']) * 2))
-        self.occupation_limit_entry.set_value(str(config["general"]["occupation_skill_limit"]))
-        self.interest_limit_entry.set_value(str(config["general"]["interest_skill_limit"]))
+
+        points_limit = str(config["general"]["occupation_skill_limit"]) + "/" + str(config["general"]["interest_skill_limit"])
+        self.limit_entry.set_value(points_limit)
         self.allow_mix_point_entry.set_value(config["general"]["allow_mix_points"])
 
     def _on_occupation_select(self):
@@ -189,21 +182,20 @@ class OccupationSkillsFrame(TFBaseFrame):
         if not selected_occupation:
             return
 
-        for i, skill_item in enumerate(selected_occupation.occupation_skills[:9]):
+        for i, skill_item in enumerate(selected_occupation.occupation_skills):
             row = i // 3
             col = i % 3
             
             if isinstance(skill_item, Skill):
-                is_concrete = not skill_item.is_abstract
                 entry = OccupationSkillEntry(
                     skill_text=skill_item.display_name,
-                    is_concrete=is_concrete,
+                    is_abstract=skill_item.is_abstract,
                     parent=self
                 )
             else:
                 entry = OccupationSkillEntry(
                     skill_text=skill_item.format_display(),
-                    is_concrete=False,
+                    is_abstract=True,
                     parent=self
                 )
             
@@ -212,9 +204,9 @@ class OccupationSkillsFrame(TFBaseFrame):
 
 
 class OccupationSkillEntry(TFBaseFrame):
-    def __init__(self, skill_text: str, is_concrete: bool = True, parent=None):
+    def __init__(self, skill_text: str, is_abstract: bool = False, parent=None):
         self.skill_text = skill_text
-        self.is_concrete = is_concrete
+        self.is_abstract = is_abstract
         super().__init__(QHBoxLayout, level=2, radius=5, parent=parent)
 
     def _setup_content(self) -> None:
@@ -229,7 +221,7 @@ class OccupationSkillEntry(TFBaseFrame):
         )
         self.main_layout.addWidget(self.skill_label)
         
-        if not self.is_concrete:
+        if self.is_abstract:
             self.select_button = TFBaseButton(
                 text="Select",
                 parent=self,
