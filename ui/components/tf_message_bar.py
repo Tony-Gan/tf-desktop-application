@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QLabel
 from PyQt6.QtCore import QTimer, Qt, QPropertyAnimation, QPoint, QEasingCurve
 from PyQt6.QtGui import QFontMetrics
 
-from ui.components.tf_font import Merriweather
+from ui.components.tf_font import NotoSerifNormal
 
 class TFMessageBar(QLabel):
     def __init__(self, parent=None):
@@ -14,7 +14,7 @@ class TFMessageBar(QLabel):
         self.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.setWordWrap(True)
         
-        self.setFont(Merriweather)
+        self.setFont(NotoSerifNormal)
         
         self.setMinimumWidth(100)
         self.setMaximumWidth(400)

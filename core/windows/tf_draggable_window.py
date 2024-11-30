@@ -6,7 +6,7 @@ from ui.components.tf_animated_button import TFAnimatedButton
 from utils.registry.tf_tool_matadata import TFToolMetadata
 from ui.tf_application import TFApplication
 from ui.components.tf_settings_widget import TFCloseButton, TFMenuButton
-from ui.components.tf_font import Merriweather
+from ui.components.tf_font import NotoSerifNormal
 
 CONTENT_PADDING_LEFT = 10
 CONTENT_PADDING_TOP = 30
@@ -61,7 +61,7 @@ class TFDraggableWindow(QFrame):
         title_layout.setSpacing(0)
 
         self._title_label = QLabel(self.metadata.window_title, title_bar)
-        self._title_label.setFont(Merriweather)
+        self._title_label.setFont(NotoSerifNormal)
         self._title_label.setObjectName("titleLabel")
         self._title_label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
         title_layout.addWidget(self._title_label, alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)

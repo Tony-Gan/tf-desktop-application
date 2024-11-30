@@ -51,24 +51,22 @@ def main():
 
 def load_font():
     """
-    - Montserrat
+    - Inconsolata SemiBold
     - Merriweather Light
+    - Open Sans Light
+    - Montserrat
+    - Inconsolata SemiCondensed
     - Montserrat Light
     - Inconsolata
-    - Open Sans
-    - Inconsolata SemiBold
-    - Inconsolata Light
-    - Inconsolata SemiCondensed
     - Merriweather
-    - Nunito
-    - Open Sans Light
-    - Nunito Light
+    - Noto Serif SC ExtraLight
+    - Inconsolata Light
+    - Noto Serif SC Medium
+    - Noto Serif SC Light
+    - Open Sans
+    - Noto Serif SC
     """
     font_paths = [
-        resource_path("resources/fonts/Nunito-Bold.ttf"),
-        resource_path("resources/fonts/Nunito-Italic.ttf"),
-        resource_path("resources/fonts/Nunito-Light.ttf"),
-        resource_path("resources/fonts/Nunito-Regular.ttf"),
         resource_path("resources/fonts/OpenSans-Bold.ttf"),
         resource_path("resources/fonts/OpenSans-Italic.ttf"),
         resource_path("resources/fonts/OpenSans-Light.ttf"),
@@ -82,9 +80,13 @@ def load_font():
         resource_path("resources/fonts/Inconsolata-Regular.ttf"),
         resource_path("resources/fonts/Inconsolata-SemiBold.ttf"),
         resource_path("resources/fonts/Inconsolata_SemiCondensed-Regular.ttf"),
-        resource_path("resources/fonts/Merriweather-Bold.ttf"),
         resource_path("resources/fonts/Merriweather-Light.ttf"),
-        resource_path("resources/fonts/Merriweather-Regular.ttf")
+        resource_path("resources/fonts/Merriweather-Regular.ttf"),
+        resource_path("resources/fonts/NotoSerifSC-Bold.ttf"),
+        resource_path("resources/fonts/NotoSerifSC-ExtraLight.ttf"),
+        resource_path("resources/fonts/NotoSerifSC-Light.ttf"),
+        resource_path("resources/fonts/NotoSerifSC-Medium.ttf"),
+        resource_path("resources/fonts/NotoSerifSC-Regular.ttf")
     ]
 
     loaded_fonts = []

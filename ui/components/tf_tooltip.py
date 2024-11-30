@@ -1,12 +1,14 @@
-from PyQt6.QtWidgets import QLabel, QToolTip
+from PyQt6.QtWidgets import QLabel
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 
 from utils.helper import resource_path
+from ui.components.tf_font import NotoSerifNormal
 
 class TFTooltip(QLabel):
     def __init__(self, size: int, tooltip_text: str):
         super().__init__()
+        self.setFont(NotoSerifNormal)
         self.normal_icon = QPixmap(resource_path("resources/images/icons/tooltips.png")).scaled(
             size, size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
         )

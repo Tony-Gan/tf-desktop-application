@@ -1,6 +1,7 @@
 from typing import Dict, List, Tuple
 
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QStackedWidget, QHBoxLayout, QFrame
 
 from ui.components.if_state_controll import IStateController
@@ -136,9 +137,9 @@ class ButtonsFrame(TFBaseFrame):
         right_widget.setLayout(self.right_layout)
         self.main_layout.addWidget(right_widget)
 
-        self.prev_button = TFPreviousButton(self, height=35, on_clicked=self.parent.go_previous)
-        self.reset_button = TFResetButton(self, height=35, on_clicked=self.parent.on_reset)
-        self.next_button = TFNextButton(self, height=35, on_clicked=self.parent.try_go_next, enabled=True)
+        self.prev_button = TFPreviousButton(self, font_family=QFont("Noto Serif SC"), height=35, on_clicked=self.parent.go_previous)
+        self.reset_button = TFResetButton(self, font_family=QFont("Noto Serif SC"), height=35, on_clicked=self.parent.on_reset)
+        self.next_button = TFNextButton(self, font_family=QFont("Noto Serif SC"), height=35, on_clicked=self.parent.try_go_next, enabled=True)
 
         self.right_layout.addStretch()
         self.right_layout.addWidget(self.prev_button)

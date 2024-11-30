@@ -5,7 +5,7 @@ from PyQt6.QtGui import QIcon, QPixmap
 from ui.components.tf_action_label import TFActionLabel
 from ui.components.tf_animated_button import TFAnimatedButton
 from ui.components.tf_base_frame import TFBaseFrame
-from ui.components.tf_font import Merriweather
+from ui.components.tf_font import NotoSerifNormal
 from ui.tf_application import TFApplication
 from ui.views.tf_window_container import TFWindowContainer
 from utils.helper import resource_path
@@ -18,7 +18,7 @@ class TFMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.app = TFApplication.instance()
-        self.setWindowTitle('TF Desktop Application')
+        self.setWindowTitle('摸会儿鱼')
         self.setWindowIcon(QIcon(resource_path("resources/images/icons/app.png")))
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -388,7 +388,7 @@ class ExpandableIconGroup(QWidget):
         
         for action_text in actions:
             label = TFActionLabel(action_text)
-            label.setFont(Merriweather)
+            label.setFont(NotoSerifNormal)
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             label.clicked.connect(lambda t=action_text: self.handle_action(t))
             self.action_labels.append(label)

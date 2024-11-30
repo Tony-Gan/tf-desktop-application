@@ -8,10 +8,11 @@ from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_button_entry import TFButtonEntry
 from ui.components.tf_check_with_label import TFCheckWithLabel
 from ui.components.tf_date_entry import TFDateEntry
+from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_radio_group import TFRadioGroup
 from ui.components.tf_value_entry import TFValueEntry
-from ui.components.tf_font import TEXT_FONT, Merriweather
+from ui.components.tf_font import TEXT_FONT, NotoSerifNormal, NotoSerifLight
 
 DEBOUNCE_INTERVAL = 500
 
@@ -115,8 +116,8 @@ class IComponentCreator:
             value_text: str = "",
             label_size: int = 80,
             value_size: int = 36,
-            label_font: QFont = Merriweather,
-            value_font: QFont = TEXT_FONT,
+            label_font: QFont = NotoSerifNormal,
+            value_font: QFont = NotoSerifLight,
             enable: bool = True,
             height: int = 24,
             number_only: bool = False,
@@ -160,8 +161,8 @@ class IComponentCreator:
             current_value: str = "",
             label_size: int = 80,
             value_size: int = 36,
-            label_font: QFont = Merriweather,
-            value_font: QFont = TEXT_FONT,
+            label_font: QFont = NotoSerifNormal,
+            value_font: QFont = NotoSerifLight,
             height: int = 24,
             extra_value_width: Optional[int] = None,
             enable_filter: bool = False,
@@ -208,7 +209,7 @@ class IComponentCreator:
             self,
             name: str,
             label_text: str,
-            label_font: QFont = Merriweather,
+            label_font: QFont = NotoSerifNormal,
             checked: bool = False,
             height: int = 24,
             spacing: int = 6,
@@ -232,14 +233,14 @@ class IComponentCreator:
             self,
             name: str,
             label_text: str = "",
-            label_font: QFont = Merriweather,
+            label_font: QFont = NotoSerifNormal,
             label_size: int = 100,
             label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
             button_text: str = "Confirm",
             entry_text: str = "",
             entry_size: int = 100,
             button_size: int = 100,
-            entry_font: QFont = TEXT_FONT,
+            entry_font: QFont = NotoSerifLight,
             height: int = 24,
             placeholder_text: str = "",
             alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
@@ -283,7 +284,7 @@ class IComponentCreator:
             name: str,
             options: List[str],
             current_value: Optional[str] = None,
-            label_font: QFont = Merriweather,
+            label_font: QFont = NotoSerifNormal,
             layout_type: type = QVBoxLayout,
             height: int = 24,
             spacing: int = 6,
@@ -303,6 +304,31 @@ class IComponentCreator:
         )
         self._register_component(name, radio_group)
         return radio_group
+    
+    def create_number_receiver(
+            self,
+            name: str,
+            text: str = "0",
+            alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+            allow_decimal: bool = False,
+            allow_negative: bool = False,
+            width: int = 50,
+            height: int = 24,
+            max_digits: int = None
+        ) -> TFNumberReceiver:
+            receiver = TFNumberReceiver(
+                text=text,
+                alignment=alignment,
+                font=TEXT_FONT,
+                allow_decimal=allow_decimal,
+                allow_negative=allow_negative,
+                width=width,
+                height=height,
+                max_digits=max_digits,
+                parent=self
+            )
+            self._register_component(name, receiver)
+            return receiver
 
     def create_label(
             self,
@@ -313,7 +339,7 @@ class IComponentCreator:
             serif: bool = False
     ) -> QLabel:
         label = QLabel(text, parent=self)
-        label.setFont(Merriweather if serif else TEXT_FONT)
+        label.setFont(NotoSerifNormal if serif else TEXT_FONT)
         if fixed_width:
             label.setFixedWidth(fixed_width)
         label.setAlignment(alignment)
@@ -330,7 +356,7 @@ class IComponentCreator:
     ) -> QLineEdit:
         edit = QLineEdit(self)
         edit.setText(text)
-        edit.setFont(Merriweather)
+        edit.setFont(NotoSerifLight)
         if width:
             edit.setFixedWidth(width)
         edit.setFixedHeight(height)
@@ -350,7 +376,7 @@ class IComponentCreator:
     ) -> QComboBox:
         combo = QComboBox(self)
         combo.addItems(items)
-        combo.setFont(Merriweather)
+        combo.setFont(NotoSerifLight)
         if width:
             combo.setFixedWidth(width)
         combo.setFixedHeight(height)
@@ -377,7 +403,7 @@ class IComponentCreator:
             height: int = 24
     ) -> QCheckBox:
         check = QCheckBox(text, self)
-        check.setFont(Merriweather)
+        check.setFont(NotoSerifNormal)
         check.setChecked(checked)
         if width:
             check.setFixedWidth(width)

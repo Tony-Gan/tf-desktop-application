@@ -28,7 +28,7 @@ class TFBaseButton(QPushButton):
         parent=None,
         width: int = 100,
         height: int = None,
-        font_family: str = "Merriweather Light",
+        font_family: str = "Noto Serif SC Light",
         font_size: int = 10,
         enabled: bool = True,
         checkable: bool = False,
@@ -165,6 +165,24 @@ class TFBaseButton(QPushButton):
         rect = self.rect()
         margin = 5
 
+        if self.icon and not self.text():
+            icon_size = min(rect.width(), rect.height()) - 2 * margin
+            icon_rect = QRect(
+                int((rect.width() - icon_size) / 2),
+                int((rect.height() - icon_size) / 2),
+                icon_size,
+                icon_size
+            )
+            painter.drawPixmap(
+                icon_rect,
+                self.icon.scaled(
+                    icon_rect.size(),
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation
+                )
+            )
+            return
+
         font_metrics = QFontMetrics(self.font())
         text_width = font_metrics.horizontalAdvance(self.text())
         text_height = font_metrics.height()
@@ -176,8 +194,6 @@ class TFBaseButton(QPushButton):
             icon_size = self.icon.size()
             icon_height = min(rect.height() - 2 * margin, icon_size.height())
             icon_width = int(icon_size.width() * (icon_height / icon_size.height()))
-        else:
-            icon_height = 0
 
         total_width = text_width + icon_width
         if self.icon:
@@ -205,7 +221,6 @@ class TFBaseButton(QPushButton):
         else:
             text_x = start_x
 
-        # 绘制文本
         painter.drawText(
             QRect(int(text_x), 0, int(text_width), rect.height()),
             Qt.AlignmentFlag.AlignVCenter,
@@ -223,14 +238,14 @@ class TFNextButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Merriweather Light",
+        font_family: str = "Noto Serif SC Light",
         font_size: int = 10,
         enabled:bool = False,
         on_clicked=None, 
         tooltip="Next step"
     ):
         super().__init__(
-            "Next",
+            "下一步",
             parent=parent,
             width=width,
             height=height,
@@ -250,14 +265,14 @@ class TFPreviousButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Merriweather Light",
+        font_family: str = "Noto Serif SC Light",
         font_size: int = 10,
         enabled:bool = True,
         on_clicked=None, 
         tooltip="Previous step"
     ):
         super().__init__(
-            "Previous",
+            "上一步",
             parent=parent,
             width=width,
             height=height,
@@ -277,14 +292,14 @@ class TFBackButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Merriweather Light",
+        font_family: str = "Noto Serif SC Light",
         font_size: int = 10,
         enabled:bool = False,
         on_clicked=None, 
         tooltip="Go back"
     ):
         super().__init__(
-            "Back",
+            "返回",
             parent=parent,
             width=width,
             height=height,
@@ -304,14 +319,14 @@ class TFConfirmButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Merriweather Light",
+        font_family: str = "Noto Serif SC Light",
         font_size: int = 10,
         enabled:bool = False,
         on_clicked=None, 
         tooltip="Confirm action"
     ):
         super().__init__(
-            "Confirm",
+            "确认",
             parent=parent,
             width=width,
             height=height,
@@ -331,14 +346,14 @@ class TFResetButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Merriweather Light",
+        font_family: str = "Noto Serif SC Light",
         font_size: int = 10,
         enabled:bool = True,
         on_clicked=None, 
         tooltip="Reset to default"
     ):
         super().__init__(
-            "Reset",
+            "重置",
             parent=parent,
             width=width,
             height=height,
@@ -358,14 +373,14 @@ class TFCancelButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Merriweather Light",
+        font_family: str = "Noto Serif SC Light",
         font_size: int = 10,
         enabled:bool = False,
         on_clicked=None, 
         tooltip="Cancel action"
     ):
         super().__init__(
-            "Cancel",
+            "取消",
             parent=parent,
             width=width,
             height=height,
@@ -385,14 +400,14 @@ class TFSubmitButton(TFBaseButton):
         parent=None, 
         width: int = 100,
         height: int = 30,
-        font_family: str = "Merriweather Light",
+        font_family: str = "Noto Serif SC Light",
         font_size: int = 10,
         enabled:bool = False,
         on_clicked=None, 
         tooltip="Submit form"
     ):
         super().__init__(
-            "Submit",
+            "提交",
             parent=parent,
             width=width,
             height=height,

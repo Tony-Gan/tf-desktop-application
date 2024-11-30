@@ -20,11 +20,15 @@ class Skill:
 
     @property
     def display_name(self) -> str:
-        formatted_name = self.name.replace("_", " ").title()
+        if self.name == '任意技能' and self.super_name is None:
+            return "任意技能"
         if self.super_name and not self.is_abstract:
-            formatted_super_name = self.super_name.replace("_", " ").title()
-            return f"{formatted_super_name} - {formatted_name}"
-        return formatted_name
+            if self.name == '交涉技能':
+                return "交涉技能"
+            return f"{self.super_name} - {self.name}"
+        if self.is_abstract:
+            return f"{self.super_name} - 任意"
+        return self.name
     
     @classmethod
     def create_abstract(cls, name: str, super_name: str = "") -> 'Skill':
@@ -353,29 +357,17 @@ class Occupation:
     def get_skill_names(self) -> List[str]:
         return self.occupation_skills.split(',')
     
-    def format_skills(self, line_break: bool = False) -> str:
+    def format_skills(self) -> str:
         formatted_skills = []
-        
-        for i, skill_item in enumerate(self.occupation_skills):
+
+        for skill_item in self.occupation_skills:
             if isinstance(skill_item, Skill):
                 formatted_skills.append(skill_item.display_name)
             elif isinstance(skill_item, SkillCombination):
                 formatted_skills.append(skill_item.format_display())
-            
-            if line_break and i == 3:
-                formatted_skills.append('\n')
+
+        return '，'.join(formatted_skills)
         
-        result = ''
-        for i, skill in enumerate(formatted_skills):
-            if skill == '\n':
-                result += skill
-            elif result.endswith('\n'):
-                result += skill
-            else:
-                result += (', ' if i > 0 else '') + skill
-        
-        return result
-    
     @classmethod
     def parse_skill_entry(cls, skill_text: str) -> Union[Skill, SkillCombination]:
         skill_text = skill_text.strip()
@@ -384,16 +376,16 @@ class Occupation:
             sub_skills = [cls.parse_skill_entry(s.strip()) for s in skill_text.split('|')]
             return SkillCombination(skills=sub_skills)
         
-        if skill_text == 'any':
-            return Skill.create_abstract(name='any')
+        if skill_text == '任意技能':
+            return Skill.create_abstract(name='任意技能', super_name=None)
         elif ':' in skill_text:
             super_name, name = skill_text.split(':')
-            if name == 'any':
-                return Skill.create_abstract(name='any', super_name=super_name)
+            if name == '任意':
+                return Skill.create_abstract(name='任意', super_name=super_name)
             else:
                 return Skill(name=name, super_name=super_name, default_point=0)
         else:
-            return Skill(name=skill_text, super_name="", default_point=0)
+            return Skill(name=skill_text, super_name=None, default_point=0)
 
     @classmethod
     def from_json(cls, data: Dict) -> 'Occupation':

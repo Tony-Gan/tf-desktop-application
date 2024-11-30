@@ -1,11 +1,12 @@
 from typing import List, Tuple
 from PyQt6.QtWidgets import QGridLayout, QSizePolicy, QSpacerItem
+from PyQt6.QtGui import QFont
 
 from implements.components.base_phase import BasePhase
 from ui.components.if_state_controll import IStateController
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_frame import TFBaseFrame
-from ui.components.tf_font import Merriweather
+from ui.components.tf_font import NotoSerifNormal
 from ui.tf_application import TFApplication
 
 
@@ -23,9 +24,10 @@ class Phase0(BasePhase):
 
         self.generate_token_button = TFBaseButton(
             parent=self.buttons_frame, 
-            text="Generate Token", 
+            text="生成令牌", 
             height=35,
-            width=150,
+            width=120,
+            font_family=QFont("Noto Serif SC"),
             on_clicked=self._on_token_generate_clicked
         )
         self.buttons_frame.add_custom_button(self.generate_token_button)
@@ -86,14 +88,14 @@ class Phase0(BasePhase):
         self.config['mode'] = base_values.get('mode', 'None')
         self.config['input_token'] = base_values.get('token', '')
 
-        if self.config['mode'] == 'Points':
+        if self.config['mode'] == '购点':
             self.config['points'] = {
                 'available': int(points_values.get('points_available', 480)),
                 'upper_limit': int(points_values.get('states_upper_limit', 80)),
                 'lower_limit': int(points_values.get('states_lower_limit', 30)),
                 'custom_luck': points_values.get('allow_custom_luck', False)
             }
-        elif self.config['mode'] == 'Destiny':
+        elif self.config['mode'] == '天命':
             self.config['destiny'] = {
                 'dice_count': destiny_values.get('dice_count', '3'),
                 'allow_exchange': destiny_values.get('stats_exchange', False),
@@ -126,18 +128,18 @@ class Phase0(BasePhase):
         base_values = self.contents_frame.get_values().get('base_entry', {})
         mode = base_values.get('mode', 'None')
         
-        if mode == 'None':
-            invalid_items.append((self.base_entry.mode_entry, "Please select a mode"))
+        if mode == '选择模式':
+            invalid_items.append((self.base_entry.mode_entry, "请选择一个模式"))
             return invalid_items
             
-        if mode == 'Points':
+        if mode == '购点':
             points_values = self.contents_frame.get_values().get('points_entry', {})
             
             points = int(points_values.get('points_available', 480))
             if points < 300 or points > 680:
                 invalid_items.append(
                     (self.points_entry.points_available_entry, 
-                     "Points available must be between 300 and 680")
+                     "可分配点数必须在 300 到 680 之间")
                 )
             
             upper = int(points_values.get('states_upper_limit', 80))
@@ -145,29 +147,29 @@ class Phase0(BasePhase):
             if upper <= lower:
                 invalid_items.append(
                     (self.points_entry.stats_upper_limit_entry,
-                     "Upper limit must be greater than lower limit")
+                     "属性上限必须大于属性下限")
                 )
                 invalid_items.append(
                     (self.points_entry.stats_lower_limit_entry,
-                     "Lower limit must be less than upper limit")
+                     "属性下限必须小于属性上限")
                 )
             if upper > 90:
                 invalid_items.append(
-                    self.points_entry.stats_upper_limit_entry, "Upper limit can't exceed 90"
+                    self.points_entry.stats_upper_limit_entry, "属性上限不能超过 90"
                 )
             if lower < 10:
                 invalid_items.append(
-                    self.points_entry.stats_lower_limit_entry, "Lower limit cant't less than 10"
+                    self.points_entry.stats_lower_limit_entry, "属性下限不能低于 10"
                 )
                 
-        elif mode == 'Destiny':
+        elif mode == '天命':
             destiny_values = self.contents_frame.get_values().get('destiny_entry', {})
             
             dice_count = int(destiny_values.get('dice_count', '3'))
             if dice_count < 1 or dice_count > 7:
                 invalid_items.append(
                     (self.destiny_entry.dice_count_entry,
-                     "Dice count must be between 1 and 7")
+                     "骰子数量必须在 1 到 7 之间")
                 )
             
             if destiny_values.get('stats_exchange', False):
@@ -175,7 +177,7 @@ class Phase0(BasePhase):
                 if exchange_count < 1 or exchange_count > 3:
                     invalid_items.append(
                         (self.destiny_entry.exchange_count_entry,
-                         "Exchange count must be between 1 and 3")
+                         "属性交换次数必须在 1 到 3 之间")
                     )
         
         general_values = self.contents_frame.get_values().get('general_entry', {})
@@ -184,14 +186,14 @@ class Phase0(BasePhase):
         if occupation_limit < 50 or occupation_limit > 95:
             invalid_items.append(
                 (self.general_entry.occupation_skill_limit_entry,
-                 "Occupation skill limit must be between 50 and 95")
+                 "职业技能上限必须在 50 到 95 之间")
             )
             
         interest_limit = int(general_values.get('interest_skill_limit', 60))
         if interest_limit < 30 or interest_limit > 90:
             invalid_items.append(
                 (self.general_entry.interest_skill_limit_entry,
-                 "Interest skill limit must be between 40 and 80")
+                 "兴趣技能上限必须在 30 到 90 之间")
             )
             
         return invalid_items
@@ -202,9 +204,9 @@ class Phase0(BasePhase):
         if token:
             try:
                 TFApplication.clipboard().setText(token)
-                TFApplication.show_message(f"Token has been copied to clipboard: {token}", 5000)
+                TFApplication.show_message(f"令牌已复制到剪贴板：{token}", 5000)
             except Exception:
-                TFApplication.show_message(f"Generated token (copy manually): {token}", 5000)
+                TFApplication.show_message(f"生成的令牌（请手动复制）：{token}", 5000)
 
     def _generate_token(self, values: dict) -> str:
         base_values = values.get('base_entry', {})
@@ -217,7 +219,7 @@ class Phase0(BasePhase):
             return ""
 
         token_parts = []
-        mode_prefix = 'PO' if mode == 'Points' else 'DE'
+        mode_prefix = 'PO' if mode == '购点' else 'DE'
         token_parts.append(mode_prefix)
 
         if mode == 'Points':
@@ -253,11 +255,11 @@ class Phase0(BasePhase):
     
     def go_next(self):
         response = TFApplication.instance().show_question(
-            "Confirmation Required",
-            "Once you proceed, all settings will be locked and cannot be changed.",
-            buttons=["Proceed", "Cancel"]
+            "确认操作",
+            "所有设置将被锁定，无法更改。",
+            buttons=["继续", "取消"]
         )
-        if response != "Proceed":
+        if response != "继续":
             return
 
         self.base_entry.setEnabled(False)
@@ -276,25 +278,25 @@ class BaseEntry(TFBaseFrame):
 
         self.mode_entry = self.create_option_entry(
             name="mode",
-            label_text="Mode:",
-            label_font=Merriweather,
-            options=["Points", "Destiny"],
-            current_value="None",
-            label_size=100,
-            value_size=80,
+            label_text="模式选择:",
+            label_font=NotoSerifNormal,
+            options=["选择模式", "购点", "天命"],
+            current_value="选择模式",
+            label_size=65,
+            value_size=100,
             height=24
         )
         self.mode_entry.value_changed.connect(self._handle_mode_change)
 
         self.token_entry = self.create_value_entry(
             name="token",
-            label_text="Token:",
-            label_font=Merriweather,
-            label_size=100,
+            label_text="令牌:",
+            label_font=NotoSerifNormal,
+            label_size=65,
             value_size=300,
             height=24,
             show_tooltip=True,
-            tooltip_text="Token provided by your Keeper, use the token and all settings will be done automatically."
+            tooltip_text="KP提供的令牌，使用该令牌后，所有设置将自动完成，并无法进行修改。"
         )
         self.token_entry.value_changed.connect(self._handle_token_change)
 
@@ -310,22 +312,22 @@ class BaseEntry(TFBaseFrame):
         if self._validate_token(token):
             self._apply_token(token)
         else:
-            print("Invalid token format")
+            TFApplication.show_message("无效的令牌格式", 5000, "yellow")
 
     def _handle_mode_change(self, mode: str) -> None:
         self.parent.points_entry.setEnabled(False)
         self.parent.destiny_entry.setEnabled(False)
         self.parent.general_entry.setEnabled(False)
 
-        if mode == "Points":
+        if mode == "购点":
             self.parent.points_entry.setEnabled(True)
             self.parent.general_entry.setEnabled(True)
-        elif mode == "Destiny":
+        elif mode == "天命":
             self.parent.destiny_entry.setEnabled(True)
             self.parent.general_entry.setEnabled(True)
 
     def _apply_token(self, token: str) -> None:
-        mode = "Points" if token.startswith('PO') else "Destiny"
+        mode = "购点" if token.startswith('PO') else "天命"
         self.mode_entry.set_value(mode)
         
         if mode == "Points":
@@ -406,9 +408,9 @@ class PointsEntry(TFBaseFrame):
 
         self.points_available_entry = self.create_value_entry(
             name="points_available",
-            label_text="Points Available:",
-            label_size=135,
-            label_font=Merriweather,
+            label_text="可分配点数:",
+            label_size=80,
+            label_font=NotoSerifNormal,
             value_size=45,
             value_text=480,
             number_only=True,
@@ -419,9 +421,9 @@ class PointsEntry(TFBaseFrame):
 
         self.stats_upper_limit_entry = self.create_value_entry(
             name="states_upper_limit",
-            label_text="Stats Upper Limit:",
-            label_size=135,
-            label_font=Merriweather,
+            label_text="属性上限:",
+            label_size=60,
+            label_font=NotoSerifNormal,
             value_size=30,
             value_text=80,
             number_only=True,
@@ -432,9 +434,9 @@ class PointsEntry(TFBaseFrame):
 
         self.stats_lower_limit_entry = self.create_value_entry(
             name="states_lower_limit",
-            label_text="Stats Lower Limit:",
-            label_size=135,
-            label_font=Merriweather,
+            label_text="属性下限:",
+            label_size=60,
+            label_font=NotoSerifNormal,
             value_size=30,
             value_text=30,
             number_only=True,
@@ -445,12 +447,12 @@ class PointsEntry(TFBaseFrame):
 
         self.allow_custom_luck_entry = self.create_check_with_label(
             name="allow_custom_luck",
-            label_text="Allow Cusom Luck",
-            label_font=Merriweather,
+            label_text="启用自定义幸运",
+            label_font=NotoSerifNormal,
             checked=False,
             height=24,
             show_tooltip=True,
-            tooltip_text="Checking this option requires the allocation of points to Luck (LUK). If not checked, Luck is determined by rolling the dice."
+            tooltip_text="勾选此选项需要将点数分配到幸运值（LUK）。如果未勾选，幸运值将通过掷骰子决定。"
         )
 
         self.main_layout.addWidget(self.points_available_entry, 0, 0)
@@ -468,9 +470,9 @@ class DestinyEntry(TFBaseFrame):
 
         self.dice_count_entry = self.create_value_entry(
             name="dice_count",
-            label_text="Dice Count:",
-            label_size=135,
-            label_font=Merriweather,
+            label_text="骰子数量:",
+            label_size=80,
+            label_font=NotoSerifNormal,
             value_size=30,
             value_text="3",
             number_only=True,
@@ -481,22 +483,22 @@ class DestinyEntry(TFBaseFrame):
 
         self.allow_stats_exchange_entry = self.create_check_with_label(
             name="stats_exchange",
-            label_text="Allow Stats Exchange",
-            label_font=Merriweather,
+            label_text="启用属性交换",
+            label_font=NotoSerifNormal,
             checked=False,
             height=24,
             show_tooltip=True,
-            tooltip_text="Checking this option allows the exchange of two attributes after selection."
+            tooltip_text="勾选此选项允许在选择后交换两个属性值。"
         )
         self.allow_stats_exchange_entry.value_changed.connect(self._handle_exchange_change)
 
         self.exchange_count_entry = self.create_value_entry(
             name="exchange_count",
-            label_text="Exchange Count:",
+            label_text="属性交换次数:",
             value_text="1",
-            label_size=135,
+            label_size=90,
             value_size=30,
-            label_font=Merriweather,
+            label_font=NotoSerifNormal,
             number_only=True,
             allow_decimal=False,
             max_digits=1,
@@ -525,52 +527,51 @@ class GeneralEntry(TFBaseFrame):
 
         self.occupation_skill_limit_entry = self.create_value_entry(
             name="occupation_skill_limit",
-            label_text="Occupation Skill Limit:",
-            label_size=150,
+            label_text="职业技能上限:",
+            label_size=90,
             value_size=30,
             value_text=80,
-            label_font=Merriweather,
+            label_font=NotoSerifNormal,
             number_only=True,
             allow_decimal=False,
             max_digits=2,
             height=24,
             show_tooltip=True,
-            tooltip_text="The maximum points limit for each occupation skill."
+            tooltip_text="每项职业技能的点数上限。"
         )
 
         self.interest_skill_limit_entry = self.create_value_entry(
             name="interest_skill_limit",
-            label_text="Interest Skill Limit:",
-            label_size=150,
+            label_text="兴趣技能上限:",
+            label_size=90,
             value_size=30,
             value_text=60,
-            label_font=Merriweather,
+            label_font=NotoSerifNormal,
             number_only=True,
             allow_decimal=False,
             max_digits=2,
             height=24,
             show_tooltip=True,
-            tooltip_text="The maximum points limit for each interest skill."
+            tooltip_text="每项兴趣技能的点数上限。"
         )
 
         self.allow_mix_points_entry = self.create_check_with_label(
             name="allow_mix_points",
-            label_text="Allow Mix Points",
-            label_font=Merriweather,
+            label_text="启用混点",
+            label_font=NotoSerifNormal,
             checked=True,
             height=24,
             show_tooltip=True,
-            tooltip_text="Checking this option allows the allocation of both occupation points and interest points to the same skill simultaneously."
+            tooltip_text="勾选此选项允许同时将职业点数和兴趣点数分配给同一技能。"
         )
 
         tooltip = """
-        Checking this option enables settings related to the Cthulhu Mythos. Specifically, Cthulhu Mythos will appear during skill allocation, \n
-        and new options related to the Cthulhu background will be added during background setting.
+        勾选这个选项后，会开启克苏鲁神话相关的设置。克苏鲁神话技能会出现在技能分配阶段，背景设置里也会增加一些和克苏鲁背景有关的选项。
         """
         self.allow_mythos_entry = self.create_check_with_label(
             name="allow_mythos",
-            label_text="Allow Mythos",
-            label_font=Merriweather,
+            label_text="启用神话",
+            label_font=NotoSerifNormal,
             checked=False,
             height=24,
             show_tooltip=True,
@@ -579,40 +580,40 @@ class GeneralEntry(TFBaseFrame):
 
         self.custom_weapon_type_entry = self.create_check_with_label(
             name="custom_weapon_type",
-            label_text="Custom Weapon Type",
-            label_font=Merriweather,
+            label_text="自定义武器类型",
+            label_font=NotoSerifNormal,
             height=24,
             show_tooltip=True,
-            tooltip_text="Checking this option allows full customization of weapon attributes."
+            tooltip_text="勾选此选项后，可以完全自定义武器属性。"
         )
 
         self.completed_mode_entry = self.create_check_with_label(
             name="completed_mode",
-            label_text="Completed Mode",
-            label_font=Merriweather,
+            label_text="完整模式",
+            label_font=NotoSerifNormal,
             height=24,
             show_tooltip=True,
-            tooltip_text="Checking this option will display uncommon settings for new cards, such as spells."
+            tooltip_text="勾选此选项后，会显示新卡片的非常规设置，例如法术。"
         )
 
         self.custom_occupation_entry = self.create_check_with_label(
             name="custom_occupation",
-            label_text="Custom Occupation",
-            label_font=Merriweather,
+            label_text="自定义职业",
+            label_font=NotoSerifNormal,
             checked=False,
             height=24,
             show_tooltip=True,
-            tooltip_text="Checking this option allows full customization of occupation."
+            tooltip_text="勾选此选项后，可以完全自定义职业。"
         )
 
         self.instruction_mode_entry = self.create_check_with_label(
             name="instruction_mode",
-            label_text="Instruction Mode",
-            label_font=Merriweather,
+            label_text="引导模式",
+            label_font=NotoSerifNormal,
             checked=False,
             height=24,
             show_tooltip=True,
-            tooltip_text="Checking this option activates guide mode, suitable for newcomers."
+            tooltip_text="勾选此选项后，将启用引导模式，适合新手使用。"
         )
 
         self.main_layout.addWidget(self.occupation_skill_limit_entry, 0, 0)

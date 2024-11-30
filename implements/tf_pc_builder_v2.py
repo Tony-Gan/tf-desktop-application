@@ -12,10 +12,8 @@ from implements.components.phase1 import Phase1
 
 class TFPcBuilderV2(TFDraggableWindow):
     metadata = TFToolMetadata(
-        name="PC Builder V2",
-        menu_path="Tools/COC",
-        menu_title="Add PC Builder V2",
-        window_title="PC Builder V2",
+        name="角色构筑器v2",
+        window_title="角色构筑器v2",
         window_size=(1080, 640),
         description="PC builder",
         max_instances=1

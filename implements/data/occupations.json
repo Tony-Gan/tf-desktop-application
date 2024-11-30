@@ -1,905 +1,905 @@
 [
     {
-        "name": "Accountant",
+        "name": "会计师",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,law,library_use,listen,persuade,spot_hidden,any,any",
-        "category": ["Business", "Science & Technology", "Academic"],
+        "occupation_skills": "会计,法律,图书馆使用,聆听,说服,侦查,任意技能,任意技能",
+        "category": ["商业", "科学与技术", "学术"],
         "credit_rating": "30-70"
     },
     {
-        "name": "Acrobat",
+        "name": "杂技演员",
         "skill_points_formula": "EDU*2+DEX*2",
-        "occupation_skills": "climb,dodge,jump,throw,spot_hidden,swim,any,any",
-        "category": ["Sports & Athletics", "Adventurer", "Service Industry"],
+        "occupation_skills": "攀爬,闪避,跳跃,投掷,侦查,游泳,任意技能,任意技能",
+        "category": ["运动与竞技", "冒险者", "服务业"],
         "credit_rating": "9-20"
     },
     {
-        "name": "AI Ethics Consultant",
+        "name": "人工智能伦理顾问",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "science:computer_science,psychology,law,library_use,interpersonal_skill:any,accounting,science:mathematics,any",
-        "category": ["Science & Technology", "Academic", "Business"],
+        "occupation_skills": "科学:计算机科学,心理学,法律,图书馆使用,交涉技能:任意,会计,科学:数学,任意技能",
+        "category": ["科学与技术", "学术", "商业"],
         "credit_rating": "30-80"
     },
     {
-        "name": "Animation Art Director",
+        "name": "动画艺术总监",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "art:design,art:technical_drawing,computer_use,interpersonal_skill:any,library_use,interpersonal_skill:any,any,any",
-        "category": ["Service Industry", "Science & Technology", "Business"],
+        "occupation_skills": "技艺:设计,技艺:制图,计算机使用,交涉技能:任意,图书馆使用,交涉技能:任意,任意技能,任意技能",
+        "category": ["服务业", "科学与技术", "商业"],
         "credit_rating": "20-70"
     },
     {
-        "name": "Artist",
+        "name": "艺术家",
         "skill_points_formula": "EDU*2+MAX(DEX,POW)*2",
-        "occupation_skills": "art:any,history|natural_world,interpersonal_skill:any,language:any,psychology,spot_hidden,interpersonal_skill:any,interpersonal_skill:any", 
-        "category": ["Occult & Mystic", "Service Industry", "Academic"],
+        "occupation_skills": "技艺:任意,历史|博物学,交涉技能:任意,语言:任意,心理学,侦查,交涉技能:任意,交涉技能:任意",
+        "category": ["神秘与灵性", "服务业", "学术"],
         "credit_rating": "9-50"
     },
     {
-        "name": "Assassin",
+        "name": "刺客",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "disguise,electrical_repair,fighting:any,firearms:any,locksmith,mechanical_repair,stealth,psychology",
-        "category": ["Criminal", "Adventurer", "Police & Military"],
+        "occupation_skills": "伪装,电器维修,格斗:任意,火器:任意,开锁,机械维修,潜行,心理学",
+        "category": ["犯罪", "冒险者", "警察与军队"],
         "credit_rating": "30-60"
     },
     {
-        "name": "Asylum Attendant",
+        "name": "精神病院看护",
         "skill_points_formula": "EDU*2+MAX(STR,DEX)*2",
-        "occupation_skills": "dodge,fighting:brawl,first_aid,interpersonal_skill:any,interpersonal_skill:any,listen,psychology,stealth",
-        "category": ["Service Industry", "Labor", "Police & Military"],
+        "occupation_skills": "闪避,格斗:徒手,急救,交涉技能:任意,交涉技能:任意,聆听,心理学,潜行",
+        "category": ["服务业", "劳动", "警察与军队"],
         "credit_rating": "8-20"
     },
     {
-        "name": "Athlete",
+        "name": "运动员",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "climb,jump,fighting:brawl,ride,interpersonal_skill:any,swin,throw,any",
-        "category": ["Sports & Athletics", "Adventurer", "Service Industry"],
+        "occupation_skills": "攀爬,跳跃,格斗:徒手,骑术,交涉技能:任意,游泳,投掷,任意技能",
+        "category": ["运动与竞技", "冒险者", "服务业"],
         "credit_rating": "9-70"
     },
     {
-        "name": "Agency Detective",
+        "name": "侦探社侦探",
         "skill_points_formula": "EDU*2+MAX(STR,DEX)*2",
-        "occupation_skills": "interpersonal_skill:any,fighting:brawl,firearms:any,law,library_use,psychology,stealth,track",
-        "category": ["Police & Military", "Business", "Adventurer"],
+        "occupation_skills": "交涉技能:任意,格斗:徒手,火器:任意,法律,图书馆使用,心理学,潜行,追踪",
+        "category": ["警察与军队", "商业", "冒险者"],
         "credit_rating": "20-45"
     },
     {
-        "name": "Alienist [Classic]",
+        "name": "心理医生 [经典]",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "law,listen,medicine,language:any,psychoanalysis,psychology,science:biology,science:chemistry",
-        "category": ["Academic", "Science & Technology", "Occult & Mystic"],
+        "occupation_skills": "法律,聆听,医学,语言:任意,精神分析,心理学,科学:生物学,科学:化学",
+        "category": ["学术", "科学与技术", "神秘与灵性"],
         "credit_rating": "10-60"
     },
     {
-        "name": "Animal Trainer",
+        "name": "驯兽师",
         "skill_points_formula": "EDU*2+MAX(APP,POW)*2",
-        "occupation_skills": "jump,listen,natural_world,psychology,science:zoology,stealth,track",
-        "category": ["Service Industry", "Adventurer", "Academic"],
+        "occupation_skills": "跳跃,聆听,博物学,心理学,科学:动物学,潜行,追踪",
+        "category": ["服务业", "冒险者", "学术"],
         "credit_rating": "10-40"
     },
     {
-        "name": "Antiquarian [Lovecraftian]",
+        "name": "古董收藏家 [洛夫克拉夫特式]",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "appraise,art:any,history,library_use,language:any,interpersonal_skill:any,spot_hidden,any",
-        "category": ["Academic", "Occult & Mystic", "Business"],
+        "occupation_skills": "估价,技艺:任意,历史,图书馆使用,语言:任意,交涉技能:任意,侦查,任意技能",
+        "category": ["学术", "神秘与灵性", "商业"],
         "credit_rating": "30-70"
     },
     {
-        "name": "Antique Dealer",
+        "name": "古董商",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,appraise,drive_auto,interpersonal_skill:any,interpersonal_skill:any,history,library_use,navigate",
-        "category": ["Business", "Academic", "Criminal"],
+        "occupation_skills": "会计,估价,汽车驾驶,交涉技能:任意,交涉技能:任意,历史,图书馆使用,导航",
+        "category": ["商业", "学术", "犯罪"],
         "credit_rating": "30-50"
     },
     {
-        "name": "Archaeologist [Lovecraftian]",
+        "name": "考古学家 [洛夫克拉夫特式]",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "appraise,archaeology,history,language:any,library_use,spot_hidden,mechanical_repair,navigate|science:any",
-        "category": ["Academic", "Adventurer", "Science & Technology"],
+        "occupation_skills": "估价,考古学,历史,语言:任意,图书馆使用,侦查,机械维修,导航|科学:任意",
+        "category": ["学术", "冒险者", "科学与技术"],
         "credit_rating": "10-40"
     },
     {
-        "name": "Architect",
+        "name": "建筑师",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,art:technical_drawing,law,language_own,computer_use|library_use,persuade,psychology,science:mathematics",
-        "category": ["Science & Technology", "Business", "Academic"],
+        "occupation_skills": "会计,技艺:制图,法律,母语,计算机使用|图书馆使用,说服,心理学,科学:数学",
+        "category": ["科学与技术", "商业", "学术"],
         "credit_rating": "30-70"
     },
     {
-        "name": "Author [Lovecraftian]",
+        "name": "作家 [洛夫克拉夫特式]",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "art:literature,history,library_use,natural_world|occult,language:any,language_own,psychology,any",
-        "category": ["Academic", "Occult & Mystic", "Service Industry"],
+        "occupation_skills": "技艺:文学,历史,图书馆使用,博物学|神秘学,语言:任意,母语,心理学,任意技能",
+        "category": ["学术", "神秘与灵性", "服务业"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Aviator",
+        "name": "飞行员",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,electrical_repair,listen,mechanical_repair,navigate,pilot:aircraft,spot_hidden,any",
-        "category": ["Transport", "Adventurer", "Service Industry"],
+        "occupation_skills": "会计,电器维修,聆听,机械维修,导航,驾驶:飞机,侦查,任意技能",
+        "category": ["运输", "冒险者", "服务业"],
         "credit_rating": "30-60"
     },
     {
-        "name": "Bank Robber",
+        "name": "银行劫匪",
         "skill_points_formula": "EDU*2+MAX(STR,DEX)*2",
-        "occupation_skills": "drive_auto,electrical_repair|mechanical_repair,fighting:any,firearms:any,intimidate,locksmith,operate_heavy_machinery,any",
-        "category": ["Criminal", "Transport", "Adventurer"],
+        "occupation_skills": "汽车驾驶,电器维修|机械维修,格斗:任意,火器:任意,恐吓,开锁,操作重型机械,任意技能",
+        "category": ["犯罪", "运输", "冒险者"],
         "credit_rating": "5-75"
     },
     {
-        "name": "Bartender",
+        "name": "酒保",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "accounting,interpersonal_skill:any,interpersonal_skill:any,fighting:brawl,listen,psychology,spot_hidden,any",
-        "category": ["Service Industry", "Business", "Criminal"],
+        "occupation_skills": "会计,交涉技能:任意,交涉技能:任意,格斗:徒手,聆听,心理学,侦查,任意技能",
+        "category": ["服务业", "商业", "犯罪"],
         "credit_rating": "8-25"
     },
     {
-        "name": "Big Game Hunter",
+        "name": "猎人",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "firearms:any,listen|spot_hidden,natural_world,navigate,language:any|survival:any,science:biology|science:botany,stealth,track",
-        "category": ["Adventurer", "Sports & Athletics", "Criminal"],
+        "occupation_skills": "火器:任意,聆听|侦查,博物学,导航,语言:任意|生存:任意,科学:生物学|科学:植物学,潜行,追踪",
+        "category": ["冒险者", "运动与竞技", "犯罪"],
         "credit_rating": "20-50"
     },
     {
-        "name": "Biotech Researcher",
+        "name": "生物技术研究员",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "science:biology,science:chemistry,science:pharmacy,library_use,psychology,computer_use,any,any",
-        "category": ["Science & Technology", "Academic", "Service Industry"],
+        "occupation_skills": "科学:生物学,科学:化学,科学:药学,图书馆使用,心理学,计算机使用,任意技能,任意技能",
+        "category": ["科学与技术", "学术", "服务业"],
         "credit_rating": "30-70"
     },
     {
-        "name": "Book Dealer",
+        "name": "书商",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,appraise,drive_auto,history,library_use,language_own,language:any,interpersonal_skill:any",
-        "category": ["Business", "Academic", "Service Industry"],
+        "occupation_skills": "会计,估价,汽车驾驶,历史,图书馆使用,母语,语言:任意,交涉技能:任意",
+        "category": ["商业", "学术", "服务业"],
         "credit_rating": "20-40"
     },
     {
-        "name": "Bootlegger/Thug",
+        "name": "走私贩/暴徒",
         "skill_points_formula": "EDU*2+STR*2",
-        "occupation_skills": "drive_auto,fighting:any,firearms:any,interpersonal_skill:any,interpersonal_skill:any,psychology,stealth,spot_hidden",
-        "category": ["Criminal", "Service Industry", "Transport"],
+        "occupation_skills": "汽车驾驶,格斗:任意,火器:任意,交涉技能:任意,交涉技能:任意,心理学,潜行,侦查",
+        "category": ["犯罪", "服务业", "运输"],
         "credit_rating": "5-30"
     },
     {
-        "name": "Bounty Hunter",
+        "name": "赏金猎人",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "drive_auto,electronics|electrical_repair,fighting:any|firearms:any,interpersonal_skill:any,law,psychology,track,stealth",
-        "category": ["Police & Military", "Adventurer", "Criminal"],
+        "occupation_skills": "汽车驾驶,电子学|电器维修,格斗:任意|火器:任意,交涉技能:任意,法律,心理学,追踪,潜行",
+        "category": ["警察与军队", "冒险者", "犯罪"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Boxer/Wrestler",
+        "name": "拳击手/摔跤手",
         "skill_points_formula": "EDU*2+STR*2",
-        "occupation_skills": "dodge,fighting:brawl,intimidate,jump,psychology,spot_hidden,any,any",
-        "category": ["Sports & Athletics", "Adventurer", "Service Industry"],
+        "occupation_skills": "闪避,格斗:徒手,恐吓,跳跃,心理学,侦查,任意技能,任意技能",
+        "category": ["运动与竞技", "冒险者", "服务业"],
         "credit_rating": "9-60"
     },
     {
-        "name": "Butler/Valet/Maid",
+        "name": "管家/男仆/女仆",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting|appraise,art:any,first_aid,listen,language:any,psychology,spot_hidden,any,any",
-        "category": ["Service Industry", "Business", "Labor"],
+        "occupation_skills": "会计|估价,技艺:任意,急救,聆听,语言:任意,心理学,侦查,任意技能,任意技能",
+        "category": ["服务业", "商业", "劳动"],
         "credit_rating": "9-40"
     },
     {
-        "name": "Burglar",
+        "name": "盗贼",
         "skill_points_formula": "EDU*2+DEX*2",
-        "occupation_skills": "appraise,climb,electrical_repair|mechanical_repair,listen,locksmith,sleight_of_hand,stealth,spot_hidden",
-        "category": ["Criminal", "Adventurer", "Labor"],
+        "occupation_skills": "估价,攀爬,电器维修|机械维修,聆听,开锁,妙手,潜行,侦查",
+        "category": ["犯罪", "冒险者", "劳动"],
         "credit_rating": "5-40"
     },
     {
-        "name": "Chauffeur",
+        "name": "司机",
         "skill_points_formula": "EDU*2+DEX*2",
-        "occupation_skills": "drive_auto,interpersonal_skill:any,interpersonal_skill:any,listen,mechanical_repair,navigate,spot_hidden,any",
-        "category": ["Transport", "Service Industry", "Business"],
+        "occupation_skills": "汽车驾驶,交涉技能:任意,交涉技能:任意,聆听,机械维修,导航,侦查,任意技能",
+        "category": ["运输", "服务业", "商业"],
         "credit_rating": "10-40"
     },
     {
-        "name": "Clergy, Member of the",
+        "name": "神职人员",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,history,library_use,listen,language:any,interpersonal_skill:any,psychology,any",
-        "category": ["Occult & Mystic", "Academic", "Service Industry"],
+        "occupation_skills": "会计,历史,图书馆使用,聆听,语言:任意,交涉技能:任意,心理学,任意技能",
+        "category": ["神秘与灵性", "学术", "服务业"],
         "credit_rating": "9-60"
     },
     {
-        "name": "Computer Programmer/Technician",
+        "name": "程序员",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "computer_use,electrical_repair,electronics,library_use,science:mathematics,spot_hidden,any,any",
-        "category": ["Science & Technology", "Business", "Academic"],
+        "occupation_skills": "计算机使用,电器维修,电子学,图书馆使用,科学:数学,侦查,任意技能,任意技能",
+        "category": ["科学与技术", "商业", "学术"],
         "credit_rating": "10-70"
     },
     {
-        "name": "Conman",
+        "name": "骗子",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "appraise,art:acting,law|language:any,listen,interpersonal_skill:any,interpersonal_skill:any,psychology,sleight_of_hand",
-        "category": ["Criminal", "Business", "Service Industry"],
+        "occupation_skills": "估价,技艺:表演,法律|语言:任意,聆听,交涉技能:任意,交涉技能:任意,心理学,妙手",
+        "category": ["犯罪", "商业", "服务业"],
         "credit_rating": "10-65"
     },
     {
-        "name": "Cowboy/girl",
+        "name": "牛仔",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "dodge,fighting:any|firearms:any,first_aid|natural_world,jump,ride,survival:any,throw,track",
-        "category": ["Adventurer", "Labor", "Sports & Athletics"],
+        "occupation_skills": "闪避,格斗:任意|火器:任意,急救|博物学,跳跃,骑术,生存:任意,投掷,追踪",
+        "category": ["冒险者", "劳动", "运动与竞技"],
         "credit_rating": "9-20"
     },
     {
-        "name": "Craftsperson",
+        "name": "工匠",
         "skill_points_formula": "EDU*2+DEX*2",
-        "occupation_skills": "accounting,art:any,art:any,mechanical_repair,natural_world,spot_hidden,any,any",
-        "category": ["Labor", "Service Industry", "Business"],
+        "occupation_skills": "会计,技艺:任意,技艺:任意,机械维修,博物学,侦查,任意技能,任意技能",
+        "category": ["劳动", "服务业", "商业"],
         "credit_rating": "10-40"
     },
     {
-        "name": "Criminal (freelance/solo)",
+        "name": "罪犯[通用]",
         "skill_points_formula": "EDU*2+MAX(DEX,APP)*2",
-        "occupation_skills": "art:acting|disguise,appraise,interpersonal_skill:any,fighting:any|firearms:any,locksmith|mechanical_repair,stealth,psychology,spot_hidden",
-        "category": ["Criminal", "Adventurer", "Service Industry"],
+        "occupation_skills": "技艺:表演|伪装,估价,交涉技能:任意,格斗:任意|火器:任意,开锁|机械维修,潜行,心理学,侦查",
+        "category": ["犯罪", "冒险者", "服务业"],
         "credit_rating": "5-65"
     },
     {
-        "name": "Cult Leader",
+        "name": "邪教领袖",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "accounting,interpersonal_skill:any,interpersonal_skill:any,occult,psychology,spot_hidden,any,any",
-        "category": ["Occult & Mystic", "Service Industry", "Adventurer"],
+        "occupation_skills": "会计,交涉技能:任意,交涉技能:任意,神秘学,心理学,侦查,任意技能,任意技能",
+        "category": ["神秘与灵性", "服务业", "冒险者"],
         "credit_rating": "30-60"
     },
     {
-        "name": "Data Scientist",
+        "name": "数据科学家",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "computer_use,library_use,science:mathematics,science:statistics,science:computer_science,accounting,psychology,any",
-        "category": ["Science & Technology", "Business", "Academic"],
+        "occupation_skills": "计算机使用,图书馆使用,科学:数学,科学:统计学,科学:计算机科学,会计,心理学,任意技能",
+        "category": ["科学与技术", "商业", "学术"],
         "credit_rating": "30-70"
     },
     {
-        "name": "Deprogrammer [Modern]",
+        "name": "反编程专家 [现代]",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "interpersonal_skill:any,interpersonal_skill:any,drive_auto,fighting:brawl|firearms:any,history,occult,psychology,stealth",
-        "category": ["Occult & Mystic", "Police & Military", "Service Industry"],
+        "occupation_skills": "交涉技能:任意,交涉技能:任意,汽车驾驶,格斗:徒手|火器:任意,历史,神秘学,心理学,潜行",
+        "category": ["神秘与灵性", "警察与军队", "服务业"],
         "credit_rating": "20-50"
     },
     {
-        "name": "Designer",
+        "name": "设计师",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,art:photography,art:any,computer_use|library_use,mechanical_repair,psychology,spot_hidden,any",
-        "category": ["Business", "Service Industry", "Academic"],
+        "occupation_skills": "会计,技艺:摄影,技艺:任意,计算机使用|图书馆使用,机械维修,心理学,侦查,任意技能",
+        "category": ["商业", "服务业", "学术"],
         "credit_rating": "20-60"
     },
     {
-        "name": "Digital Marketing Specialist",
+        "name": "数字营销专家",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "computer_use,interpersonal_skill:any,art:writing,library_use,psychology,accounting,spot_hidden,any",
-        "category": ["Business", "Service Industry", "Science & Technology"],
+        "occupation_skills": "计算机使用,交涉技能:任意,技艺:写作,图书馆使用,心理学,会计,侦查,任意技能",
+        "category": ["商业", "服务业", "科学与技术"],
         "credit_rating": "20-60"
     },
     {
-        "name": "Digital Content Streamer",
+        "name": "主播",
         "skill_points_formula": "EDU*1+APP*3",
-        "occupation_skills": "art:acting,computer_use,interpersonal_skill:any,psychology,art:any,listen,spot_hidden,any",
-        "category": ["Service Industry", "Adventurer", "Business"],
+        "occupation_skills": "技艺:表演,计算机使用,交涉技能:任意,心理学,技艺:任意,聆听,侦查,任意技能",
+        "category": ["服务业", "冒险者", "商业"],
         "credit_rating": "10-50"
     },
     {
-        "name": "Dilettante [Lovecraftian]",
+        "name": "花花公子 [洛夫克拉夫特式]",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "art:any,firearms:any,language:any,ride,interpersonal_skill:any,any,any,any",
-        "category": ["Service Industry", "Adventurer", "Occult & Mystic"],
+        "occupation_skills": "技艺:任意,火器:任意,语言:任意,骑术,交涉技能:任意,任意技能,任意技能,任意技能",
+        "category": ["服务业", "冒险者", "神秘与灵性"],
         "credit_rating": "50-99"
     },
     {
-        "name": "Diver",
+        "name": "潜水员",
         "skill_points_formula": "EDU*2+DEX*2",
-        "occupation_skills": "diving,first_aid,mechanical_repair,pilot:boat,science:biology,spot_hidden,swim,any",
-        "category": ["Adventurer", "Labor", "Transport"],
+        "occupation_skills": "潜水,急救,机械维修,驾驶:船只,科学:生物学,侦查,游泳,任意技能",
+        "category": ["冒险者", "劳动", "运输"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Doctor of Medicine [Lovecraftian]",
+        "name": "医学博士 [洛夫克拉夫特式]",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "first_aid,medicine,language:latin,psychology,science:biology,science:pharmacy,any,any",
-        "category": ["Academic", "Science & Technology", "Service Industry"],
+        "occupation_skills": "急救,医学,语言:拉丁语,心理学,科学:生物学,科学:药学,任意技能,任意技能",
+        "category": ["学术", "科学与技术", "服务业"],
         "credit_rating": "30-80"
     },
     {
-        "name": "Dream Interpreter",
+        "name": "解梦师",
         "skill_points_formula": "EDU*2+POW*2",
-        "occupation_skills": "occult,psychology,interpersonal_skill:any,library_use,history,art:any,natural_world,any",
-        "category": ["Occult & Mystic", "Service Industry", "Academic"],
+        "occupation_skills": "神秘学,心理学,交涉技能:任意,图书馆使用,历史,技艺:任意,博物学,任意技能",
+        "category": ["神秘与灵性", "服务业", "学术"],
         "credit_rating": "10-40"
     },
     {
-        "name": "Drifter",
+        "name": "流浪者",
         "skill_points_formula": "EDU*2+MAX(APP,DEX,STR)*2",
-        "occupation_skills": "climb,jump,listen,navigate,interpersonal_skill:any,stealth,any,any",
-        "category": ["Adventurer", "Labor", "Service Industry"],
+        "occupation_skills": "攀爬,跳跃,聆听,导航,交涉技能:任意,潜行,任意技能,任意技能",
+        "category": ["冒险者", "劳动", "服务业"],
         "credit_rating": "0-5"
     },
     {
-        "name": "Driver",
+        "name": "司机",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "accounting,drive_auto,listen,interpersonal_skill:any,mechanical_repair,navigate,psychology,any",
-        "category": ["Transport", "Labor", "Adventurer"],
+        "occupation_skills": "会计,汽车驾驶,聆听,交涉技能:任意,机械维修,导航,心理学,任意技能",
+        "category": ["运输", "劳动", "冒险者"],
         "credit_rating": "9-20"
     },
     {
-        "name": "Drone Operator",
+        "name": "无人机操作员",
         "skill_points_formula": "EDU*2+DEX*2",
-        "occupation_skills": "pilot:drone,mechanical_repair,electrical_repair,photography,spot_hidden,navigate,survival:any,any",
-        "category": ["Transport", "Adventurer", "Science & Technology"],
+        "occupation_skills": "驾驶:无人机,机械维修,电器维修,摄影,侦查,导航,生存:任意,任意技能",
+        "category": ["运输", "冒险者", "科学与技术"],
         "credit_rating": "10-40"
     },
     {
-        "name": "E-sports Coach",
+        "name": "电子竞技教练",
         "skill_points_formula": "POW*2+EDU*2",
-        "occupation_skills": "computer_use,psychology,interpersonal_skill:any,fast_talk,language:any,spot_hidden,library_use,any",
-        "category": ["Sports & Athletics", "Service Industry", "Science & Technology"],
+        "occupation_skills": "计算机使用,心理学,交涉技能:任意,话术,语言:任意,侦查,图书馆使用,任意技能",
+        "category": ["运动与竞技", "服务业", "科学与技术"],
         "credit_rating": "20-60"
     },
     {
-        "name": "Editor",
+        "name": "编辑",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,history,language_own,interpersonal_skill:any,interpersonal_skill:any,psychology,spot_hidden,any",
-        "category": ["Academic", "Business", "Service Industry"],
+        "occupation_skills": "会计,历史,母语,交涉技能:任意,交涉技能:任意,心理学,侦查,任意技能",
+        "category": ["学术", "商业", "服务业"],
         "credit_rating": "10-30"
     },
     {
-        "name": "Elected Official",
+        "name": "民选官员",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "charm,history,intimidate,fast_talk,listen,language_own,persuade,psychology",
-        "category": ["Service Industry", "Business", "Academic"],
+        "occupation_skills": "取悦,历史,恐吓,话术,聆听,母语,说服,心理学",
+        "category": ["服务业", "商业", "学术"],
         "credit_rating": "50-90"
     },
     {
-        "name": "Engineer",
+        "name": "工程师",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "art:technical_drawing,electrical_repair,library_use,mechanical_repair,operate_heavy_machinery,science:engineering,science:physics,any",
-        "category": ["Science & Technology", "Labor", "Business"],
+        "occupation_skills": "技艺:制图,电器维修,图书馆使用,机械维修,操作重型机械,科学:工程学,科学:物理学,任意技能",
+        "category": ["科学与技术", "劳动", "商业"],
         "credit_rating": "30-60"
     },
     {
-        "name": "Entertainer",
+        "name": "艺人",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "art:any,disguise,interpersonal_skill:any,interpersonal_skill:any,listen,psychology,any,any",
-        "category": ["Service Industry", "Occult & Mystic", "Adventurer"],
+        "occupation_skills": "技艺:任意,伪装,交涉技能:任意,交涉技能:任意,聆听,心理学,任意技能,任意技能",
+        "category": ["服务业", "神秘与灵性", "冒险者"],
         "credit_rating": "9-70"
     },
     {
-        "name": "Explorer [Classic]",
+        "name": "探险家 [经典]",
         "skill_points_formula": "EDU*2+MAX(APP,DEX,STR)*2",
-        "occupation_skills": "climb|swim,firearms:any,history,jump,natural_world,navigate,language:any,survival:any",
-        "category": ["Adventurer", "Academic", "Service Industry"],
+        "occupation_skills": "攀爬|游泳,火器:任意,历史,跳跃,博物学,导航,语言:任意,生存:任意",
+        "category": ["冒险者", "学术", "服务业"],
         "credit_rating": "55-80"
     },
     {
-        "name": "Farmer",
+        "name": "农民",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "art:farming,drive_auto|wagon,interpersonal_skill:any,mechanical_repair,natural_world,operate_heavy_machinery,track,any",
-        "category": ["Labor", "Service Industry", "Adventurer"],
+        "occupation_skills": "技艺:农业,汽车驾驶|马车,交涉技能:任意,机械维修,博物学,操作重型机械,追踪,任意技能",
+        "category": ["劳动", "服务业", "冒险者"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Federal Agent",
+        "name": "联邦探员",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "drive_auto,fighting:brawl,firearms:any,law,persuade,stealth,spot_hidden,any",
-        "category": ["Police & Military", "Adventurer", "Service Industry"],
+        "occupation_skills": "汽车驾驶,格斗:徒手,火器:任意,法律,说服,潜行,侦查,任意技能",
+        "category": ["警察与军队", "冒险者", "服务业"],
         "credit_rating": "20-40"
     },
     {
-        "name": "Fence",
+        "name": "销赃者",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "accounting,appraise,art:forgery,history,interpersonal_skill:any,library_use,spot_hidden,any",
-        "category": ["Criminal", "Business", "Service Industry"],
+        "occupation_skills": "会计,估价,技艺:伪造,历史,交涉技能:任意,图书馆使用,侦查,任意技能",
+        "category": ["犯罪", "商业", "服务业"],
         "credit_rating": "20-40"
     },
     {
-        "name": "Feng Shui Consultant",
+        "name": "风水顾问",
         "skill_points_formula": "EDU*2+MAX(APP,POW)*2",
-        "occupation_skills": "occult,psychology,fast_talk,interpersonal_skill:any,natural_world,spot_hidden,library_use,any",
-        "category": ["Occult & Mystic", "Business", "Service Industry"],
+        "occupation_skills": "神秘学,心理学,话术,交涉技能:任意,博物学,侦查,图书馆使用,任意技能",
+        "category": ["神秘与灵性", "商业", "服务业"],
         "credit_rating": "10-50"
     },
     {
-        "name": "Film Star",
+        "name": "电影明星",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "art:acting,disguise,drive_auto,interpersonal_skill:any,interpersonal_skill:any,psychology,any,any",
-        "category": ["Service Industry", "Occult & Mystic", "Business"],
+        "occupation_skills": "技艺:表演,伪装,汽车驾驶,交涉技能:任意,交涉技能:任意,心理学,任意技能,任意技能",
+        "category": ["服务业", "神秘与灵性", "商业"],
         "credit_rating": "20-90"
     },
     {
-        "name": "Firefighter",
+        "name": "消防员",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "climb,dodge,drive_auto,first_aid,jump,mechanical_repair,operate_heavy_machinery,throw",
-        "category": ["Labor", "Police & Military", "Service Industry"],
+        "occupation_skills": "攀爬,闪避,汽车驾驶,急救,跳跃,机械维修,操作重型机械,投掷",
+        "category": ["劳动", "警察与军队", "服务业"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Foreign Correspondent",
+        "name": "外派记者",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "history,language:any,language_own,listen,interpersonal_skill:any,interpersonal_skill:any,psychology,any",
-        "category": ["Academic", "Service Industry", "Adventurer"],
+        "occupation_skills": "历史,语言:任意,母语,聆听,交涉技能:任意,交涉技能:任意,心理学,任意技能",
+        "category": ["学术", "服务业", "冒险者"],
         "credit_rating": "10-40"
     },
     {
-        "name": "Forensic Surgeon",
+        "name": "法医",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "language:latin,library_use,medicine,persuade,science:biology,science:forensics,science:pharmacy,spot_hidden",
-        "category": ["Science & Technology", "Police & Military", "Academic"],
+        "occupation_skills": "语言:拉丁语,图书馆使用,医学,说服,科学:生物学,科学:法医学,科学:药学,侦查",
+        "category": ["科学与技术", "警察与军队", "学术"],
         "credit_rating": "40-60"
     },
     {
-        "name": "Forger/Counterfeiter",
+        "name": "伪造者/造币者",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,appraise,art:forgery,history,library_use,spot_hidden,sleight_of_hand,any",
-        "category": ["Criminal", "Business", "Science & Technology"],
+        "occupation_skills": "会计,估价,技艺:伪造,历史,图书馆使用,侦查,妙手,任意技能",
+        "category": ["犯罪", "商业", "科学与技术"],
         "credit_rating": "20-60"
     },
     {
-        "name": "Gun Moll [Classic]",
+        "name": "黑手党伴侣 [经典]",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "art:any,interpersonal_skill:any,interpersonal_skill:any,fighting:brawl|firearms:handgun,drive_auto,listen,stealth,any",
-        "category": ["Criminal", "Service Industry", "Adventurer"],
+        "occupation_skills": "技艺:任意,交涉技能:任意,交涉技能:任意,格斗:徒手|火器:手枪,汽车驾驶,聆听,潜行,任意技能",
+        "category": ["犯罪", "服务业", "冒险者"],
         "credit_rating": "10-80"
     },
     {
-        "name": "Gambler",
+        "name": "赌徒",
         "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
-        "occupation_skills": "accounting,art:acting,interpersonal_skill:any,interpersonal_skill:any,listen,psychology,sleight_of_hand,spot_hidden",
-        "category": ["Criminal", "Business", "Service Industry"],
+        "occupation_skills": "会计,技艺:表演,交涉技能:任意,交涉技能:任意,聆听,心理学,妙手,侦查",
+        "category": ["犯罪", "商业", "服务业"],
         "credit_rating": "8-50"
     },
     {
-        "name": "Gangster Boss",
+        "name": "黑帮老大",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "fighting:any,firearms:any,law,listen,interpersonal_skill:any,interpersonal_skill:any,psychology,spot_hidden",
-        "category": ["Criminal", "Business", "Adventurer"],
+        "occupation_skills": "格斗:任意,火器:任意,法律,聆听,交涉技能:任意,交涉技能:任意,心理学,侦查",
+        "category": ["犯罪", "商业", "冒险者"],
         "credit_rating": "60-95"
     },
     {
-        "name": "Gangster Underling",
+        "name": "黑帮下属",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "drive_auto,fighting:any,firearms:any,interpersonal_skill:any,interpersonal_skill:any,psychology,any,any",
-        "category": ["Criminal", "Transport", "Adventurer"],
+        "occupation_skills": "汽车驾驶,格斗:任意,火器:任意,交涉技能:任意,交涉技能:任意,心理学,任意技能,任意技能",
+        "category": ["犯罪", "运输", "冒险者"],
         "credit_rating": "9-20"
     },
     {
-        "name": "Gentleman/Lady",
+        "name": "绅士/女士",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "art:any,interpersonal_skill:any,interpersonal_skill:any,firearms:rifle_shotgun,history,language:any,navigate,ride",
-        "category": ["Service Industry", "Academic", "Adventurer"],
+        "occupation_skills": "技艺:任意,交涉技能:任意,交涉技能:任意,火器:步枪与霰弹枪,历史,语言:任意,导航,骑术",
+        "category": ["服务业", "学术", "冒险者"],
         "credit_rating": "40-90"
     },
     {
-        "name": "Hacker",
+        "name": "黑客",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "computer_use,electrical_repair,electronics,library_use,spot_hidden,interpersonal_skill:any,any,any",
-        "category": ["Science & Technology", "Criminal", "Adventurer"],
+        "occupation_skills": "计算机使用,电器维修,电子学,图书馆使用,侦查,交涉技能:任意,任意技能,任意技能",
+        "category": ["科学与技术", "犯罪", "冒险者"],
         "credit_rating": "10-70"
     },
     {
-        "name": "Hobo",
+        "name": "流浪汉",
         "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
-        "occupation_skills": "art:any,climb,jump,listen,locksmith|sleight_of_hand,navigate,stealth,any",
-        "category": ["Adventurer", "Labor", "Service Industry"],
+        "occupation_skills": "技艺:任意,攀爬,跳跃,聆听,开锁|妙手,导航,潜行,任意技能",
+        "category": ["冒险者", "劳动", "服务业"],
         "credit_rating": "0-5"
     },
     {
-        "name": "Hospital Orderly",
+        "name": "医院勤杂工",
         "skill_points_formula": "EDU*2+STR*2",
-        "occupation_skills": "electrical_repair,interpersonal_skill:any,fighting:brawl,first_aid,listen,mechanical_repair,psychology,stealth",
-        "category": ["Service Industry", "Labor", "Science & Technology"],
+        "occupation_skills": "电器维修,交涉技能:任意,格斗:徒手,急救,聆听,机械维修,心理学,潜行",
+        "category": ["服务业", "劳动", "科学与技术"],
         "credit_rating": "6-15"
     },
     {
-        "name": "Investigative Journalist",
+        "name": "调查记者",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "art:any,interpersonal_skill:any,history,library_use,language_own,psychology,any,any",
-        "category": ["Service Industry", "Academic", "Adventurer"],
+        "occupation_skills": "技艺:任意,交涉技能:任意,历史,图书馆使用,母语,心理学,任意技能,任意技能",
+        "category": ["服务业", "学术", "冒险者"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Judge",
+        "name": "法官",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "history,intimidate,law,library_use,listen,language_own,persuade,psychology",
-        "category": ["Academic", "Business", "Service Industry"],
+        "occupation_skills": "历史,恐吓,法律,图书馆使用,聆听,母语,说服,心理学",
+        "category": ["学术", "商业", "服务业"],
         "credit_rating": "50-80"
     },
     {
-        "name": "Laboratory Assistant",
+        "name": "实验室助理",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "computer_use|library_use,electrical_repair,language:any,science:chemistry,science:any,science:any,spot_hidden,any",
-        "category": ["Science & Technology", "Academic", "Labor"],
+        "occupation_skills": "计算机使用|图书馆使用,电器维修,语言:任意,科学:化学,科学:任意,科学:任意,侦查,任意技能",
+        "category": ["科学与技术", "学术", "劳动"],
         "credit_rating": "10-30"
     },
     {
-        "name": "Laborer, Unskilled",
+        "name": "劳动者",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "drive_auto,electrical_repair,fighting:any,first_aid,mechanical_repair,operate_heavy_machinery,throw,any",
-        "category": ["Labor", "Service Industry", "Transport"],
+        "occupation_skills": "汽车驾驶,电器维修,格斗:任意,急救,机械维修,操作重型机械,投掷,任意技能",
+        "category": ["劳动", "服务业", "运输"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Lumberjack",
+        "name": "伐木工",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "climb,dodge,fighting:chainsaw,first_aid,jump,mechanical_repair,natural_world|science:biology|science:botany,throw",
-        "category": ["Labor", "Adventurer", "Service Industry"],
+        "occupation_skills": "攀爬,闪避,格斗:链锯,急救,跳跃,机械维修,博物学|科学:生物学|科学:植物学,投掷",
+        "category": ["劳动", "冒险者", "服务业"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Lawyer",
+        "name": "律师",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,law,library_use,interpersonal_skill:any,interpersonal_skill:any,psychology,any,any",
-        "category": ["Academic", "Business", "Service Industry"],
+        "occupation_skills": "会计,法律,图书馆使用,交涉技能:任意,交涉技能:任意,心理学,任意技能,任意技能",
+        "category": ["学术", "商业", "服务业"],
         "credit_rating": "30-80"
     },
     {
-        "name": "Librarian [Lovecraftian]",
+        "name": "图书管理员 [洛夫克拉夫特式]",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,library_use,language:any,language_own,any,any,any,any",
-        "category": ["Academic", "Service Industry", "Science & Technology"],
+        "occupation_skills": "会计,图书馆使用,语言:任意,母语,任意技能,任意技能,任意技能,任意技能",
+        "category": ["学术", "服务业", "科学与技术"],
         "credit_rating": "9-35"
     },
     {
-        "name": "Mechanic (and Skilled Trades)",
+        "name": "机械师（及技术工人）",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "art:any,climb,drive_auto,electrical_repair,mechanical_repair,operate_heavy_machinery,any,any",
-        "category": ["Labor", "Science & Technology", "Service Industry"],
+        "occupation_skills": "技艺:任意,攀爬,汽车驾驶,电器维修,机械维修,操作重型机械,任意技能,任意技能",
+        "category": ["劳动", "科学与技术", "服务业"],
         "credit_rating": "9-40"
     },
     {
-        "name": "Military Officer",
+        "name": "军官",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "accounting,firearms:any,navigate,first_aid,interpersonal_skill:any,interpersonal_skill:any,psychology,any",
-        "category": ["Police & Military", "Adventurer", "Business"],
+        "occupation_skills": "会计,火器:任意,导航,急救,交涉技能:任意,交涉技能:任意,心理学,任意技能",
+        "category": ["警察与军队", "冒险者", "商业"],
         "credit_rating": "20-70"
     },
     {
-        "name": "Mindfulness Coach",
+        "name": "正念教练",
         "skill_points_formula": "EDU*2+POW*2",
-        "occupation_skills": "psychology,interpersonal_skill:any,art:any,language:any,first_aid,library_use,spot_hidden,any",
-        "category": ["Service Industry", "Science & Technology", "Academic"],
+        "occupation_skills": "心理学,交涉技能:任意,技艺:任意,语言:任意,急救,图书馆使用,侦查,任意技能",
+        "category": ["服务业", "科学与技术", "学术"],
         "credit_rating": "20-50"
     },
     {
-        "name": "Miner",
+        "name": "矿工",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "climb,geology,jump,mechanical_repair,operate_heavy_machinery,stealth,spot_hidden,any",
-        "category": ["Labor", "Science & Technology", "Service Industry"],
+        "occupation_skills": "攀爬,地质学,跳跃,机械维修,操作重型机械,潜行,侦查,任意技能",
+        "category": ["劳动", "科学与技术", "服务业"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Missionary",
+        "name": "传教士",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "art:any,first_aid,mechanical_repair,medicine,natural_world,interpersonal_skill:any,any,any",
-        "category": ["Occult & Mystic", "Service Industry", "Academic"],
+        "occupation_skills": "技艺:任意,急救,机械维修,医学,博物学,交涉技能:任意,任意技能,任意技能",
+        "category": ["神秘与灵性", "服务业", "学术"],
         "credit_rating": "0-30"
     },
     {
-        "name": "Mountain Climber",
+        "name": "登山家",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "climb,first_aid,jump,listen,navigate,language:any,survival:mountain,track",
-        "category": ["Adventurer", "Sports & Athletics", "Service Industry"],
+        "occupation_skills": "攀爬,急救,跳跃,聆听,导航,语言:任意,生存:山地,追踪",
+        "category": ["冒险者", "运动与竞技", "服务业"],
         "credit_rating": "30-60"
     },
     {
-        "name": "Museum Curator",
+        "name": "博物馆馆长",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,appraise,archaeology,history,library_use,occult,language:any,spot_hidden",
-        "category": ["Academic", "Service Industry", "Occult & Mystic"],
+        "occupation_skills": "会计,估价,考古学,历史,图书馆使用,神秘学,语言:任意,侦查",
+        "category": ["学术", "服务业", "神秘与灵性"],
         "credit_rating": "10-30"
     },
     {
-        "name": "Musician",
+        "name": "音乐家",
         "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
-        "occupation_skills": "art:instrument,interpersonal_skill:any,listen,psychology,any,any,any,any",
-        "category": ["Service Industry", "Occult & Mystic", "Adventurer"],
+        "occupation_skills": "技艺:乐器,交涉技能:任意,聆听,心理学,任意技能,任意技能,任意技能,任意技能",
+        "category": ["服务业", "神秘与灵性", "冒险者"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Nurse",
+        "name": "护士",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "first_aid,listen,medicine,interpersonal_skill:any,psychology,science:biology,science:chemistry,spot_hidden",
-        "category": ["Service Industry", "Science & Technology", "Academic"],
+        "occupation_skills": "急救,聆听,医学,交涉技能:任意,心理学,科学:生物学,科学:化学,侦查",
+        "category": ["服务业", "科学与技术", "学术"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Occultist",
+        "name": "神秘学者",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "anthropology,history,library_use,interpersonal_skill:any,occult,language:any,science:astronomy,any",
-        "category": ["Occult & Mystic", "Academic", "Service Industry"],
+        "occupation_skills": "人类学,历史,图书馆使用,交涉技能:任意,神秘学,语言:任意,科学:天文学,任意技能",
+        "category": ["神秘与灵性", "学术", "服务业"],
         "credit_rating": "9-65"
     },
     {
-        "name": "Outdoorsman/woman",
+        "name": "野外生存者",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "firearms:any,first_aid,listen,natural_world,navigate,spot_hidden,survival:any,track",
-        "category": ["Adventurer", "Labor", "Service Industry"],
+        "occupation_skills": "火器:任意,急救,聆听,博物学,导航,侦查,生存:任意,追踪",
+        "category": ["冒险者", "劳动", "服务业"],
         "credit_rating": "5-20"
     },
     {
-        "name": "Parapsychologist",
+        "name": "超心理学家",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "anthropology,art:photography,history,library_use,occult,language:any,psychology,any",
-        "category": ["Occult & Mystic", "Academic", "Science & Technology"],
+        "occupation_skills": "人类学,技艺:摄影,历史,图书馆使用,神秘学,语言:任意,心理学,任意技能",
+        "category": ["神秘与灵性", "学术", "科学与技术"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Pharmacist",
+        "name": "药剂师",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,first_aid,language:latin,library_use,interpersonal_skill:any,psychology,science:pharmacy,science:chemistry",
-        "category": ["Science & Technology", "Service Industry", "Academic"],
+        "occupation_skills": "会计,急救,语言:拉丁语,图书馆使用,交涉技能:任意,心理学,科学:药学,科学:化学",
+        "category": ["科学与技术", "服务业", "学术"],
         "credit_rating": "35-75"
     },
     {
-        "name": "Photographer",
+        "name": "摄影师",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "art:photography,interpersonal_skill:any,psychology,science:chemistry,stealth,spot_hidden,any,any",
-        "category": ["Service Industry", "Science & Technology", "Business"],
+        "occupation_skills": "技艺:摄影,交涉技能:任意,心理学,科学:化学,潜行,侦查,任意技能,任意技能",
+        "category": ["服务业", "科学与技术", "商业"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Photojournalist",
+        "name": "摄影记者",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "art:photography,climb,interpersonal_skill:any,language:any,psychology,science:chemistry,any,any",
-        "category": ["Service Industry", "Adventurer", "Academic"],
+        "occupation_skills": "技艺:摄影,攀爬,交涉技能:任意,语言:任意,心理学,科学:化学,任意技能,任意技能",
+        "category": ["服务业", "冒险者", "学术"],
         "credit_rating": "10-30"
     },
     {
-        "name": "Pilot",
+        "name": "飞行员",
         "skill_points_formula": "EDU*2+DEX*2",
-        "occupation_skills": "electrical_repair,mechanical_repair,navigate,operate_heavy_machinery,pilot:aircraft,science:astronomy,any,any",
-        "category": ["Transport", "Adventurer", "Science & Technology"],
+        "occupation_skills": "电器维修,机械维修,导航,操作重型机械,驾驶:飞机,科学:天文学,任意技能,任意技能",
+        "category": ["运输", "冒险者", "科学与技术"],
         "credit_rating": "20-70"
     },
     {
-        "name": "Police Detective",
+        "name": "警察侦探",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "art:acting|disguise,firearms:any,law,listen,interpersonal_skill:any,psychology,spot_hidden,any",
-        "category": ["Police & Military", "Adventurer", "Service Industry"],
+        "occupation_skills": "技艺:表演|伪装,火器:任意,法律,聆听,交涉技能:任意,心理学,侦查,任意技能",
+        "category": ["警察与军队", "冒险者", "服务业"],
         "credit_rating": "20-50"
     },
     {
-        "name": "Private Investigator",
+        "name": "私家侦探",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "art:photography,disguise,law,library_use,interpersonal_skill:any,psychology,spot_hidden,any",
-        "category": ["Adventurer", "Service Industry", "Police & Military"],
+        "occupation_skills": "技艺:摄影,伪装,法律,图书馆使用,交涉技能:任意,心理学,侦查,任意技能",
+        "category": ["冒险者", "服务业", "警察与军队"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Professor [Lovecraftian]",
+        "name": "教授 [洛夫克拉夫特式]",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "library_use,language:any,language_own,psychology,any,any,any,any",
-        "category": ["Academic", "Science & Technology", "Service Industry"],
+        "occupation_skills": "图书馆使用,语言:任意,母语,心理学,任意技能,任意技能,任意技能,任意技能",
+        "category": ["学术", "科学与技术", "服务业"],
         "credit_rating": "20-70"
     },
     {
-        "name": "Prospector",
+        "name": "探矿者",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "climb,first_aid,history,mechanical_repair,navigate,science:geology,spot_hidden,any",
-        "category": ["Labor", "Adventurer", "Service Industry"],
+        "occupation_skills": "攀爬,急救,历史,机械维修,导航,科学:地质学,侦查,任意技能",
+        "category": ["劳动", "冒险者", "服务业"],
         "credit_rating": "0-10"
     },
     {
-        "name": "Prostitute",
+        "name": "妓女",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "art:any,interpersonal_skill:any,interpersonal_skill:any,dodge,psychology,sleight_of_hand,stealth,any",
-        "category": ["Service Industry", "Criminal", "Adventurer"],
+        "occupation_skills": "技艺:任意,交涉技能:任意,交涉技能:任意,闪避,心理学,妙手,潜行,任意技能",
+        "category": ["服务业", "犯罪", "冒险者"],
         "credit_rating": "5-50"
     },
     {
-        "name": "Psychiatrist",
+        "name": "精神科医生",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "language:any,listen,medicine,persuade,psychoanalysis,psychology,science:biology,science:chemistry",
-        "category": ["Academic", "Service Industry", "Science & Technology"],
+        "occupation_skills": "语言:任意,聆听,医学,说服,精神分析,心理学,科学:生物学,科学:化学",
+        "category": ["学术", "服务业", "科学与技术"],
         "credit_rating": "30-80"
     },
     {
-        "name": "Psychologist/Psychoanalyst",
+        "name": "心理学家/精神分析师",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,library_use,listen,persuade,psychoanalysis,psychology,any,any",
-        "category": ["Academic", "Service Industry", "Science & Technology"],
+        "occupation_skills": "会计,图书馆使用,聆听,说服,精神分析,心理学,任意技能,任意技能",
+        "category": ["学术", "服务业", "科学与技术"],
         "credit_rating": "10-40"
     },
     {
-        "name": "Reporter",
+        "name": "记者",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "art:acting,history,listen,language_own,interpersonal_skill:any,psychology,stealth,spot_hidden",
-        "category": ["Service Industry", "Academic", "Adventurer"],
+        "occupation_skills": "技艺:表演,历史,聆听,母语,交涉技能:任意,心理学,潜行,侦查",
+        "category": ["服务业", "学术", "冒险者"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Researcher",
+        "name": "研究员",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "history,library_use,interpersonal_skill:any,language:any,spot_hidden,any,any,any",
-        "category": ["Academic", "Science & Technology", "Service Industry"],
+        "occupation_skills": "历史,图书馆使用,交涉技能:任意,语言:任意,侦查,任意技能,任意技能,任意技能",
+        "category": ["学术", "科学与技术", "服务业"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Sailor, Naval",
+        "name": "水手（海军）",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "electrical_repair|mechanical_repair,fighting:any,firearms:any,first_aid,navigate,pilot:boat,survival:sea,swim",
-        "category": ["Police & Military", "Transport", "Adventurer"],
+        "occupation_skills": "电器维修|机械维修,格斗:任意,火器:任意,急救,导航,驾驶:船只,生存:海洋,游泳",
+        "category": ["警察与军队", "运输", "冒险者"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Sailor, Commercial",
+        "name": "水手（商船）",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "first_aid,mechanical_repair,natural_world,navigate,interpersonal_skill:any,pilot:boat,spot_hidden,swim",
-        "category": ["Transport", "Labor", "Criminal"],
+        "occupation_skills": "急救,机械维修,博物学,导航,交涉技能:任意,驾驶:船只,侦查,游泳",
+        "category": ["运输", "劳动", "犯罪"],
         "credit_rating": "20-40"
     },
     {
-        "name": "Salesperson",
+        "name": "销售员",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "accounting,interpersonal_skill:any,interpersonal_skill:any,drive_auto,listen,psychology,stealth|sleight_of_hand,any",
-        "category": ["Business", "Service Industry", "Criminal"],
+        "occupation_skills": "会计,交涉技能:任意,交涉技能:任意,汽车驾驶,聆听,心理学,潜行|妙手,任意技能",
+        "category": ["商业", "服务业", "犯罪"],
         "credit_rating": "9-40"
     },
     {
-        "name": "Scientist",
+        "name": "科学家",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "science:any,science:any,science:any,computer_use|library_use,language:any,language_own,interpersonal_skill:any,spot_hidden",
-        "category": ["Science & Technology", "Academic", "Service Industry"],
+        "occupation_skills": "科学:任意,科学:任意,科学:任意,计算机使用|图书馆使用,语言:任意,母语,交涉技能:任意,侦查",
+        "category": ["科学与技术", "学术", "服务业"],
         "credit_rating": "9-50"
     },
     {
-        "name": "Secretary",
+        "name": "秘书",
         "skill_points_formula": "EDU*2+MAX(DEX,APP)*2",
-        "occupation_skills": "accounting,art:typing|shorthand,interpersonal_skill:any,interpersonal_skill:any,language_own,library_use|computer_use,psychology,any",
-        "category": ["Service Industry", "Business", "Academic"],
+        "occupation_skills": "会计,技艺:打字|速记,交涉技能:任意,交涉技能:任意,母语,图书馆使用|计算机使用,心理学,任意技能",
+        "category": ["服务业", "商业", "学术"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Shopkeeper",
+        "name": "店长",
         "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
-        "occupation_skills": "accounting,interpersonal_skill:any,interpersonal_skill:any,electrical_repair,listen,mechanical_repair,psychology,spot_hidden",
-        "category": ["Business", "Service Industry", "Labor"],
+        "occupation_skills": "会计,交涉技能:任意,交涉技能:任意,电器维修,聆听,机械维修,心理学,侦查",
+        "category": ["商业", "服务业", "劳动"],
         "credit_rating": "20-40"
     },
     {
-        "name": "Smuggler",
+        "name": "走私犯",
         "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
-        "occupation_skills": "firearms:any,listen,navigate,interpersonal_skill:any,drive_auto|pilot:any,psychology,sleight_of_hand,spot_hidden",
-        "category": ["Criminal", "Transport", "Adventurer"],
+        "occupation_skills": "火器:任意,聆听,导航,交涉技能:任意,汽车驾驶|驾驶:任意,心理学,妙手,侦查",
+        "category": ["犯罪", "运输", "冒险者"],
         "credit_rating": "20-60"
     },
     {
-        "name": "Social Media Manager",
+        "name": "社交媒体经理",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "computer_use,art:writing,interpersonal_skill:any,psychology,library_use,accounting,spot_hidden,any",
-        "category": ["Business", "Service Industry", "Science & Technology"],
+        "occupation_skills": "计算机使用,技艺:写作,交涉技能:任意,心理学,图书馆使用,会计,侦查,任意技能",
+        "category": ["商业", "服务业", "科学与技术"],
         "credit_rating": "20-50"
     },
     {
-        "name": "Soldier/Marine",
+        "name": "陆军士兵/海军士兵",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "climb|swim,dodge,fighting:any,firearms:any,stealth,survival:any,first_aid|mechanical_repair|language:any,first_aid|mechanical_repair|language:any",
-        "category": ["Police & Military", "Adventurer", "Labor"],
+        "occupation_skills": "攀爬|游泳,闪避,格斗:任意,火器:任意,潜行,生存:任意,急救|机械维修|语言:任意,急救|机械维修|语言:任意",
+        "category": ["警察与军队", "冒险者", "劳动"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Spiritual Medium",
+        "name": "灵媒",
         "skill_points_formula": "EDU*2+POW*2",
-        "occupation_skills": "occult,psychology,interpersonal_skill:any,listen,spot_hidden,art:painting,language:any,any",
-        "category": ["Occult & Mystic", "Service Industry", "Adventurer"],
+        "occupation_skills": "神秘学,心理学,交涉技能:任意,聆听,侦查,技艺:绘画,语言:任意,任意技能",
+        "category": ["神秘与灵性", "服务业", "冒险者"],
         "credit_rating": "9-40"
     },
     {
-        "name": "Spy",
+        "name": "间谍",
         "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
-        "occupation_skills": "art:acting|disguise,firearms:any,listen,language:any,interpersonal_skill:any,psychology,sleight_of_hand,stealth",
-        "category": ["Adventurer", "Police & Military", "Occult & Mystic"],
+        "occupation_skills": "技艺:表演|伪装,火器:任意,聆听,语言:任意,交涉技能:任意,心理学,妙手,潜行",
+        "category": ["冒险者", "警察与军队", "神秘与灵性"],
         "credit_rating": "20-60"
     },
     {
-        "name": "Stage Actor",
+        "name": "舞台演员",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "art:acting,disguise,fighting:any,history,interpersonal_skill:any,interpersonal_skill:any,psychology,any",
-        "category": ["Service Industry", "Occult & Mystic", "Adventurer"],
+        "occupation_skills": "技艺:表演,伪装,格斗:任意,历史,交涉技能:任意,交涉技能:任意,心理学,任意技能",
+        "category": ["服务业", "神秘与灵性", "冒险者"],
         "credit_rating": "9-40"
     },
     {
-        "name": "Street Punk",
+        "name": "街头混混",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "climb,interpersonal_skill:any,fighting:any,firearms:any,jump,sleight_of_hand,stealth,throw",
-        "category": ["Criminal", "Adventurer", "Labor"],
+        "occupation_skills": "攀爬,交涉技能:任意,格斗:任意,火器:任意,跳跃,妙手,潜行,投掷",
+        "category": ["犯罪", "冒险者", "劳动"],
         "credit_rating": "3-10"
     },
     {
-        "name": "Student/Intern",
+        "name": "学生/实习生",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "language_own|language:any,library_use,listen,any,any,any,any,any",
-        "category": ["Academic", "Service Industry", "Business"],
+        "occupation_skills": "母语|语言:任意,图书馆使用,聆听,任意技能,任意技能,任意技能,任意技能,任意技能",
+        "category": ["学术", "服务业", "商业"],
         "credit_rating": "5-10"
     },
     {
-        "name": "Stuntman",
+        "name": "特技演员",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "climb,dodge,electrical_repair|mechanical_repair,fighting:any,first_aid,jump,swim,diving|drive_auto|pilot:any|ride",
-        "category": ["Sports & Athletics", "Adventurer", "Service Industry"],
+        "occupation_skills": "攀爬,闪避,电器维修|机械维修,格斗:任意,急救,跳跃,游泳,潜水|汽车驾驶|驾驶:任意|骑术",
+        "category": ["运动与竞技", "冒险者", "服务业"],
         "credit_rating": "10-50"
     },
     {
-        "name": "Taxi Driver",
+        "name": "出租车司机",
         "skill_points_formula": "EDU*2+DEX*2",
-        "occupation_skills": "accounting,drive_auto,electrical_repair,fast_talk,mechanical_repair,navigate,spot_hidden,any",
-        "category": ["Transport", "Service Industry", "Adventurer"],
+        "occupation_skills": "会计,汽车驾驶,电器维修,话术,机械维修,导航,侦查,任意技能",
+        "category": ["运输", "服务业", "冒险者"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Traditional Medicine Practitioner",
+        "name": "中医",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "medicine,first_aid,science:chemistry,science:pharmacy,psychology,natural_world,occult,any",
-        "category": ["Occult & Mystic", "Science & Technology", "Service Industry"],
+        "occupation_skills": "医学,急救,科学:化学,科学:药学,心理学,博物学,神秘学,任意技能",
+        "category": ["神秘与灵性", "科学与技术", "服务业"],
         "credit_rating": "20-70"
     },
     {
-        "name": "Tribe Member",
+        "name": "部落成员",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "climb,fighting:any|throw,listen,natural_world,occult,spot_hidden,swim,survival:any",
-        "category": ["Occult & Mystic", "Adventurer", "Labor"],
+        "occupation_skills": "攀爬,格斗:任意|投掷,聆听,博物学,神秘学,侦查,游泳,生存:任意",
+        "category": ["神秘与灵性", "冒险者", "劳动"],
         "credit_rating": "0-15"
     },
     {
-        "name": "UX/UI Designer",
+        "name": "UX/UI设计师",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "art:design,computer_use,interpersonal_skill:any,psychology,library_use,spot_hidden,art:technical_drawing,any",
-        "category": ["Service Industry", "Science & Technology", "Business"],
+        "occupation_skills": "技艺:设计,计算机使用,交涉技能:任意,心理学,图书馆使用,侦查,技艺:制图,任意技能",
+        "category": ["服务业", "科学与技术", "商业"],
         "credit_rating": "20-50"
     },
     {
-        "name": "Undertaker",
+        "name": "殡葬业人员",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,drive_auto,interpersonal_skill:any,history,occult,psychology,science:biology,science:chemistry",
-        "category": ["Service Industry", "Occult & Mystic", "Academic"],
+        "occupation_skills": "会计,汽车驾驶,交涉技能:任意,历史,神秘学,心理学,科学:生物学,科学:化学",
+        "category": ["服务业", "神秘与灵性", "学术"],
         "credit_rating": "20-40"
     },
     {
-        "name": "Uniformed Police Officer",
+        "name": "警官",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "fighting:brawl,firearms:any,first_aid,interpersonal_skill:any,law,psychology,spot_hidden,drive_auto|ride",
-        "category": ["Police & Military", "Service Industry", "Adventurer"],
+        "occupation_skills": "格斗:徒手,火器:任意,急救,交涉技能:任意,法律,心理学,侦查,汽车驾驶|骑术",
+        "category": ["警察与军队", "服务业", "冒险者"],
         "credit_rating": "9-30"
     },
     {
-        "name": "Union Activist",
+        "name": "工会活动家",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,interpersonal_skill:any,interpersonal_skill:any,fighting:brawl,law,listen,operate_heavy_machinery,psychology",
-        "category": ["Labor", "Service Industry", "Business"],
+        "occupation_skills": "会计,交涉技能:任意,交涉技能:任意,格斗:徒手,法律,聆听,操作重型机械,心理学",
+        "category": ["劳动", "服务业", "商业"],
         "credit_rating": "5-30"
     },
     {
-        "name": "Waitress/Waiter",
+        "name": "服务员",
         "skill_points_formula": "EDU*2+MAX(APP,DEX)*2",
-        "occupation_skills": "accounting,art:any,dodge,listen,interpersonal_skill:any,interpersonal_skill:any,psychology,any",
-        "category": ["Service Industry", "Business", "Criminal"],
+        "occupation_skills": "会计,技艺:任意,闪避,聆听,交涉技能:任意,交涉技能:任意,心理学,任意技能",
+        "category": ["服务业", "商业", "犯罪"],
         "credit_rating": "9-20"
     },
     {
-        "name": "White-Collar Worker (Clerk/Executive)",
+        "name": "白领职员（文员/主管）",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,language:any,law,library_use|computer_use,listen,interpersonal_skill:any,any,any",
-        "category": ["Business", "Service Industry", "Academic"],
+        "occupation_skills": "会计,语言:任意,法律,图书馆使用|计算机使用,聆听,交涉技能:任意,任意技能,任意技能",
+        "category": ["商业", "服务业", "学术"],
         "credit_rating": "9-20"
     },
     {
-        "name": "White-Collar Worker (Middle/Senior Manager)",
+        "name": "白领职员（中高级管理者）",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "accounting,language:any,law,interpersonal_skill:any,interpersonal_skill:any,psychology,any,any",
-        "category": ["Business", "Service Industry", "Academic"],
+        "occupation_skills": "会计,语言:任意,法律,交涉技能:任意,交涉技能:任意,心理学,任意技能,任意技能",
+        "category": ["商业", "服务业", "学术"],
         "credit_rating": "20-80"
     },
     {
-        "name": "Zealot",
+        "name": "狂信徒",
         "skill_points_formula": "EDU*2+MAX(APP,POW)*2",
-        "occupation_skills": "history,interpersonal_skill:any,interpersonal_skill:any,psychology,stealth,any",
-        "category": ["Occult & Mystic", "Adventurer", "Service Industry"],
+        "occupation_skills": "历史,交涉技能:任意,交涉技能:任意,心理学,潜行,任意技能",
+        "category": ["神秘与灵性", "冒险者", "服务业"],
         "credit_rating": "0-30"
     },
     {
-        "name": "Zookeeper",
+        "name": "动物管理员",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "art:animal_handling,accounting,dodge,first_aid,natural_world,medicine,science:pharmacy,science:zoology",
-        "category": ["Labor", "Science & Technology", "Service Industry"],
+        "occupation_skills": "技艺:驯兽,会计,闪避,急救,博物学,医学,科学:药学,科学:动物学",
+        "category": ["劳动", "科学与技术", "服务业"],
         "credit_rating": "9-40"
     }
 ]

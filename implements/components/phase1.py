@@ -1,5 +1,5 @@
-import math
 import os
+import math
 import random
 import shutil
 from pathlib import Path
@@ -7,13 +7,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QFileDialog, QVBoxLayout, QStackedWidget
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor
+from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor, QFont
 
 from implements.components.base_phase import BasePhase
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame
-from ui.components.tf_font import Merriweather
+from ui.components.tf_font import Merriweather, NotoSerifNormal, NotoSerifLight
 from ui.tf_application import TFApplication
 
 
@@ -26,23 +26,26 @@ class Phase1(BasePhase):
 
         self.show_character_description_button = TFBaseButton(
             parent=self.buttons_frame, 
-            text="Char. Info", 
+            text="角色信息", 
             height=35,
             width=120,
+            font_family=QFont("Noto Serif SC"),
             on_clicked=self._on_show_character_description_clicked
         )
         self.age_reduction_button = TFBaseButton(
             parent=self.buttons_frame, 
-            text="Age Reduction", 
+            text="年龄修正", 
             height=35,
             width=120,
+            font_family=QFont("Noto Serif SC"),
             on_clicked=self._on_age_reduction_clicked
         )
         self.stats_exchange_button = TFBaseButton(
             parent=self.buttons_frame, 
-            text="Stats Exchange", 
+            text="属性交换", 
             height=35,
             width=120,
+            font_family=QFont("Noto Serif SC"),
             on_clicked=self._on_stats_exchange_clicked
         )
         self.buttons_frame.add_custom_button(self.show_character_description_button)
@@ -79,7 +82,7 @@ class Phase1(BasePhase):
         self.age_reduction_button.setEnabled(True)
 
         mode = self.config.get("mode")
-        if mode == "Destiny":
+        if mode == "天命":
             if self.lower_frame.middle_stack:
                 stats_entries = self.lower_frame.basic_stats_group.stats_entries
                 for entry in stats_entries.values():
@@ -89,7 +92,7 @@ class Phase1(BasePhase):
                 self.lower_frame.basic_stats_group.hide()
                 self.lower_frame.dice_result_frame.show()
                 self.lower_frame.middle_stack.setCurrentWidget(self.lower_frame.dice_result_frame)
-        elif mode == "Points":
+        elif mode == "购点":
             if self.lower_frame.middle_stack:
                 self.lower_frame.middle_stack.setCurrentWidget(self.lower_frame.basic_stats_group)
                 stats = self.lower_frame.basic_stats_group.stats_entries
@@ -134,11 +137,11 @@ class Phase1(BasePhase):
         pass
 
     def check_dependencies(self):
-        mode = self.config.get("mode", "Destiny")
+        mode = self.config.get("mode", "天命")
         self.lower_frame.stats_info_group.update_from_config(self.config)
         self.lower_frame.handle_mode_change(mode, self.config)
 
-        if mode == "Destiny":
+        if mode == "天命":
             destiny_config = self.config.get("destiny", {})
             allow_exchange = destiny_config.get("allow_exchange", False)
             self.stats_exchange_button.setVisible(allow_exchange)
@@ -150,36 +153,36 @@ class Phase1(BasePhase):
         
         player_info = self.upper_frame.player_info_group
         if not player_info.player_name_entry.get_value():
-            invalid_items.append((player_info.player_name_entry, "Player name cannot be empty"))
-        if player_info.era_entry.get_value() == "None":
-            invalid_items.append((player_info.era_entry, "Please select an era"))
+            invalid_items.append((player_info.player_name_entry, "玩家姓名不能为空"))
+        if player_info.era_entry.get_value() == "未选择":
+            invalid_items.append((player_info.era_entry, "请选择一个时代"))
             
         char_info = self.upper_frame.character_info_group
         if not char_info.char_name_entry.get_value():
-            invalid_items.append((char_info.char_name_entry, "Character name cannot be empty"))
+            invalid_items.append((char_info.char_name_entry, "角色姓名不能为空"))
         if not char_info.age_entry.get_value():
-            invalid_items.append((char_info.age_entry, "Age cannot be empty"))
+            invalid_items.append((char_info.age_entry, "年龄不能为空"))
         elif int(char_info.age_entry.get_value()) < 15 or int(char_info.age_entry.get_value()) > 90:
-            invalid_items.append((char_info.age_entry, "Age should be set within 15 to 90"))
-        if char_info.gender_entry.get_value() == "None":
-            invalid_items.append((char_info.gender_entry, "Please select a gender"))
+            invalid_items.append((char_info.age_entry, "年龄应设置在 15 到 90 之间"))
+        if char_info.gender_entry.get_value() == "未选择":
+            invalid_items.append((char_info.gender_entry, "请选择性别"))
         if not char_info.natinality_entry.get_value():
-            invalid_items.append((char_info.natinality_entry, "Nationality cannot be empty"))
+            invalid_items.append((char_info.natinality_entry, "国籍不能为空"))
         if not char_info.residence_entry.get_value():
-            invalid_items.append((char_info.residence_entry, "Residence cannot be empty"))
+            invalid_items.append((char_info.residence_entry, "居住地不能为空"))
         if not char_info.birthpalce_entry.get_value():
-            invalid_items.append((char_info.birthpalce_entry, "Birthplace cannot be empty"))
+            invalid_items.append((char_info.birthpalce_entry, "出生地不能为空"))
         if not char_info.language_own_entry.get_text():
-            invalid_items.append((char_info.language_own_entry, "Please select a language"))
+            invalid_items.append((char_info.language_own_entry, "请选择你的母语"))
 
         mode = self.config.get("mode")
-        if mode == "Destiny":
+        if mode == "天命":
             if not self.lower_frame.basic_stats_group.isVisible():
                 invalid_items.append((
                     self.lower_frame.dice_result_frame, 
-                    "Please select a set of dice results"
+                    "请选择一组骰子结果"
                 ))
-        elif mode == "Points":
+        elif mode == "购点":
             points_config = self.config.get("points", {})
             lower_limit = points_config.get("lower_limit", 30)
             upper_limit = points_config.get("upper_limit", 80)
@@ -191,22 +194,22 @@ class Phase1(BasePhase):
                     if value < lower_limit:
                         invalid_items.append((
                             entry,
-                            f"{stat} must be at least {lower_limit} (current: {value})"
+                            f"{stat} 至少需要 {lower_limit}（当前值：{value}）"
                         ))
                     elif value > upper_limit:
                         invalid_items.append((
                             entry,
-                            f"{stat} cannot exceed {upper_limit} (current: {value})"
+                            f"{stat} 不能超过 {upper_limit}（当前值：{value}）"
                         ))
                 except ValueError:
-                    invalid_items.append((entry, f"Invalid value for {stat}"))
+                    invalid_items.append((entry, f"{stat} 的值无效"))
         
         return invalid_items
 
     def _on_show_character_description_clicked(self):
         for stat, entry in self.lower_frame.basic_stats_group.stats_entries.items():
             if not entry.get_value() or int(entry.get_value()) == 0:
-                TFApplication.instance().show_message("Please set all attributes before viewing character description", 5000, "yellow")
+                TFApplication.instance().show_message("请先设置所有属性后再查看角色描述", 5000, "yellow")
                 return
         
         stats = {}
@@ -219,16 +222,16 @@ class Phase1(BasePhase):
         mode = self.lower_frame.stats_info_group.entries["dice_mode"].get_value()
 
         if not self.upper_frame.character_info_group.age_entry.get_value().isdigit():
-            TFApplication.instance().show_message("Enter your age before age reduction.", 5000, "yellow")
+            TFApplication.instance().show_message("请先输入年龄后再进行年龄修正操作。", 5000, "yellow")
             return
         
         if not self.lower_frame.basic_stats_group.isVisible():
-            TFApplication.instance().show_message("Select your basic stats before proceeding.", 5000, "yellow")
+            TFApplication.instance().show_message("请选择基本属性后再继续。", 5000, "yellow")
             return
 
-        if mode == "Points":
+        if mode == "购点":
             if not int(self.lower_frame.stats_info_group.entries["points_available"].get_value()) == 0:
-                TFApplication.instance().show_message("Allocate all points before proceeding", 5000, "yellow")
+                TFApplication.instance().show_message("请分配完所有点数后再继续。", 5000, "yellow")
                 return
 
         modifications = []
@@ -257,18 +260,18 @@ class Phase1(BasePhase):
                     old_value = int(stats_group.stats_entries[stat].get_value())
                     new_value = max(1, old_value - reduction)
                     stats_group.stats_entries[stat].set_value(str(new_value))
-                    modifications.append(f"{stat} reduced by {reduction} points ({old_value} → {new_value})")
+                    modifications.append(f"{stat} 减少了 {reduction} 点（{old_value} → {new_value}）")
 
 
         edu_message = self._process_edu_improvement(age, stats_group)
         app_message = self._process_app_reduction(age, stats_group)
-
-        if age < 20 and mode == "Destiny" or (mode == "Points" and not self.config["points"]["custom_luck"]):
+        print(self.config)
+        if age < 20 and mode == "天命" or (mode == "购点" and not self.config["points"]["custom_luck"]):
             dice_result = sum(random.randint(1, 6) for _ in range(3)) * 5
-            curr_luk = int(self.lower_frame.basic_stats_group.stats_entries["LUK"].get_value() )
+            curr_luk = int(self.lower_frame.basic_stats_group.stats_entries["LUK"].get_value())
             if dice_result > curr_luk:
                 self.lower_frame.basic_stats_group.stats_entries["LUK"].set_value(str(dice_result))
-                modifications.append(f"Luck improved from {curr_luk} to {dice_result}")
+                modifications.append(f"LUK 从 {curr_luk} 提高到 {dice_result}")
 
         if edu_message:
             modifications.extend(edu_message)
@@ -287,7 +290,7 @@ class Phase1(BasePhase):
 
     def _on_stats_exchange_clicked(self):
         if not self.lower_frame.basic_stats_group.isVisible():
-            TFApplication.instance().show_message("Please select your basic stats before exchanging", 5000, "yellow")
+            TFApplication.instance().show_message("请先选择基本属性后再进行交换", 5000, "yellow")
             return
         
         current_stats = {}
@@ -368,7 +371,7 @@ class Phase1(BasePhase):
         if edu_checks:
             stats_group.stats_entries['EDU'].set_value(str(curr_edu))
             if curr_edu > old_edu:
-                edu_message.append(f"Education improved from {old_edu} to {curr_edu}")
+                edu_message.append(f"EDU 从 {old_edu} 提高到 {curr_edu}")
 
         return edu_message
     
@@ -392,7 +395,7 @@ class Phase1(BasePhase):
             old_app = int(stats_group.stats_entries['APP'].get_value())
             new_app = max(1, old_app - app_reduction)
             stats_group.stats_entries['APP'].set_value(str(new_app))
-            app_message.append(f"APP reduced by {app_reduction} points due to age ({old_app} → {new_app})")
+            app_message.append(f"APP 因年龄减少了 {app_reduction} 点（{old_app} → {new_app}）")
 
         return app_message
 
@@ -440,7 +443,7 @@ class LowerFrame(TFBaseFrame):
         self.add_child("radar_graph", self.radar_graph)
 
     def handle_mode_change(self, mode: str, config: dict) -> None:
-        if mode == "Points":
+        if mode == "购点":
             self.middle_stack.setCurrentWidget(self.basic_stats_group)
             points_config = config.get("points", {})
             allow_custom_luck = points_config.get("custom_luck", False)
@@ -457,9 +460,9 @@ class LowerFrame(TFBaseFrame):
                     entry.set_value(str(dice_result))
                     self.basic_stats_group.total_points += dice_result
                     self.basic_stats_group._update_points_available()
-                    TFApplication.instance().show_message(f"Dice Result for LUC: {dice_result}", 5000, "green")
+                    TFApplication.instance().show_message(f"LUK 骰子结果：{dice_result}", 5000, "green")
 
-        elif mode == "Destiny":
+        elif mode == "天命":
             dice_count = int(config.get("destiny", {}).get("dice_count", 3))
             if not self.dice_result_frame:
                 self.dice_result_frame = DiceResultFrame(dice_count, self)
@@ -515,12 +518,12 @@ class AvatarFrame(TFBaseFrame):
 
         self.upload_button = self.create_button(
             name="avatar_upload",
-            text="Update Avatar",
+            text="上传头像",
             width=120,
             height=24,
             font_size=10,
             enabled=True,
-            tooltip="Click to upload a new avatar image",
+            tooltip="点击进行头像上传",
             border_radius=5,
             on_clicked=self._on_avatar_upload
         )
@@ -534,7 +537,7 @@ class AvatarFrame(TFBaseFrame):
     def _on_avatar_upload(self):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Select Avatar Image",
+            "选择头像图片",
             "",
             "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
         )
@@ -595,22 +598,24 @@ class PlayerInfoGroup(TFBaseFrame):
         super().__init__(radius=10, level=1, parent=parent)
 
     def _setup_content(self) -> None:
-        self.setFixedWidth(180)
+        self.setFixedWidth(210)
 
         self.player_name_entry = self.create_value_entry(
             name="player_name",
-            label_text="Player Name:",
-            label_size=90,
+            label_text="Player(PL):",
+            label_size=80,
             value_size=70,
-            height=24
+            height=24,
+            show_tooltip=True,
+            tooltip_text="玩家的称呼（非你所创建的角色的称呼）"
         )
 
         self.era_entry = self.create_option_entry(
             name="era",
-            label_text="Era:",
-            options=["1920s", "Modern"],
-            current_value="Modern",
-            label_size=90,
+            label_text="时代:",
+            options=["1920s", "现代"],
+            current_value="现代",
+            label_size=80,
             value_size=70,
             height=24
         )
@@ -627,16 +632,16 @@ class CharacterInfoGroup(TFBaseFrame):
     def _setup_content(self) -> None:
         self.char_name_entry = self.create_value_entry(
             name="char_name",
-            label_text="Name:",
-            label_size=80,
+            label_text="姓名:",
+            label_size=50,
             value_size=75,
             height=24
         )
 
         self.age_entry = self.create_value_entry(
             name="age",
-            label_text="Age:",
-            label_size=75,
+            label_text="年龄:",
+            label_size=50,
             value_size=75,
             height=24,
             number_only=True,
@@ -646,43 +651,43 @@ class CharacterInfoGroup(TFBaseFrame):
 
         self.gender_entry = self.create_option_entry(
             name="gender",
-            label_text="Gender:",
-            options=["None", "Male", "Female", "Other"],
-            current_value="None",
-            label_size=75,
+            label_text="性别:",
+            options=["未选择", "男性", "女性", "其他"],
+            current_value="未选择",
+            label_size=50,
             value_size=75,
             height=24
         )
 
         self.natinality_entry = self.create_value_entry(
             name="nationality",
-            label_text="Nationality:",
-            label_size=80,
+            label_text="国籍:",
+            label_size=50,
             value_size=75,
             height=24
         )
 
         self.residence_entry = self.create_value_entry(
             name="residence",
-            label_text="Residence:",
-            label_size=75,
+            label_text="现居地:",
+            label_size=60,
             value_size=75,
             height=24
         )
 
         self.birthpalce_entry = self.create_value_entry(
-            name="birthpalce",
-            label_text="Birthplace:",
-            label_size=75,
+            name="birthplace",
+            label_text="出生地:",
+            label_size=60,
             value_size=75,
             height=24
         )
 
         self.language_own_entry = self.create_button_entry(
             name="language_own",
-            label_text="Language:",
-            label_size=80,
-            button_text="Select",
+            label_text="母语:",
+            label_size=50,
+            button_text="选择",
             button_callback=self._on_language_select,
             button_size=75,
             entry_size=75,
@@ -711,12 +716,12 @@ class StatsInformationGroup(TFBaseFrame):
         super().__init__(radius=10, level=1, parent=parent)
 
     def _setup_content(self) -> None:
-        self.setFixedWidth(180)
+        self.setFixedWidth(140)
     
         self.entries['dice_mode'] = self.create_value_entry(
             name="dice_mode",
-            label_text="Dice Mode:",
-            label_size=110,
+            label_text="模式:",
+            label_size=65,
             value_size=50,
             height=24,
             enable=False
@@ -736,20 +741,20 @@ class StatsInformationGroup(TFBaseFrame):
                 except RuntimeError:
                     continue
 
-        mode = config.get("mode", "Destiny")
+        mode = config.get("mode", "天命")
         self.entries['dice_mode'].blockSignals(True)
         self.entries['dice_mode'].set_value(mode)
         self.entries['dice_mode'].blockSignals(False)
 
-        if mode == "Points":
+        if mode == "购点":
             points_config = config.get("points", {})
             available_points = points_config.get("available", 480)
             self.parent.basic_stats_group.total_points = available_points
             
             self.entries['points_available'] = self.create_value_entry(
                 name="points_available",
-                label_text="Points Available:",
-                label_size=110,
+                label_text="可用点数:",
+                label_size=65,
                 value_text=str(available_points),
                 value_size=50,
                 height=24,
@@ -759,8 +764,8 @@ class StatsInformationGroup(TFBaseFrame):
             stats_range = f"{points_config.get('lower_limit', 30)}-{points_config.get('upper_limit', 80)}"
             self.entries['stats_range'] = self.create_value_entry(
                 name="stats_range",
-                label_text="Stats Range:",
-                label_size=110,
+                label_text="属性范围:",
+                label_size=65,
                 value_size=50,
                 value_text=stats_range,
                 height=24,
@@ -770,8 +775,8 @@ class StatsInformationGroup(TFBaseFrame):
             custom_luck = "Yes" if points_config.get("custom_luck", False) else "No"
             self.entries['allow_custom_luck'] = self.create_value_entry(
                 name="allow_custom_luck",
-                label_text="Custom Luck:",
-                label_size=110,
+                label_text="自定义LUK:",
+                label_size=65,
                 value_size=50,
                 value_text=custom_luck,
                 height=24,
@@ -782,13 +787,13 @@ class StatsInformationGroup(TFBaseFrame):
             self.main_layout.addWidget(self.entries['stats_range'])
             self.main_layout.addWidget(self.entries['allow_custom_luck'])
 
-        elif mode == "Destiny":
+        elif mode == "天命":
             destiny_config = config.get("destiny", {})
             
             self.entries['dice_count'] = self.create_value_entry(
                 name="dice_count",
-                label_text="Dice Count:",
-                label_size=110,
+                label_text="骰子数量:",
+                label_size=65,
                 value_size=50,
                 value_text=str(destiny_config.get("dice_count", "3")),
                 height=24,
@@ -798,10 +803,10 @@ class StatsInformationGroup(TFBaseFrame):
             allow_exchange = destiny_config.get("allow_exchange", False)
             self.entries['allow_exchange'] = self.create_value_entry(
                 name="allow_stats_exchange",
-                label_text="Stats Exchange:",
-                label_size=110,
+                label_text="属性交换:",
+                label_size=65,
                 value_size=50,
-                value_text="Yes" if allow_exchange else "No",
+                value_text="允许" if allow_exchange else "禁止",
                 height=24,
                 enable=False
             )
@@ -809,8 +814,8 @@ class StatsInformationGroup(TFBaseFrame):
             exchange_count = destiny_config.get("exchange_count", "1") if allow_exchange else "N/A"
             self.entries['exchange_count'] = self.create_value_entry(
                 name="exchange_count",
-                label_text="Exchange Times:",
-                label_size=110,
+                label_text="交换次数:",
+                label_size=65,
                 value_size=50,
                 value_text=exchange_count,
                 height=24,
@@ -960,7 +965,7 @@ class BasicStatsGroup(TFBaseFrame):
             return "+5d6", "+6"
         
     def _update_points_available(self) -> None:
-        if self.parent.stats_info_group.entries['dice_mode'].get_value() != "Points":
+        if self.parent.stats_info_group.entries['dice_mode'].get_value() != "购点":
             return
             
         total_used = sum(self._get_stat_value(stat) for stat in self.stats_entries)
@@ -999,13 +1004,13 @@ class DiceResultFrame(TFBaseFrame):
             total_with_luck = total_without_luck + roll['LUK']
             
             base_stats_text = " ".join(base_stats)
-            stats_text = f"{base_stats_text}\nTotals(base/with luck): {total_without_luck}/{total_with_luck}"
+            stats_text = f"{base_stats_text}\n总计（基础值/含幸运值）：{total_without_luck}/{total_with_luck}"
             options.append(stats_text)
 
         self.radio_group = self.create_radio_group(
             name="dice_results",
             options=options,
-            label_font=Merriweather,
+            label_font=NotoSerifNormal,
             height=48,
             spacing=5
         )
@@ -1034,7 +1039,7 @@ class DiceResultFrame(TFBaseFrame):
             total_with_luck = total_without_luck + roll['LUK']
             
             base_stats_text = " ".join(base_stats)
-            stats_text = f"{base_stats_text}\nTotals(base/with luck): {total_without_luck}/{total_with_luck}"
+            stats_text = f"{base_stats_text}\n总计（基础值/含幸运值）：{total_without_luck}/{total_with_luck}"
             options.append(stats_text)
             
         old_selection = next(
@@ -1048,7 +1053,7 @@ class DiceResultFrame(TFBaseFrame):
         self.radio_group = self.create_radio_group(
             name="dice_results",
             options=options,
-            label_font=Merriweather,
+            label_font=NotoSerifNormal,
             height=48,
             spacing=5
         )
@@ -1131,7 +1136,7 @@ class RadarGraph(TFBaseFrame):
         self.text_color = QColor("#FFFFFF")
         
     def _setup_content(self) -> None:
-        self.setFixedSize(300, 300)
+        self.setFixedWidth(300)
         
     def update_stats(self, stats: dict) -> None:
         self.stats = stats
@@ -1228,7 +1233,7 @@ class RadarGraph(TFBaseFrame):
         text_pen = QPen(self.text_color)
         painter.setPen(text_pen)
         
-        font = Merriweather
+        font = NotoSerifNormal
         font.setPointSize(9)
         painter.setFont(font)
         
@@ -1262,16 +1267,13 @@ class RadarGraph(TFBaseFrame):
 
 class LanguageSelectionDialog(TFBaseDialog):
     def __init__(self, parent=None):
-        super().__init__(title="Select Language", layout_type=QGridLayout, parent=parent)
+        super().__init__(title="选择语言", layout_type=QGridLayout, parent=parent)
 
     def _setup_content(self) -> None:
         languages = [
-            "English", "Spanish", "French", "German", "Italian",
-            "Chinese", "Japanese", "Korean", "Russian", "Arabic",
-            "Portuguese", "Dutch", "Swedish", "Greek", "Turkish",
-            "Hindi", "Thai", "Vietnamese", "Polish", "Hebrew",
-            "Bengali", "Persian", "Ukrainian", "Urdu", "Romanian",
-            "Malay", "Hungarian", "Czech", "Danish", "Finnish"
+            "汉语", "英语", "日语", "法语", "韩语",
+            "泰语", "俄罗斯语", "西班牙语", "阿拉伯语", "葡萄牙语",
+            "希伯来语", "越南语", "印地语", "其他"
         ]
 
         self.language_group = self.create_radio_group(
@@ -1290,7 +1292,7 @@ class LanguageSelectionDialog(TFBaseDialog):
 
     def validate(self) -> List[Tuple[Any, str]]:
         if not self.language_group.get_value():
-            return [(self.language_group, "Please select a language")]
+            return [(self.language_group, "请选择母语")]
         return []
 
     def get_validated_data(self) -> Optional[str]:
@@ -1306,18 +1308,18 @@ class AgeReductionDialog(TFBaseDialog):
         self.stat_entries = {}
         
         super().__init__(
-            title=f"Age Reduction: {total_reduction} Points",
+            title=f"年龄修正",
             parent=parent,
             button_config=[
-                {"text": "Apply", "callback": self._on_ok_clicked},
-                {"text": "Cancel", "callback": self.reject, "role": "reject"}
+                {"text": "确定", "callback": self._on_ok_clicked},
+                {"text": "取消", "callback": self.reject, "role": "reject"}
             ]
         )
 
     def _setup_content(self) -> None:
         self.info_label = self.create_value_entry(
             name="info",
-            label_text="Please allocate the following points for attribute reduction:",
+            label_text="请将以下点数进行分配：",
             value_text=str(self.total_reduction),
             label_size=400,
             value_size=60,
@@ -1330,7 +1332,7 @@ class AgeReductionDialog(TFBaseDialog):
             current_value = self.current_stats.get(stat, 0)
             entry = self.create_value_entry(
                 name=f"deduct_{stat.lower()}",
-                label_text=f"{stat} Reduction (Current: {current_value}):",
+                label_text=f"{stat}（当前: {current_value}）:",
                 value_text="0",
                 label_size=180,
                 value_size=100,
@@ -1361,17 +1363,17 @@ class AgeReductionDialog(TFBaseDialog):
                 current_value = self.current_stats.get(stat, 0)
                 
                 if value < 0:
-                    errors.append((entry, f"{stat} reduction cannot be negative"))
+                    errors.append((entry, f"{stat} 的减少值不能为负数"))
                 elif current_value - value < 1:
-                    errors.append((entry, f"{stat} cannot be reduced below 1 (Current: {current_value})"))
+                    errors.append((entry, f"{stat} 不能减少到小于 1（当前值：{current_value}）"))
                 total += value
             except ValueError:
-                errors.append((entry, f"Invalid value for {stat}"))
+                errors.append((entry, f"{stat} 的值无效"))
 
         if total != self.total_reduction:
             errors.append((
                 self.info_label,
-                f"Total reduction must equal {self.total_reduction} (current: {total})"
+                f"总减少值必须等于 {self.total_reduction}（当前：{total}）"
             ))
 
         return errors
@@ -1387,24 +1389,24 @@ class CharacterDescriptionDialog(TFBaseDialog):
     def __init__(self, parent=None, stats: Dict[str, int] = None):
         self.stats = stats or {}
         super().__init__(
-            title="Character Description",
+            title="角色信息",
             layout_type=QGridLayout,
             parent=parent,
-            button_config=[{"text": "OK", "callback": self.accept}]
+            button_config=[{"text": "确定", "callback": self.accept}]
         )
         self.resize(800, 600)
 
     def _setup_content(self) -> None:
         descriptions = {
-            'STR': ('Strength', self._get_str_description),
-            'CON': ('Constitution', self._get_con_description),
-            'SIZ': ('Size', self._get_siz_description),
-            'DEX': ('Dexterity', self._get_dex_description),
-            'APP': ('Appearance', self._get_app_description),
-            'INT': ('Intelligence', self._get_int_description),
-            'POW': ('Power', self._get_pow_description),
-            'EDU': ('Education', self._get_edu_description),
-            'LUK': ('Luck', self._get_luck_description),
+            'STR': ('力量', self._get_str_description),
+            'CON': ('体质', self._get_con_description),
+            'SIZ': ('体型', self._get_siz_description),
+            'DEX': ('敏捷', self._get_dex_description),
+            'APP': ('外貌', self._get_app_description),
+            'INT': ('智力', self._get_int_description),
+            'POW': ('信仰', self._get_pow_description),
+            'EDU': ('教育', self._get_edu_description),
+            'LUK': ('幸运', self._get_luck_description),
         }
 
         for idx, (stat, (full_name, desc_func)) in enumerate(descriptions.items()):
@@ -1429,115 +1431,113 @@ class CharacterDescriptionDialog(TFBaseDialog):
 
     def _get_str_description(self, value: int) -> str:
         if value <= 15:
-            return "Struggles with even basic physical tasks"
+            return "几乎没有力量，连拧开瓶盖或提起椅子都显得吃力"
         elif value <= 40:
-            return "Notably weak, has difficulty with manual labor"
+            return "明显偏弱，搬重物或长时间体力活让人感到吃不消"
         elif value <= 60:
-            return "Possesses average human strength"
+            return "普通人的平均力量，可以胜任一般的日常体力活动"
         elif value <= 80:
-            return "Remarkably strong, could be a successful athlete"
+            return "强壮有力，能够轻松完成体能挑战，比如举重或短跑"
         else:
-            return "Exceptionally powerful, rivals professional strongmen"
+            return "非凡的力量，举重、破门而入甚至搬动家具都不在话下"
 
     def _get_con_description(self, value: int) -> str:
         if value <= 20:
-            return "Chronically ill, requires frequent medical attention"
+            return "体弱多病，稍微受凉就可能卧床不起"
         elif value <= 40:
-            return "Often sick, has a weak constitution"
+            return "身体较差，经常生病或感到疲惫"
         elif value <= 60:
-            return "Generally healthy with normal resilience"
+            return "健康水平一般，能应付日常但抗压力较弱"
         elif value <= 80:
-            return "Robust health, rarely gets sick"
+            return "身体强壮，少有生病，能快速恢复"
         else:
-            return "Iron constitution, seems immune to illness"
+            return "铁打的体格，几乎百毒不侵，无惧严酷环境"
 
     def _get_siz_description(self, value: int) -> str:
         if value <= 20:
-            return "Child-sized, very small and thin"
+            return "身材瘦小，甚至看起来像个未成年的孩子"
         elif value <= 40:
-            return "Small and slight of build"
+            return "个头不高，身形纤细，通常在群体中不显眼"
         elif value <= 60:
-            return "Average height and build"
+            return "标准体型，普通人的平均身材"
         elif value <= 80:
-            return "Notably tall or broad"
+            return "高大威猛或体格魁梧，在人群中常常显得突出"
         elif value <= 100:
-            return "Exceptionally large, stands out in any crowd"
+            return "身材庞大，无论身高还是体型都令人印象深刻"
         else:
-            return "Giant-like proportions, possibly record-breaking"
+            return "巨人般的身材，可能需要特制的衣物或家具"
 
     def _get_dex_description(self, value: int) -> str:
         if value <= 20:
-            return "Severely uncoordinated, struggles with basic motor tasks"
+            return "动作迟缓，常常打翻物品或被简单的运动绊住"
         elif value <= 40:
-            return "Clumsy and awkward in movement"
+            return "动作笨拙，缺乏流畅的肢体协调性"
         elif value <= 60:
-            return "Average coordination and reflexes"
+            return "协调性普通，可以完成一般的体育活动"
         elif value <= 80:
-            return "Graceful and agile, excellent physical coordination"
+            return "动作灵活，具备优秀的反应速度和身体控制能力"
         else:
-            return "Exceptional agility, could be a professional acrobat"
+            return "灵活性惊人，像体操运动员或特技演员般敏捷"
 
     def _get_app_description(self, value: int) -> str:
         if value <= 20:
-            return "Appearance causes discomfort in others"
+            return "外貌怪异或令人不适，可能被社会视为异类"
         elif value <= 40:
-            return "Plain, tends to blend into the background"
+            return "长相平凡，容易被忽略，不会引起特别的关注"
         elif value <= 60:
-            return "Average appearance, neither striking nor forgettable"
+            return "中等外貌，符合大众审美标准"
         elif value <= 80:
-            return "Attractive, draws positive attention"
+            return "吸引人的外貌，能轻松赢得别人的好感"
         else:
-            return "Stunning beauty, could be a professional model"
+            return "美得惊艳或英俊得无法忽视，如明星般光彩夺目"
 
     def _get_int_description(self, value: int) -> str:
         if value <= 20:
-            return "Severe cognitive limitations"
+            return "思维迟缓，可能无法理解复杂概念"
         elif value <= 40:
-            return "Below average mental capacity"
+            return "智力偏低，但能应付基本的逻辑和任务"
         elif value <= 60:
-            return "Average intelligence, capable of normal reasoning"
+            return "普通水平的智力，足以理解日常问题"
         elif value <= 80:
-            return "Sharp mind, quick to understand complex concepts"
+            return "聪明机智，擅长分析问题和理解抽象概念"
         else:
-            return "Genius-level intellect"
+            return "天才般的头脑，往往能以超乎常人的视角解决问题"
 
     def _get_pow_description(self, value: int) -> str:
         if value <= 20:
-            return "Weak-willed, easily manipulated"
+            return "意志薄弱，容易被恐惧或压力击垮"
         elif value <= 40:
-            return "Lacks mental fortitude"
+            return "心志不够坚韧，面对挫折常常退缩"
         elif value <= 60:
-            return "Normal willpower and determination"
+            return "意志力普通，能应对正常的生活压力"
         elif value <= 80:
-            return "Strong-willed, difficult to influence"
-        elif value <= 100:
-            return "Exceptional mental fortitude, almost unshakeable"
+            return "坚定的意志力，难以被外界轻易动摇"
         else:
-            return "Superhuman willpower, possibly psychically sensitive"
+            return "超凡的意志力，几乎无惧任何挑战或心理打击"
 
     def _get_edu_description(self, value: int) -> str:
         if value <= 20:
-            return "Minimal formal education"
+            return "接受的教育极为有限，基本的知识水平"
         elif value <= 40:
-            return "Basic education, equivalent to elementary school"
+            return "初等教育程度，了解一些基础的文化和技能"
         elif value <= 60:
-            return "High school level education"
+            return "中等教育水平，具备广泛的基础知识"
         elif value <= 80:
-            return "University graduate, well-educated"
+            return "高等教育背景，拥有丰富的知识储备"
         else:
-            return "Scholarly excellence, extensive knowledge in many fields"
+            return "学术造诣深厚，几乎在某些领域达到专家级水平"
 
     def _get_luck_description(self, value: int) -> str:
         if value <= 20:
-            return "Seems to attract misfortune"
+            return "霉运缠身，经常遇到倒霉事"
         elif value <= 40:
-            return "Often experiences bad luck"
+            return "偶尔不走运，但也不是完全的倒霉鬼"
         elif value <= 60:
-            return "Average fortune in life"
+            return "普通的运气，既没有太多好运也没有太多霉运"
         elif value <= 80:
-            return "Notably lucky, things tend to work out well"
+            return "好运常伴，经常在关键时刻扭转局势"
         else:
-            return "Incredibly fortunate, seems blessed by fate"
+            return "福星高照，无论做什么事情似乎总能成功"
 
 
 class StatExchangeDialog(TFBaseDialog):
@@ -1550,14 +1550,14 @@ class StatExchangeDialog(TFBaseDialog):
             title="Exchange Stats",
             parent=parent,
             button_config=[
-                {"text": "Exchange", "callback": self._on_ok_clicked},
-                {"text": "Cancel", "callback": self.reject, "role": "reject"}
+                {"text": "交换", "callback": self._on_ok_clicked},
+                {"text": "取消", "callback": self.reject, "role": "reject"}
             ]
         )
 
     def _setup_content(self) -> None:
         times_label = self.create_label(
-            text=f"Remaining exchange times: {self.remaining_times}",
+            text=f"剩余交换次数：{self.remaining_times}",
             height=24
         )
         self.main_layout.addWidget(times_label)
@@ -1580,7 +1580,7 @@ class StatExchangeDialog(TFBaseDialog):
         
         if len(selected) != 2:
             return [(self.stat_entries[selected[0]] if selected else None,
-                    "Please select exactly two stats to exchange")]
+                    "请选择恰好两个属性进行交换")]
         return []
 
     def get_validated_data(self) -> Tuple[str, str]:
