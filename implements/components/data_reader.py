@@ -11,7 +11,7 @@ def load_occupations_from_json() -> List[Occupation]:
         data = json.load(f)
     return [Occupation.from_json(entry) for entry in data]
 
-def load_skills_from_json( dex: int, edu: int, language_own: str) -> List[Skill]:
+def load_skills_from_json( dex: int, edu: int) -> List[Skill]:
     skills = []
 
     with open(resource_path("implements/data/default_skills.json"), 'r', encoding='utf-8') as file:
@@ -21,10 +21,9 @@ def load_skills_from_json( dex: int, edu: int, language_own: str) -> List[Skill]
             name = skill_key.split(":")[1] if ":" in skill_key else skill_key
             super_name = skill_key.split(":")[0] if ":" in skill_key else None
 
-            if name == 'dodge':
+            if name == '闪避':
                 default_point = dex // 2
-            elif name == 'language_own':
-                name = language_own
+            elif name == '母语':
                 default_point = edu
 
             skill = Skill(

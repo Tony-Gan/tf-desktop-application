@@ -46,9 +46,10 @@ class Phase0(BasePhase):
     def reset_contents(self):
         self.reset_validation_state()
         
-        self.base_entry.mode_entry.set_value("None")
+        self.base_entry.mode_entry.set_value("选择模式")
         self.base_entry.token_entry.set_value("")
         self.base_entry.setEnabled(True)
+        self.base_entry._handle_mode_change("选择模式")
         
         points_entry = self.points_entry
         points_entry.points_available_entry.set_value("480")
@@ -204,9 +205,9 @@ class Phase0(BasePhase):
         if token:
             try:
                 TFApplication.clipboard().setText(token)
-                TFApplication.show_message(f"令牌已复制到剪贴板：{token}", 5000)
+                TFApplication.instance().show_message(f"令牌已复制到剪贴板：{token}", 5000)
             except Exception:
-                TFApplication.show_message(f"生成的令牌（请手动复制）：{token}", 5000)
+                TFApplication.instance().show_message(f"生成的令牌（请手动复制）：{token}", 5000)
 
     def _generate_token(self, values: dict) -> str:
         base_values = values.get('base_entry', {})
@@ -254,13 +255,7 @@ class Phase0(BasePhase):
         return ''.join(token_parts)
     
     def go_next(self):
-        response = TFApplication.instance().show_question(
-            "确认操作",
-            "所有设置将被锁定，无法更改。",
-            buttons=["继续", "取消"]
-        )
-        if response != "继续":
-            return
+        TFApplication.instance().show_message("所有设置已锁定", 5000, 'green')
 
         self.base_entry.setEnabled(False)
         self.points_entry.setEnabled(False)
@@ -287,6 +282,7 @@ class BaseEntry(TFBaseFrame):
             height=24
         )
         self.mode_entry.value_changed.connect(self._handle_mode_change)
+        self.mode_entry.label.setStyleSheet("color: #FFB700;")
 
         self.token_entry = self.create_value_entry(
             name="token",
@@ -300,7 +296,7 @@ class BaseEntry(TFBaseFrame):
         )
         self.token_entry.value_changed.connect(self._handle_token_change)
 
-        self._handle_mode_change("None")
+        self._handle_mode_change("选择模式")
 
         self.main_layout.addWidget(self.mode_entry)
         self.main_layout.addWidget(self.token_entry)
@@ -318,6 +314,11 @@ class BaseEntry(TFBaseFrame):
         self.parent.points_entry.setEnabled(False)
         self.parent.destiny_entry.setEnabled(False)
         self.parent.general_entry.setEnabled(False)
+
+        if mode == "选择模式":
+            self.mode_entry.label.setStyleSheet("color: #FFB700;")
+        else:
+            self.mode_entry.label.setStyleSheet("")
 
         if mode == "购点":
             self.parent.points_entry.setEnabled(True)
@@ -593,7 +594,7 @@ class GeneralEntry(TFBaseFrame):
             label_font=NotoSerifNormal,
             height=24,
             show_tooltip=True,
-            tooltip_text="勾选此选项后，会显示新卡片的非常规设置，例如法术。"
+            tooltip_text="勾选此选项后，会显示新卡片的非常规设置，包括防具，格斗技，法术，局内局外关系，经历包等。"
         )
 
         self.custom_occupation_entry = self.create_check_with_label(

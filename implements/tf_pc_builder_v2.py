@@ -3,11 +3,12 @@ from typing import List
 from PyQt6.QtWidgets import QHBoxLayout, QStackedWidget, QFrame
 
 from core.windows.tf_draggable_window import TFDraggableWindow
-from implements.components.phase2 import Phase2
 from ui.components.tf_base_frame import TFBaseFrame
 from utils.registry.tf_tool_matadata import TFToolMetadata
 from implements.components.phase0 import Phase0
 from implements.components.phase1 import Phase1
+from implements.components.phase2 import Phase2
+from implements.components.phase3 import Phase3
 
 
 class TFPcBuilderV2(TFDraggableWindow):
@@ -62,10 +63,12 @@ class TFPcBuilderV2(TFDraggableWindow):
         phase0 = Phase0(self.p_data, self.config, self.stacked_widget)
         phase1 = Phase1(self.p_data, self.config, self.stacked_widget)
         phase2 = Phase2(self.p_data, self.config, self.stacked_widget)
+        phase3 = Phase3(self.p_data, self.config, self.stacked_widget)
         self.stacked_widget.addWidget(phase0)
         self.stacked_widget.addWidget(phase1)
         self.stacked_widget.addWidget(phase2)
-        self.frames = [phase0, phase1, phase2]
+        self.stacked_widget.addWidget(phase3)
+        self.frames = [phase0, phase1, phase2, phase3]
 
 
 class ProgressFrame(TFBaseFrame):

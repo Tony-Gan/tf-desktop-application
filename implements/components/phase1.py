@@ -13,8 +13,9 @@ from implements.components.base_phase import BasePhase
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame
-from ui.components.tf_font import Merriweather, NotoSerifNormal, NotoSerifLight
+from ui.components.tf_font import NotoSerifNormal
 from ui.tf_application import TFApplication
+from utils.helper import resource_path
 
 
 class Phase1(BasePhase):
@@ -265,7 +266,6 @@ class Phase1(BasePhase):
 
         edu_message = self._process_edu_improvement(age, stats_group)
         app_message = self._process_app_reduction(age, stats_group)
-        print(self.config)
         if age < 20 and mode == "天命" or (mode == "购点" and not self.config["points"]["custom_luck"]):
             dice_result = sum(random.randint(1, 6) for _ in range(3)) * 5
             curr_luk = int(self.lower_frame.basic_stats_group.stats_entries["LUK"].get_value())
@@ -544,9 +544,19 @@ class AvatarFrame(TFBaseFrame):
 
         if not file_path:
             return
+        
+        try:
+            file_size = os.path.getsize(file_path)
+            max_size = 2 * 1024 * 1024
+            if file_size > max_size:
+                TFApplication.instance().show_message("文件大小超过2MB限制，请选择更小的文件。", 5000, "yellow")
+                return
+        except Exception as e:
+            TFApplication.instance().show_message(f"无法检查文件大小: {str(e)}", 5000, "yellow")
+            return
 
         try:
-            avatar_dir = Path("resources/data/coc/pcs/avatars")
+            avatar_dir = Path(resource_path("resources/data/coc/pcs/avatars"))
             avatar_dir.mkdir(parents=True, exist_ok=True)
 
             avatar_filename = os.path.basename(file_path)
@@ -609,6 +619,7 @@ class PlayerInfoGroup(TFBaseFrame):
             show_tooltip=True,
             tooltip_text="玩家的称呼（非你所创建的角色的称呼）"
         )
+        self.player_name_entry.value_changed.connect(self._update_label_colors)
 
         self.era_entry = self.create_option_entry(
             name="era",
@@ -622,6 +633,14 @@ class PlayerInfoGroup(TFBaseFrame):
 
         self.main_layout.addWidget(self.player_name_entry)
         self.main_layout.addWidget(self.era_entry)
+
+        self._update_label_colors()
+
+    def _update_label_colors(self) -> None:
+        if not self.player_name_entry.get_value():
+            self.player_name_entry.label.setStyleSheet("color: #FFB700;")
+        else:
+            self.player_name_entry.label.setStyleSheet("")
 
 
 class CharacterInfoGroup(TFBaseFrame):
@@ -637,6 +656,7 @@ class CharacterInfoGroup(TFBaseFrame):
             value_size=75,
             height=24
         )
+        self.char_name_entry.value_changed.connect(self._update_label_colors)
 
         self.age_entry = self.create_value_entry(
             name="age",
@@ -648,6 +668,7 @@ class CharacterInfoGroup(TFBaseFrame):
             allow_decimal=False,
             max_digits=2
         )
+        self.age_entry.value_changed.connect(self._update_label_colors)
 
         self.gender_entry = self.create_option_entry(
             name="gender",
@@ -658,6 +679,7 @@ class CharacterInfoGroup(TFBaseFrame):
             value_size=75,
             height=24
         )
+        self.gender_entry.value_changed.connect(self._update_label_colors)
 
         self.natinality_entry = self.create_value_entry(
             name="nationality",
@@ -666,6 +688,7 @@ class CharacterInfoGroup(TFBaseFrame):
             value_size=75,
             height=24
         )
+        self.natinality_entry.value_changed.connect(self._update_label_colors)
 
         self.residence_entry = self.create_value_entry(
             name="residence",
@@ -674,6 +697,7 @@ class CharacterInfoGroup(TFBaseFrame):
             value_size=75,
             height=24
         )
+        self.residence_entry.value_changed.connect(self._update_label_colors)
 
         self.birthpalce_entry = self.create_value_entry(
             name="birthplace",
@@ -682,6 +706,7 @@ class CharacterInfoGroup(TFBaseFrame):
             value_size=75,
             height=24
         )
+        self.birthpalce_entry.value_changed.connect(self._update_label_colors)
 
         self.language_own_entry = self.create_button_entry(
             name="language_own",
@@ -694,6 +719,7 @@ class CharacterInfoGroup(TFBaseFrame):
             border_radius=5
         )
         self.language_own_entry.set_entry_enabled(False)
+        self.language_own_entry.text_changed.connect(self._language_update_callback)
 
         self.main_layout.addWidget(self.char_name_entry, 0, 0)
         self.main_layout.addWidget(self.age_entry, 0, 1)
@@ -703,10 +729,32 @@ class CharacterInfoGroup(TFBaseFrame):
         self.main_layout.addWidget(self.birthpalce_entry, 1, 2)
         self.main_layout.addWidget(self.language_own_entry, 2, 0, 1, 2)
 
+        self._update_label_colors()
+
     def _on_language_select(self):
         success, selected_language = LanguageSelectionDialog.get_input(self)
         if success and selected_language:
             self.language_own_entry.set_text(selected_language)
+
+    def _language_update_callback(self):
+        self._update_label_colors()
+
+    def _update_label_colors(self) -> None:
+        validations = {
+            self.char_name_entry: not self.char_name_entry.get_value(),
+            self.age_entry: not self.age_entry.get_value(),
+            self.natinality_entry: not self.natinality_entry.get_value(),
+            self.residence_entry: not self.residence_entry.get_value(),
+            self.birthpalce_entry: not self.birthpalce_entry.get_value(),
+            self.gender_entry: self.gender_entry.get_value() == "未选择",
+            self.language_own_entry: not self.language_own_entry.get_text()
+        }
+
+        for entry, is_invalid in validations.items():
+            if is_invalid:
+                entry.label.setStyleSheet("color: #FFB700;")
+            else:
+                entry.label.setStyleSheet("")
 
 
 class StatsInformationGroup(TFBaseFrame):
