@@ -2,7 +2,7 @@ from typing import Dict, List, Tuple
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QStackedWidget, QHBoxLayout, QFrame
+from PyQt6.QtWidgets import QStackedWidget, QHBoxLayout, QFrame, QLayout, QVBoxLayout
 
 from ui.components.if_state_controll import IStateController
 from ui.components.tf_base_button import TFPreviousButton, TFResetButton, TFNextButton
@@ -14,10 +14,11 @@ class BasePhase(TFBaseFrame):
 
     navigate = pyqtSignal(int)
 
-    def __init__(self, p_data: Dict, config: Dict, parent: QStackedWidget):
+    def __init__(self, p_data: Dict, config: Dict, parent: QStackedWidget, layout:QLayout=QVBoxLayout):
         self.parent = parent
         self.p_data = p_data
         self.config = config
+        self.layout = layout
 
         super().__init__(radius=5, parent=parent)
         self.initialized = False
@@ -25,7 +26,7 @@ class BasePhase(TFBaseFrame):
         self.saved_state = {}
 
     def _setup_content(self) -> None:
-        self.contents_frame = ContentsFrame(self.p_data, self.config, self)
+        self.contents_frame = ContentsFrame(self.p_data, self.config, self, layout=self.layout)
         self.buttons_frame = ButtonsFrame(self)
         self.buttons_frame.setFixedHeight(50)
 
@@ -106,10 +107,10 @@ class BasePhase(TFBaseFrame):
 
 class ContentsFrame(TFBaseFrame):
 
-    def __init__(self, p_data: Dict, config: Dict, parent=None):
+    def __init__(self, p_data: Dict, config: Dict, parent=None, layout: QLayout=QVBoxLayout):
         self.p_data = p_data
         self.config = config
-        super().__init__(level=0, radius=0, parent=parent)
+        super().__init__(layout_type=layout, level=0, radius=0, parent=parent)
 
     def _setup_content(self) -> None:
         pass

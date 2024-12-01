@@ -361,12 +361,14 @@ class BasicInformationFrame(TFBaseFrame):
             self.parent.occupation_skills_frame.update_occupation_skills()
             self.parent.parent.skills_frame.refresh_skill_display()
 
+            if '信誉' in self.parent.parent.skills_frame.skill_entries:
+                self.parent.parent.skills_frame.skill_entries['信誉']._update_label_color()
+
             for entry in [
                 self.occupation_points_entry,
                 self.interest_points_entry
             ]:
                 entry.value_field.setStyleSheet("color: #3498DB;")
-            # TODO: 触发其他需要的更新（预留占位符）
 
 
 class OccupationSkillsFrame(TFBaseFrame):
@@ -679,6 +681,15 @@ class SkillEntry(TFBaseFrame):
             
         occupation_limit = phase2.config['general']['occupation_skill_limit']
         interest_limit = phase2.config['general']['interest_skill_limit']
+
+        if self.skill.name == '信誉':
+            if phase2.selected_occupation:
+                min_credit = phase2.selected_occupation.get_credit_rating_min()
+                max_credit = phase2.selected_occupation.get_credit_rating_max()
+                total_points = self.skill.total_point
+                if total_points < min_credit or total_points > max_credit:
+                    self.skill_label.setStyleSheet("color: #FF6B6B;")
+                    return
         
         if self.skill.is_occupation:
             if self.skill.total_point > occupation_limit:

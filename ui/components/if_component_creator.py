@@ -1,6 +1,6 @@
 from typing import Callable, List, Dict, Optional, Any
 
-from PyQt6.QtWidgets import QLabel, QLineEdit, QComboBox, QCheckBox, QCompleter, QVBoxLayout
+from PyQt6.QtWidgets import QLabel, QLineEdit, QComboBox, QCheckBox, QCompleter, QVBoxLayout, QTextEdit
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
 
@@ -8,6 +8,7 @@ from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_button_entry import TFButtonEntry
 from ui.components.tf_check_with_label import TFCheckWithLabel
 from ui.components.tf_date_entry import TFDateEntry
+from ui.components.tf_label_entry import TFLabelWithTip
 from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.components.tf_radio_group import TFRadioGroup
@@ -363,6 +364,70 @@ class IComponentCreator:
         edit.setAlignment(alignment)
         self._register_component(name, edit)
         return edit
+    
+    def create_text_edit(
+            self,
+            name: str,
+            text: str = "",
+            width: int = 100,
+            height: int = 72,
+            placeholder_text: str = "",
+            read_only: bool = False,
+            word_wrap: bool = True,
+            scroll_policy: Optional[tuple[Qt.ScrollBarPolicy, Qt.ScrollBarPolicy]] = None,
+            enable_rich_text: bool = False,
+            show_tooltip: bool = False,
+            tooltip_text: str = ""
+    ) -> QTextEdit:
+        text_edit = QTextEdit(self)
+        text_edit.setText(text)
+        text_edit.setFont(NotoSerifLight)
+        text_edit.setFixedWidth(width)
+        text_edit.setFixedHeight(height)
+        
+        if placeholder_text:
+            text_edit.setPlaceholderText(placeholder_text)
+        
+        text_edit.setReadOnly(read_only)
+        text_edit.setLineWrapMode(
+            QTextEdit.LineWrapMode.WidgetWidth if word_wrap 
+            else QTextEdit.LineWrapMode.NoWrap
+        )
+        
+        if scroll_policy:
+            text_edit.setHorizontalScrollBarPolicy(scroll_policy[0])
+            text_edit.setVerticalScrollBarPolicy(scroll_policy[1])
+        
+        if not enable_rich_text:
+            text_edit.setAcceptRichText(False)
+        
+        if show_tooltip and tooltip_text:
+            text_edit.setToolTip(tooltip_text)
+        
+        self._register_component(name, text_edit)
+        return text_edit
+    
+    def create_label_with_tip(
+            self,
+            name: str,
+            text: str = "",
+            font: QFont = NotoSerifNormal,
+            tooltip_text: str = "",
+            height: int = 24,
+            label_size: Optional[int] = None,
+            alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+    ) -> TFLabelWithTip:
+        label = TFLabelWithTip(
+            text=text,
+            font=font,
+            tooltip_text=tooltip_text,
+            height=height,
+            label_size=label_size,
+            alignment=alignment,
+            parent=self
+        )
+        self._register_component(name, label)
+        return label
 
     def create_combo_box(
             self,

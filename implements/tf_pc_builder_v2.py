@@ -63,7 +63,7 @@ class TFPcBuilderV2(TFDraggableWindow):
         phase0 = Phase0(self.p_data, self.config, self.stacked_widget)
         phase1 = Phase1(self.p_data, self.config, self.stacked_widget)
         phase2 = Phase2(self.p_data, self.config, self.stacked_widget)
-        phase3 = Phase3(self.p_data, self.config, self.stacked_widget)
+        phase3 = Phase3(self.p_data, self.config, self.stacked_widget, layout=QHBoxLayout)
         self.stacked_widget.addWidget(phase0)
         self.stacked_widget.addWidget(phase1)
         self.stacked_widget.addWidget(phase2)
