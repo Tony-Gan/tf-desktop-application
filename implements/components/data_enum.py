@@ -7,13 +7,13 @@ class Penetration(Enum):
 
 
 class Category(Enum):
-    COLD_WEAPON = "Cold Weapon"
-    THROWN_WEAPO = "Thrown Weapon"
-    HANDGUN = "Handgun"
-    RIFLE = "Rifle"
-    SHOTGUN = "Shotgun"
-    SMG = "SMG"
-    EXPLOSIVE = "Explosive"
-    HEAVY_WEAPON = "Heavy Weapon"
-    ARTILLERY = "Artillery"
+    COLD_WEAPON = "冷兵器"
+    THROWN_WEAPO = "投掷武器"
+    HANDGUN = "手枪"
+    RIFLE = "步枪"
+    SHOTGUN = "霰弹枪"
+    SMG = "冲锋枪"
+    EXPLOSIVE = "爆炸物"
+    HEAVY_WEAPON = "重型武器"
+    ARTILLERY = "火炮"
 

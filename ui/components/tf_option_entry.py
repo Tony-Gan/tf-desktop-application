@@ -22,6 +22,7 @@ class TFOptionEntry(QFrame, IStateController):
             label_font: QFont = LABEL_FONT,
             value_font: QFont = TEXT_FONT,
             height: int = 24,
+            enable: bool = True,
             extra_value_width: Optional[int] = None,
             enable_filter: bool = False,
             show_tooltip: bool = False,
@@ -36,7 +37,7 @@ class TFOptionEntry(QFrame, IStateController):
         self._setup_ui(
             label_text, current_value,
             label_size, value_size, label_font, value_font,
-            height, enable_filter,
+            height, enable, enable_filter,
             show_tooltip, tooltip_text
         )
 
@@ -49,6 +50,7 @@ class TFOptionEntry(QFrame, IStateController):
             label_font: QFont,
             value_font: QFont,
             height: int,
+            enable: bool,
             enable_filter: bool,
             show_tooltip: bool,
             tooltip_text: str
@@ -81,6 +83,8 @@ class TFOptionEntry(QFrame, IStateController):
 
         if enable_filter:
             self._setup_filter()
+
+        self.combo_box.setEnabled(enable)
 
         layout.addWidget(self.label)
         layout.addSpacing(2)

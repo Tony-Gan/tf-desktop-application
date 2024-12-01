@@ -1369,7 +1369,7 @@ class AgeReductionDialog(TFBaseDialog):
             name="info",
             label_text="请将以下点数进行分配：",
             value_text=str(self.total_reduction),
-            label_size=400,
+            label_size=150,
             value_size=60,
             enable=False
         )

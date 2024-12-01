@@ -67,12 +67,20 @@ class TFDraggableWindow(QFrame):
         title_layout.addWidget(self._title_label, alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
 
         title_layout.addStretch()
+        title_layout.setSpacing(15)
 
         self._init_buttons(title_layout)
 
         main_layout.addWidget(title_bar)
 
     def _init_buttons(self, layout):
+        self._minimize_button = TFAnimatedButton(
+            icon_name="minimize",
+            tooltip="Minimize window",
+            size=20 ,
+            parent=self
+        )
+        self._minimize_button.clicked_signal.connect(self.minimize)
         self._close_button = TFAnimatedButton(
             icon_name="close",
             tooltip="Close window",
@@ -80,6 +88,8 @@ class TFDraggableWindow(QFrame):
             parent=self
         )
         self._close_button.clicked_signal.connect(self.close_window)
+
+        layout.addWidget(self._minimize_button, alignment=Qt.AlignmentFlag.AlignVCenter)
         layout.addWidget(self._close_button, alignment=Qt.AlignmentFlag.AlignVCenter)
 
     def __init_subclass__(cls, **kwargs):
@@ -292,6 +302,9 @@ class TFDraggableWindow(QFrame):
             self._dragging = False
             self.last_moved_time = time()
             self.mouse_released.emit()
+
+    def minimize(self):
+        pass
 
     def close_window(self):
         self.closed.emit(self)

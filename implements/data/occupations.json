@@ -44,21 +44,21 @@
     {
         "name": "精神病院看护",
         "skill_points_formula": "EDU*2+MAX(STR,DEX)*2",
-        "occupation_skills": "闪避,格斗:徒手,急救,交涉技能:任意,交涉技能:任意,聆听,心理学,潜行",
+        "occupation_skills": "闪避,格斗:斗殴,急救,交涉技能:任意,交涉技能:任意,聆听,心理学,潜行",
         "category": ["服务业", "劳动", "警察与军队"],
         "credit_rating": "8-20"
     },
     {
         "name": "运动员",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "攀爬,跳跃,格斗:徒手,骑术,交涉技能:任意,游泳,投掷,任意技能",
+        "occupation_skills": "攀爬,跳跃,格斗:斗殴,骑术,交涉技能:任意,游泳,投掷,任意技能",
         "category": ["运动与竞技", "冒险者", "服务业"],
         "credit_rating": "9-70"
     },
     {
         "name": "侦探社侦探",
         "skill_points_formula": "EDU*2+MAX(STR,DEX)*2",
-        "occupation_skills": "交涉技能:任意,格斗:徒手,火器:任意,法律,图书馆使用,心理学,潜行,追踪",
+        "occupation_skills": "交涉技能:任意,格斗:斗殴,火器:任意,法律,图书馆使用,心理学,潜行,追踪",
         "category": ["警察与军队", "商业", "冒险者"],
         "credit_rating": "20-45"
     },
@@ -128,7 +128,7 @@
     {
         "name": "酒保",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "会计,交涉技能:任意,交涉技能:任意,格斗:徒手,聆听,心理学,侦查,任意技能",
+        "occupation_skills": "会计,交涉技能:任意,交涉技能:任意,格斗:斗殴,聆听,心理学,侦查,任意技能",
         "category": ["服务业", "商业", "犯罪"],
         "credit_rating": "8-25"
     },
@@ -170,7 +170,7 @@
     {
         "name": "拳击手/摔跤手",
         "skill_points_formula": "EDU*2+STR*2",
-        "occupation_skills": "闪避,格斗:徒手,恐吓,跳跃,心理学,侦查,任意技能,任意技能",
+        "occupation_skills": "闪避,格斗:斗殴,恐吓,跳跃,心理学,侦查,任意技能,任意技能",
         "category": ["运动与竞技", "冒险者", "服务业"],
         "credit_rating": "9-60"
     },
@@ -254,7 +254,7 @@
     {
         "name": "反编程专家 [现代]",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "交涉技能:任意,交涉技能:任意,汽车驾驶,格斗:徒手|火器:任意,历史,神秘学,心理学,潜行",
+        "occupation_skills": "交涉技能:任意,交涉技能:任意,汽车驾驶,格斗:斗殴|火器:任意,历史,神秘学,心理学,潜行",
         "category": ["神秘与灵性", "警察与军队", "服务业"],
         "credit_rating": "20-50"
     },
@@ -380,7 +380,7 @@
     {
         "name": "联邦探员",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "汽车驾驶,格斗:徒手,火器:任意,法律,说服,潜行,侦查,任意技能",
+        "occupation_skills": "汽车驾驶,格斗:斗殴,火器:任意,法律,说服,潜行,侦查,任意技能",
         "category": ["警察与军队", "冒险者", "服务业"],
         "credit_rating": "20-40"
     },
@@ -436,7 +436,7 @@
     {
         "name": "黑手党伴侣 [经典]",
         "skill_points_formula": "EDU*2+APP*2",
-        "occupation_skills": "技艺:任意,交涉技能:任意,交涉技能:任意,格斗:徒手|火器:手枪,汽车驾驶,聆听,潜行,任意技能",
+        "occupation_skills": "技艺:任意,交涉技能:任意,交涉技能:任意,格斗:斗殴|火器:手枪,汽车驾驶,聆听,潜行,任意技能",
         "category": ["犯罪", "服务业", "冒险者"],
         "credit_rating": "10-80"
     },
@@ -485,7 +485,7 @@
     {
         "name": "医院勤杂工",
         "skill_points_formula": "EDU*2+STR*2",
-        "occupation_skills": "电器维修,交涉技能:任意,格斗:徒手,急救,聆听,机械维修,心理学,潜行",
+        "occupation_skills": "电器维修,交涉技能:任意,格斗:斗殴,急救,聆听,机械维修,心理学,潜行",
         "category": ["服务业", "劳动", "科学与技术"],
         "credit_rating": "6-15"
     },
@@ -856,14 +856,14 @@
     {
         "name": "警官",
         "skill_points_formula": "EDU*2+MAX(DEX,STR)*2",
-        "occupation_skills": "格斗:徒手,火器:任意,急救,交涉技能:任意,法律,心理学,侦查,汽车驾驶|骑术",
+        "occupation_skills": "格斗:斗殴,火器:任意,急救,交涉技能:任意,法律,心理学,侦查,汽车驾驶|骑术",
         "category": ["警察与军队", "服务业", "冒险者"],
         "credit_rating": "9-30"
     },
     {
         "name": "工会活动家",
         "skill_points_formula": "EDU*4",
-        "occupation_skills": "会计,交涉技能:任意,交涉技能:任意,格斗:徒手,法律,聆听,操作重型机械,心理学",
+        "occupation_skills": "会计,交涉技能:任意,交涉技能:任意,格斗:斗殴,法律,聆听,操作重型机械,心理学",
         "category": ["劳动", "服务业", "商业"],
         "credit_rating": "5-30"
     },

@@ -130,10 +130,10 @@ class Phase2(BasePhase):
             total_points = skill.total_point
             
             if skill.name == '母语':
-                if total_points > occupation_limit:
+                if total_points > occupation_limit and skill.occupation_point + skill.interest_point != 0:
                     invalid_items.append((
                         self.skills_frame.skill_entries[skill.full_name],
-                        f"母语技能不能超过职业技能上限 {occupation_limit}"
+                        f"母语技能不能超过职业技能上限 {occupation_limit}，若默认已超过职业上限，则无法加点"
                     ))
                 continue
                 
@@ -628,7 +628,7 @@ class SkillEntry(TFBaseFrame):
         
         self.occupation_points = self.create_number_receiver(
             name="occupation_points",
-            text="0",
+            text=str(self.skill.occupation_point),
             alignment=Qt.AlignmentFlag.AlignCenter,
             width=22,
             max_digits=2
@@ -638,7 +638,7 @@ class SkillEntry(TFBaseFrame):
         
         self.interest_points = self.create_number_receiver(
             name="interest_points",
-            text="0",
+            text=str(self.skill.interest_point),
             alignment=Qt.AlignmentFlag.AlignCenter,
             width=22,
             max_digits=2
@@ -655,7 +655,7 @@ class SkillEntry(TFBaseFrame):
         
         self.total_points = self.create_number_receiver(
             name="total_points",
-            text=str(self.skill.default_point),
+            text=str(self.skill.total_point),
             alignment=Qt.AlignmentFlag.AlignCenter,
             width=22
         )
@@ -710,7 +710,10 @@ class SkillEntry(TFBaseFrame):
         self.total_points.setText(str(self.skill.total_point))
         self._update_label_color()
         
-        self.parent.parent.upper_frame.basic_info_frame.update_points_information()
+        if isinstance(self.parent.parent, Phase2):
+            self.parent.parent.upper_frame.basic_info_frame.update_points_information()
+        else:
+            self.parent.parent.parent.upper_frame.basic_info_frame.update_points_information()
             
     def reset(self):
         self.occupation_points.setText("0")
