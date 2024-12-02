@@ -5,7 +5,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QStackedWidget, QHBoxLayout, QFrame, QLayout, QVBoxLayout
 
 from ui.components.if_state_controll import IStateController
-from ui.components.tf_base_button import TFPreviousButton, TFResetButton, TFNextButton
+from ui.components.tf_base_button import TFCompleteButton, TFPreviousButton, TFResetButton, TFNextButton
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.tf_application import TFApplication
 
@@ -104,6 +104,9 @@ class BasePhase(TFBaseFrame):
     def on_reset(self):
         self.reset_contents()
 
+    def on_complete(self):
+        pass
+
 
 class ContentsFrame(TFBaseFrame):
 
@@ -141,11 +144,13 @@ class ButtonsFrame(TFBaseFrame):
         self.prev_button = TFPreviousButton(self, font_family=QFont("Noto Serif SC"), height=35, on_clicked=self.parent.go_previous)
         self.reset_button = TFResetButton(self, font_family=QFont("Noto Serif SC"), height=35, on_clicked=self.parent.on_reset)
         self.next_button = TFNextButton(self, font_family=QFont("Noto Serif SC"), height=35, on_clicked=self.parent.try_go_next, enabled=True)
+        self.complete_button = TFCompleteButton(self, font_family=QFont("Noto Serif SC"), height=35, on_clicked=self.parent.on_complete, enabled=True)
 
         self.right_layout.addStretch()
         self.right_layout.addWidget(self.prev_button)
         self.right_layout.addWidget(self.reset_button)
         self.right_layout.addWidget(self.next_button)
+        self.right_layout.addWidget(self.complete_button)
 
     def add_custom_button(self, button):
         self.left_layout.addWidget(button)

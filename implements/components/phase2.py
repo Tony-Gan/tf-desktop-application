@@ -22,6 +22,8 @@ class Phase2(BasePhase):
         self.selected_occupation = None
         super()._setup_content()
 
+        self.buttons_frame.complete_button.hide()
+
         self.show_occupation_list_button = TFBaseButton(
             parent=self.buttons_frame, 
             text="职业列表", 

@@ -421,3 +421,28 @@ class TFSubmitButton(TFBaseButton):
 
         self.setObjectName("TFSubmitButton")
 
+class TFCompleteButton(TFBaseButton):
+    def __init__(
+        self, 
+        parent=None, 
+        width: int = 100,
+        height: int = 30,
+        font_family: str = "Noto Serif SC Light",
+        font_size: int = 10,
+        enabled:bool = False,
+        on_clicked=None
+    ):
+        super().__init__(
+            "完成",
+            parent=parent,
+            width=width,
+            height=height,
+            font_family=font_family,
+            font_size=font_size,
+            enabled=enabled,
+            object_name="submit_button",
+            on_clicked=on_clicked
+        )
+
+        self.setObjectName("TFSubmitButton")
+

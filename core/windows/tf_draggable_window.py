@@ -2,6 +2,7 @@ from time import time
 from PyQt6.QtWidgets import QFrame, QLabel, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
+from core.windows.tf_mini_window import TFMiniWindow
 from ui.components.tf_animated_button import TFAnimatedButton
 from utils.registry.tf_tool_matadata import TFToolMetadata
 from ui.tf_application import TFApplication
@@ -76,21 +77,26 @@ class TFDraggableWindow(QFrame):
     def _init_buttons(self, layout):
         self._minimize_button = TFAnimatedButton(
             icon_name="minimize",
-            tooltip="Minimize window",
+            tooltip="最小化",
             size=20 ,
             parent=self
         )
         self._minimize_button.clicked_signal.connect(self.minimize)
         self._close_button = TFAnimatedButton(
             icon_name="close",
-            tooltip="Close window",
+            tooltip="关闭",
             size=20 ,
             parent=self
         )
         self._close_button.clicked_signal.connect(self.close_window)
 
+        self.init_custom_menu_items(layout)
+
         layout.addWidget(self._minimize_button, alignment=Qt.AlignmentFlag.AlignVCenter)
         layout.addWidget(self._close_button, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+    def init_custom_menu_tems(self, layout):
+        pass
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -304,7 +310,20 @@ class TFDraggableWindow(QFrame):
             self.mouse_released.emit()
 
     def minimize(self):
-        pass
+        mini_window = TFMiniWindow(self.parent(), self.title)
+        mini_window.move(self.pos())
+        mini_window.restored.connect(self._on_restore)
+        mini_window.closed.connect(self.close_window)
+        mini_window.moved.connect(self.moved.emit)
+        
+        self.hide()
+        mini_window.show()
+
+    def _on_restore(self):
+        sender = self.sender()
+        if sender:
+            self.move(sender.pos())
+        self.show()
 
     def close_window(self):
         self.closed.emit(self)

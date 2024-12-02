@@ -18,6 +18,7 @@ class Phase0(BasePhase):
         super()._setup_content()
 
         self.buttons_frame.prev_button.hide()
+        self.buttons_frame.complete_button.hide()
 
         self.contents_frame.main_layout.setContentsMargins(10, 10, 10, 10)
         self.contents_frame.main_layout.setSpacing(40)

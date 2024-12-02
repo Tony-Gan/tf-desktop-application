@@ -9,7 +9,7 @@ QLineEdit, QTextEdit, QDateEdit, QComboBox {
 }
 
 QLabel:disabled, QLineEdit:disabled, QTextEdit:disabled {
-    color: #5F6673;
+    color: #848C9C;
 }
 
 QLineEdit:hover, QTextEdit:hover, QDateEdit:hover, QComboBox:hover {
@@ -139,4 +139,20 @@ TFBaseFrame[frameLevel="1"][frameRadius="15"] {
 TFBaseFrame[frameLevel="1"][frameRadius="20"] {
     background-color: #242831;
     border-radius: 20px;
+}
+QFrame#TFMiniWindow {
+    background-color: #1E1E1E;
+    border: 1px solid #333333;
+    border-radius: 4px;
+}
+
+QFrame#TFMiniWindow QLabel#miniTitleLabel {
+    color: #FFFFFF;
+    font-size: 11px;
+    padding: 0;
+    margin: 0;
+}
+
+QFrame#TFMiniWindow:hover {
+    border: 1px solid #444444;
 }

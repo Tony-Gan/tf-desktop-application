@@ -24,6 +24,7 @@ class Phase1(BasePhase):
         super()._setup_content()
 
         self.buttons_frame.prev_button.hide()
+        self.buttons_frame.complete_button.hide()
 
         self.show_character_description_button = TFBaseButton(
             parent=self.buttons_frame, 
