@@ -110,13 +110,16 @@ class TFBaseButton(QPushButton):
             
         colors = self.LEVEL_COLORS.get(self.level, self.LEVEL_COLORS[0])
         
+        current_bg = self._bg_color
+        current_text = self._text_color
+        
         self._bg_animation.stop()
-        self._bg_animation.setStartValue(colors['idle_bg'])
+        self._bg_animation.setStartValue(current_bg)
         self._bg_animation.setEndValue(colors['hover_bg'])
         self._bg_animation.start()
         
         self._text_animation.stop()
-        self._text_animation.setStartValue(colors['idle_text'])
+        self._text_animation.setStartValue(current_text)
         self._text_animation.setEndValue(colors['hover_text'])
         self._text_animation.start()
         
@@ -128,15 +131,20 @@ class TFBaseButton(QPushButton):
             
         colors = self.LEVEL_COLORS.get(self.level, self.LEVEL_COLORS[0])
         
+        current_bg = self._bg_color
+        current_text = self._text_color
+        
         self._bg_animation.stop()
-        self._bg_animation.setStartValue(colors['hover_bg'])
+        self._bg_animation.setStartValue(current_bg)
         self._bg_animation.setEndValue(colors['idle_bg'])
         self._bg_animation.start()
         
         self._text_animation.stop()
-        self._text_animation.setStartValue(colors['hover_text'])
+        self._text_animation.setStartValue(current_text)
         self._text_animation.setEndValue(colors['idle_text'])
         self._text_animation.start()
+        
+        super().leaveEvent(event)
         
         super().leaveEvent(event)
 

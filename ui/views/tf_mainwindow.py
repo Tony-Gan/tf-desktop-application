@@ -1,9 +1,10 @@
 from PyQt6.QtWidgets import QMainWindow, QScrollArea, QSizePolicy, QHBoxLayout, QFrame, QSpacerItem, QLabel, QWidget, QVBoxLayout, QPushButton
 from PyQt6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, pyqtSignal, QSize
-from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtGui import QIcon, QPixmap, QFont
 
 from ui.components.tf_action_label import TFActionLabel
 from ui.components.tf_animated_button import TFAnimatedButton
+from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.components.tf_font import NotoSerifNormal
 from ui.tf_application import TFApplication
@@ -294,9 +295,12 @@ class MenuFrame(TFBaseFrame):
         
         self.tools_group.main_button.clicked.connect(self.toggle_tools)
         
-        for icon in ['about', 'settings']:
-            btn = TFAnimatedButton(icon)
-            self.main_layout.addWidget(btn, 0, Qt.AlignmentFlag.AlignHCenter)
+        about_btn = TFAnimatedButton('about')
+        about_btn.clicked_signal.connect(self._show_about)
+        self.main_layout.addWidget(about_btn, 0, Qt.AlignmentFlag.AlignHCenter)
+
+        settings_btn = TFAnimatedButton('settings')
+        self.main_layout.addWidget(settings_btn, 0, Qt.AlignmentFlag.AlignHCenter)
         
         self.main_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
 
@@ -341,6 +345,9 @@ class MenuFrame(TFBaseFrame):
         super().mousePressEvent(event)
         if not self.tools_group.geometry().contains(event.pos()):
             self.tools_group.collapse()
+
+    def _show_about(self):
+        AboutDialog.get_input(self)
 
 
 class ExpandableIconGroup(QWidget):
@@ -426,3 +433,118 @@ class ExpandableIconGroup(QWidget):
         
     def handle_action(self, action_text):
         self.action_triggered.emit(action_text)
+
+
+class AboutDialog(TFBaseDialog):
+    FIRST_TEST_NAMES = ["秋刀鱼", "我不是惜林", "零九七", "BTap1920"]
+    def __init__(self, parent=None):
+        super().__init__(
+            title="关于摸摸鱼",
+            layout_type=QVBoxLayout,
+            parent=parent,
+            button_config=[{"text": "确定", "callback": self.accept}]
+        )
+        self.resize(800, 600)
+
+    def _setup_content(self):
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        
+        content_widget = TFBaseFrame(QVBoxLayout, parent=scroll)
+        content_widget.main_layout.setSpacing(10)
+        content_widget.main_layout.setContentsMargins(20, 20, 20, 20)
+        scroll.setWidget(content_widget)
+
+        label_font = QFont("Noto Serif SC")
+        label_font.setPointSize(12)
+
+        label = content_widget.create_label(
+            '项目启动 - 2024/10/31', 
+            alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter,
+            height=24
+        )
+        label.setFont(label_font)
+        content_widget.main_layout.addWidget(label)
+
+        content_widget.main_layout.addSpacing(50)
+
+        label = content_widget.create_label(
+            '项目确定为COC工具 - 2024/11/09', 
+            alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter,
+            height=24
+        )
+        label.setFont(label_font)
+        content_widget.main_layout.addWidget(label)
+
+        content_widget.main_layout.addSpacing(50)
+
+        label = content_widget.create_label(
+            '调查员角色卡完成 - 2024/11/10', 
+            alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter,
+            height=24
+        )
+        label.setFont(label_font)
+        content_widget.main_layout.addWidget(label)
+
+        content_widget.main_layout.addSpacing(50)
+
+        label = content_widget.create_label(
+            '角色构筑器完成 - 2024/11/20', 
+            alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter,
+            height=24
+        )
+        label.setFont(label_font)
+        content_widget.main_layout.addWidget(label)
+
+        content_widget.main_layout.addSpacing(50)
+
+        label = content_widget.create_label(
+            '第一次用户测试（调查员角色卡 / 角色构筑器） - 2024/11/20-2024/11/21', 
+            alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter,
+            height=24
+        )
+        label.setFont(label_font)
+        content_widget.main_layout.addWidget(label)
+
+        for n in self.FIRST_TEST_NAMES:
+            n_label = content_widget.create_label(
+                n, 
+                height=24,
+                alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
+            )
+            n_label.setFont(NotoSerifNormal)
+            content_widget.main_layout.addWidget(n_label)
+            
+        content_widget.main_layout.addSpacing(50)
+
+        label = content_widget.create_label(
+            'V2代码重构完成 - 2024/11/24', 
+            alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter,
+            height=24
+        )
+        label.setFont(label_font)
+        content_widget.main_layout.addWidget(label)
+
+        content_widget.main_layout.addSpacing(50)
+
+        label = content_widget.create_label(
+            '添加中文支持 - 2024/12/01', 
+            alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter,
+            height=24
+        )
+        label.setFont(label_font)
+        content_widget.main_layout.addWidget(label)
+
+        content_widget.main_layout.addSpacing(50)
+
+        label = content_widget.create_label(
+            '角色构筑器V2完成 - 2024/12/03', 
+            alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter,
+            height=24
+        )
+        label.setFont(label_font)
+        content_widget.main_layout.addWidget(label)
+
+        self.main_layout.addWidget(scroll)

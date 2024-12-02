@@ -93,9 +93,62 @@ class Phase2(BasePhase):
         if 'skills' not in self.p_data:
             self.p_data['skills'] = {}
         
+        self.p_data['skills_points'] = {}
+        for skill in self.skills:
+            if skill.occupation_point > 0 or skill.interest_point > 0:
+                self.p_data['skills_points'][skill.full_name] = {
+                    'occupation_point': skill.occupation_point,
+                    'interest_point': skill.interest_point,
+                    'is_occupation': skill.is_occupation
+                }
+        
         for skill in self.skills:
             if skill.total_point > skill.default_point or skill.name == '母语' or skill.name == '闪避':
                 self.p_data['skills'][skill.full_name] = skill.total_point
+
+    def restore_state(self):
+        if 'skills_points' in self.p_data:
+            for skill in self.skills:
+                if skill.full_name in self.p_data['skills_points']:
+                    skill_data = self.p_data['skills_points'][skill.full_name]
+                    skill.occupation_point = skill_data['occupation_point']
+                    skill.interest_point = skill_data['interest_point']
+                    skill.is_occupation = skill_data['is_occupation']
+
+        if 'character_info' in self.p_data and 'occupation' in self.p_data['character_info']:
+            occupation_name = self.p_data['character_info']['occupation']
+            occupation = next((o for o in self.occupations if o.name == occupation_name), None)
+            if occupation:
+                self.selected_occupation = occupation
+                basic_info = self.upper_frame.basic_info_frame
+                basic_info.occupation_entry.set_text(occupation.name)
+                basic_info.occupation_points_entry.set_value(
+                    str(occupation.calculate_skill_points(self.basic_stats))
+                )
+                
+                concrete_skills = {s.name for s in occupation.occupation_skills if isinstance(s, Skill) and not s.is_abstract}
+                
+                for s in self.skills:
+                    if s.occupation_point > 0 and s.name not in concrete_skills and s.name != '信誉':
+                        s.occupation_point = 0
+                    s.is_occupation = False
+                    if s.name == '信誉':
+                        s.is_occupation = True
+
+                for s1 in occupation.occupation_skills:
+                    if isinstance(s1, Skill):
+                        for s2 in self.skills:
+                            if s1 == s2:
+                                s2.is_occupation = True
+                                break
+                                
+                self.upper_frame.occupation_skills_frame.update_occupation_skills()
+
+        self.skills_frame.refresh_skill_display()
+        self.upper_frame.basic_info_frame.update_points_information()
+
+        if '信誉' in self.skills_frame.skill_entries:
+            self.skills_frame.skill_entries['信誉']._update_label_color()
 
     def check_dependencies(self):
         self.allow_mythos = self.config['general']['allow_mythos']
@@ -106,8 +159,9 @@ class Phase2(BasePhase):
         nine_stats = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu', 'luk']
         self.basic_stats = {k.upper(): int(self.p_data["basic_stats"][k]) for k in nine_stats}
 
-        self.skills = load_skills_from_json(self.basic_stats["DEX"], self.basic_stats["EDU"])
-        self.occupations = load_occupations_from_json()
+        if not hasattr(self, 'skills'):
+            self.skills = load_skills_from_json(self.basic_stats["DEX"], self.basic_stats["EDU"])
+            self.occupations = load_occupations_from_json()
 
         self.upper_frame.basic_info_frame.init_points_information()
         self.skills_frame.refresh_skill_display()
@@ -248,11 +302,11 @@ class BasicInformationFrame(TFBaseFrame):
         self.occupation_entry = self.create_button_entry(
             name="occupation",
             label_text="职业:",
-            label_size=90,
+            label_size=100,
             button_text="选择",
             button_callback=self._on_occupation_select,
             button_size=75,
-            entry_size=160,
+            entry_size=150,
             border_radius=5,
             height=24
         )
@@ -304,7 +358,8 @@ class BasicInformationFrame(TFBaseFrame):
     def init_points_information(self):
         config = self.parent.parent.config
         p_data = self.parent.parent.p_data
-        self.interest_points_entry.set_value(str(int(p_data['basic_stats']['int']) * 2))
+        if not hasattr(self.parent.parent, 'skills'):
+            self.interest_points_entry.set_value(str(int(p_data['basic_stats']['int']) * 2))
 
         points_limit = str(config["general"]["occupation_skill_limit"]) + "/" + str(config["general"]["interest_skill_limit"])
         self.limit_entry.set_value(points_limit)
@@ -473,14 +528,16 @@ class OccupationSkillEntry(TFBaseFrame):
 
     def handle_skill_selection(self, selected_skill: Skill):
         if self.selected_skill:
-            self.selected_skill.is_occupation = False
+            if self.selected_skill.occupation_point > 0:
+                self.selected_skill.occupation_point = 0
+                self.selected_skill.is_occupation = False
+                self.parnet.parent.basic_info_frame.update_points_information()
 
         self.selected_skill = selected_skill
         self.skill_label.setText(selected_skill.display_name)
         self.skill_label.setStyleSheet("")
         selected_skill.is_occupation = True
         self.parent.parent.parent.skills_frame.refresh_skill_display()
-
 
 
 class SkillsFrame(TFBaseFrame):
@@ -571,12 +628,15 @@ class SkillsFrame(TFBaseFrame):
                 return lambda: self._on_expand_skill(skill_type)
             
             has_occupation_skill = False
+            has_interest_skill = False
             for skill in self.parent.skills:
-                if (skill.super_name == skill_type and 
-                    skill.is_occupation):
-                    has_occupation_skill = True
-                    break
-                
+                if skill.super_name == skill_type:
+                    if skill.is_occupation:
+                        has_occupation_skill = True
+                        break
+                    elif skill.interest_point > 0:
+                        has_interest_skill = True
+            
             btn = self.create_button(
                 name=f"expand_{skill_type}",
                 text=f"{skill_type}",
@@ -587,7 +647,45 @@ class SkillsFrame(TFBaseFrame):
 
             if has_occupation_skill:
                 btn._text_color = QColor("#3498DB")
-                btn.update()
+                btn.LEVEL_COLORS = {
+                    0: {
+                        'idle_bg': QColor("#242831"),
+                        'hover_bg': QColor("#858585"),
+                        'disabled_bg': QColor("#4D4D4D"),
+                        'idle_text': QColor("#FFFFFF"),
+                        'hover_text': QColor("#FFFFFF"),
+                        'disabled_text': QColor("#808080")
+                    },
+                    btn.level: {
+                        'idle_bg': QColor("#2C3340"),
+                        'hover_bg': QColor("#959595"), 
+                        'disabled_bg': QColor("#575757"),
+                        'idle_text': QColor("#3498DB"),
+                        'hover_text': QColor("#3498DB"), 
+                        'disabled_text': QColor("#808080")
+                    }
+                }
+            elif has_interest_skill:
+                btn._text_color = QColor("#2ECC71")
+                btn.LEVEL_COLORS = {
+                    0: {
+                        'idle_bg': QColor("#242831"),
+                        'hover_bg': QColor("#858585"),
+                        'disabled_bg': QColor("#4D4D4D"),
+                        'idle_text': QColor("#FFFFFF"),
+                        'hover_text': QColor("#FFFFFF"),
+                        'disabled_text': QColor("#808080")
+                    },
+                    btn.level: {
+                        'idle_bg': QColor("#2C3340"),
+                        'hover_bg': QColor("#959595"), 
+                        'disabled_bg': QColor("#575757"),
+                        'idle_text': QColor("#2ECC71"),
+                        'hover_text': QColor("#2ECC71"), 
+                        'disabled_text': QColor("#808080")
+                    }
+                }
+            btn.update()
 
             self.buttons_frame.main_layout.addWidget(btn)
             
@@ -1054,6 +1152,12 @@ class SkillExpandDialog(TFBaseDialog):
                 widget.deleteLater()
                 if widget.skill.name in self.skill_entries:
                     del self.skill_entries[widget.skill.name]
+
+    def exec(self):
+        result = super().exec()
+        if isinstance(self.parent, SkillsFrame):
+            self.parent.refresh_skill_display()
+        return result
 
 
 class BaseSkillSelectDialog(TFBaseDialog):

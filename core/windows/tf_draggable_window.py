@@ -95,7 +95,7 @@ class TFDraggableWindow(QFrame):
         layout.addWidget(self._minimize_button, alignment=Qt.AlignmentFlag.AlignVCenter)
         layout.addWidget(self._close_button, alignment=Qt.AlignmentFlag.AlignVCenter)
 
-    def init_custom_menu_tems(self, layout):
+    def init_custom_menu_items(self, layout):
         pass
 
     def __init_subclass__(cls, **kwargs):

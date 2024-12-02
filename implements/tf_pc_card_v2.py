@@ -1,10 +1,11 @@
-from PyQt6.QtWidgets import QVBoxLayout, QTabWidget
+from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtCore import Qt
 
 from core.windows.tf_draggable_window import TFDraggableWindow
 from ui.components.tf_animated_button import TFAnimatedButton
+from ui.components.tf_tab_widget import TFTabWidget
 from utils.registry.tf_tool_matadata import TFToolMetadata
-# from implements.components.card1 import Card1
+from implements.components.card1 import Card1
 # from implements.components.card2 import Card2
 # from implements.components.card3 import Card3
 
@@ -19,6 +20,8 @@ class TFPcCardV2(TFDraggableWindow):
     )
 
     def __init__(self, parent=None):
+        self.edit_mode = False
+        self.p_data = {}
         super().__init__(parent)
 
     def initialize_window(self):
@@ -26,12 +29,11 @@ class TFPcCardV2(TFDraggableWindow):
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.setSpacing(5)
 
-        navigation_bar = QTabWidget(self)
-        # card1 = Card1(self)
+        navigation_bar = TFTabWidget(self)
+        card1 = Card1(self)
         # card2 = Card2(self)
         # card3 = Card3(self)
-
-        # navigation_bar.addTab(card1, 'Card1')
+        navigation_bar.addTab(card1, 'Card1')
         # navigation_bar.addTab(card2, 'Card2')
         # navigation_bar.addTab(card3, 'Card3')
 
@@ -48,7 +50,7 @@ class TFPcCardV2(TFDraggableWindow):
 
         self._enable_edit_button = TFAnimatedButton(
             icon_name="edit",
-            tooltip="加载角色",
+            tooltip="编辑角色",
             size=20 ,
             parent=self
         )

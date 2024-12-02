@@ -1316,7 +1316,14 @@ class RadarGraph(TFBaseFrame):
 
 class LanguageSelectionDialog(TFBaseDialog):
     def __init__(self, parent=None):
-        super().__init__(title="选择语言", layout_type=QGridLayout, parent=parent)
+        super().__init__(
+            title="选择语言", 
+            layout_type=QGridLayout, 
+            parent=parent,
+            button_config=[
+                {"text": "确定", "callback": self._on_ok_clicked}
+                ]
+        )
 
     def _setup_content(self) -> None:
         languages = [
@@ -1371,7 +1378,7 @@ class AgeReductionDialog(TFBaseDialog):
             label_text="请将以下点数进行分配：",
             value_text=str(self.total_reduction),
             label_size=150,
-            value_size=60,
+            value_size=50,
             enable=False
         )
         self.main_layout.addWidget(self.info_label)
@@ -1383,8 +1390,8 @@ class AgeReductionDialog(TFBaseDialog):
                 name=f"deduct_{stat.lower()}",
                 label_text=f"{stat}（当前: {current_value}）:",
                 value_text="0",
-                label_size=180,
-                value_size=100,
+                label_size=150,
+                value_size=50,
                 number_only=True,
                 allow_decimal=False,
                 allow_negative=False,
