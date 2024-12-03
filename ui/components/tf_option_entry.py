@@ -34,6 +34,7 @@ class TFOptionEntry(QFrame, IStateController):
 
         self.extra_value_width = extra_value_width
         self.options = options or []
+        self.show_tooltip = show_tooltip
         self._setup_ui(
             label_text, current_value,
             label_size, value_size, label_font, value_font,
@@ -120,6 +121,10 @@ class TFOptionEntry(QFrame, IStateController):
         index = self.combo_box.findText(value)
         if index >= 0:
             self.combo_box.setCurrentIndex(index)
+
+    def update_tooltip(self, text: str) -> None:
+        if self.show_tooltip:
+            self.tooltip_icon.update_tooltip(text)
 
 
 class TFComboBox(QComboBox):

@@ -40,6 +40,8 @@ class TFValueEntry(QFrame, IStateController):
         QFrame.__init__(self, parent)
         IStateController.__init__(self)
 
+        self.show_tooltip = show_tooltip
+
         self._setup_ui(
             label_text, value_text, label_size, value_size, label_font, value_font, enable,
             height, alignment, label_alignment, number_only, allow_decimal, allow_negative,
@@ -141,3 +143,7 @@ class TFValueEntry(QFrame, IStateController):
     def set_enable(self, enable: bool) -> None:
         self.label.setEnabled(enable)
         self.value_field.setEnabled(enable)
+
+    def update_tooltip(self, text: str) -> None:
+        if self.show_tooltip:
+            self.tooltip_icon.update_tooltip(text)

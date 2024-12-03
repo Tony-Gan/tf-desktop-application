@@ -404,12 +404,19 @@ class WeaponEntry(TFBaseFrame):
         )
 
         skill_name = self.weapon_data["weapon_type"].skill.standard_text
+        print(skill_name)
+        print(self.parent.parent.parent.p_data.get("skills", {}))
         default_value = 0
         for s in self.parent.parent.parent.skills:
             if s.name == skill_name:
                 default_value = s.default_point
                 break
-        skill_value = self.parent.parent.parent.p_data.get("skills", {}).get(skill_name, default_value)
+        level = -1
+        for k, v in self.parent.parent.parent.p_data.get("skills", {}):
+            if skill_name in k:
+                level = v
+                break
+        skill_value = default_value if level == -1 else level
         display_skill_name = skill_name
         
         self.skill_entry = self.create_value_entry(
@@ -946,17 +953,24 @@ class CharacterPreviewDialog(TFBaseDialog):
             self._add_section_header(content_widget, "技能")
             skills_frame = TFBaseFrame(QGridLayout, parent=content_widget)
             
-            for i, (skill, value) in enumerate(self.p_data['skills'].items()):
-                if value:
+            row = 0
+            col = 0
+            for skill_name, skill_data in self.p_data['skills'].items():
+                if skill_data.get('total_point'):
                     entry = skills_frame.create_value_entry(
-                        name=f"skill_{skill}",
-                        label_text=skill,
-                        value_text=str(value),
+                        name=f"skill_{skill_name}",
+                        label_text=skill_name,
+                        value_text=str(skill_data['total_point']),
                         enable=False,
                         label_size=80,
                         value_size=40
                     )
-                    skills_frame.main_layout.addWidget(entry, i // 3, i % 3)
+                    skills_frame.main_layout.addWidget(entry, row, col)
+                    
+                    col += 1
+                    if col >= 3:
+                        col = 0
+                        row += 1
             content_widget.main_layout.addWidget(skills_frame)
 
         if self.p_data.get('background', {}).get('background') or self.p_data.get('background', {}).get('portraits'):

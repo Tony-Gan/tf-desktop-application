@@ -27,6 +27,8 @@ class TFCheckWithLabel(QFrame, IStateController):
         QFrame.__init__(self, parent)
         IStateController.__init__(self)
 
+        self.show_tooltip = show_tooltip
+
         self._setup_ui(
             label_text,
             label_font,
@@ -84,3 +86,7 @@ class TFCheckWithLabel(QFrame, IStateController):
     
     def set_checked(self, checked) -> None:
         self.check.setChecked(checked)
+
+    def update_tooltip(self, text: str) -> None:
+        if self.show_tooltip:
+            self.tooltip_icon.update_tooltip(text)

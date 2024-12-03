@@ -27,3 +27,6 @@ class TFTooltip(QLabel):
     def leaveEvent(self, event):
         self.setPixmap(self.normal_icon)
         super().leaveEvent(event)
+
+    def update_tooltip(self, new_text: str) -> None:
+        self.setToolTip(new_text)

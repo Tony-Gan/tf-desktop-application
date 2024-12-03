@@ -93,24 +93,22 @@ class Phase2(BasePhase):
         if 'skills' not in self.p_data:
             self.p_data['skills'] = {}
         
-        self.p_data['skills_points'] = {}
-        for skill in self.skills:
-            if skill.occupation_point > 0 or skill.interest_point > 0:
-                self.p_data['skills_points'][skill.full_name] = {
-                    'occupation_point': skill.occupation_point,
-                    'interest_point': skill.interest_point,
-                    'is_occupation': skill.is_occupation
-                }
-        
         for skill in self.skills:
             if skill.total_point > skill.default_point or skill.name == '母语' or skill.name == '闪避':
-                self.p_data['skills'][skill.full_name] = skill.total_point
+                self.p_data['skills'][skill.full_name] = {
+                    'occupation_point': skill.occupation_point,
+                    'interest_point': skill.interest_point,
+                    'extra_point': 0,
+                    'total_point': skill.total_point,
+                    'is_occupation': skill.is_occupation,
+                    'growth_signal': False
+                }
 
     def restore_state(self):
-        if 'skills_points' in self.p_data:
+        if 'skills' in self.p_data:
             for skill in self.skills:
-                if skill.full_name in self.p_data['skills_points']:
-                    skill_data = self.p_data['skills_points'][skill.full_name]
+                if skill.full_name in self.p_data['skills']:
+                    skill_data = self.p_data['skills'][skill.full_name]
                     skill.occupation_point = skill_data['occupation_point']
                     skill.interest_point = skill_data['interest_point']
                     skill.is_occupation = skill_data['is_occupation']

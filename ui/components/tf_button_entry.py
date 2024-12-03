@@ -40,6 +40,8 @@ class TFButtonEntry(QFrame, IStateController):
         QFrame.__init__(self, parent)
         IStateController.__init__(self)
 
+        self.show_tooltip = show_tooltip
+
         self._setup_ui(
             label_text, label_font, label_size, label_alignment,
             button_text, entry_text, entry_size, button_size,
@@ -149,3 +151,7 @@ class TFButtonEntry(QFrame, IStateController):
         
     def set_button_text(self, text: str) -> None:
         self.button.setText(text)
+
+    def update_tooltip(self, text: str) -> None:
+        if self.show_tooltip:
+            self.tooltip_icon.update_tooltip(text)

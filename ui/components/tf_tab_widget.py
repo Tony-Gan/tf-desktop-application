@@ -2,6 +2,8 @@ from PyQt6.QtWidgets import QTabWidget, QTabBar, QStylePainter
 from PyQt6.QtGui import QPainterPath, QColor
 from PyQt6.QtCore import Qt, QSize
 
+from ui.components.tf_font import NotoSerifNormal
+
 class TFTabBar(QTabBar):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -12,7 +14,7 @@ class TFTabBar(QTabBar):
 
     def tabSizeHint(self, index: int) -> QSize:
         size = super().tabSizeHint(index)
-        size.setWidth(size.width() + 20)
+        size.setWidth(size.width())
         size.setHeight(size.height() + 4)
         return size
     
@@ -32,7 +34,7 @@ class TFTabBar(QTabBar):
 
     def paintEvent(self, event):
         painter = QStylePainter(self)
-        overlap = -10
+        overlap = -15
 
         selected_index = self.currentIndex()
 
@@ -98,7 +100,4 @@ class TFTabWidget(QTabWidget):
             }
         """)
 
-        font = self.font()
-        font.setFamily("CustomFont")
-        font.setPointSize(12)
-        self.setFont(font)
+        self.setFont(NotoSerifNormal)

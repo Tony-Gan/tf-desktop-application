@@ -44,3 +44,6 @@ class TFLabelWithTip(QFrame):
         
     def text(self) -> str:
         return self.label.text()
+
+    def update_tooltip(self, text: str) -> None:
+        self.tooltip.update_tooltip(text)
