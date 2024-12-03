@@ -138,8 +138,6 @@ class TFPcCardV2(TFDraggableWindow):
                 
         except json.JSONDecodeError:
             TFApplication.instance().show_message("无效的JSON文件格式", 5000, 'yellow')
-        finally:
-            print(self.p_data)
 
     def _enable_edit(self):
         if self.p_data == {}:

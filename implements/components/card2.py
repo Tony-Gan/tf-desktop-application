@@ -125,7 +125,7 @@ class SkillsFrame(TFBaseFrame):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
         self.content_widget = TFBaseFrame(level=1, layout_type=QGridLayout, parent=scroll)
         self.content_widget.main_layout.setSpacing(10)
