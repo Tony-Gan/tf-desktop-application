@@ -3,6 +3,7 @@ from PyQt6.QtCore import Qt, QPoint, QRect, pyqtSignal, pyqtProperty, QDataStrea
 
 from ui.components.tf_base_frame import TFBaseFrame
 
+
 class FlowLayout(QLayout):
     def __init__(self, parent=None, margin=0, spacing=10):
         super().__init__(parent)
@@ -29,7 +30,7 @@ class FlowLayout(QLayout):
             return None
 
     def expandingDirections(self):
-        return Qt.Orientations(Qt.Orientation(0))
+        return Qt.Orientation(0)
 
     def hasHeightForWidth(self):
         return True
@@ -93,8 +94,33 @@ class TFFlexibleWindow(TFBaseFrame):
         return True
 
     def has_space_for_label(self, label):
-        # 简单判断是否有空间，可以根据需要调整逻辑
-        return True  # 暂时返回 True，实际需要计算是否有空间
+        # 获取可用的宽度和高度
+        available_width = self.contentsRect().width()
+        available_height = self.contentsRect().height()
+
+        # 获取所有标签的尺寸，包括新标签
+        item_sizes = [item.widget().sizeHint() for item in self.layout().itemList]
+        item_sizes.append(label.sizeHint())
+
+        # 模拟布局计算所需的总高度
+        x = 0
+        y = 0
+        line_height = 0
+        space_x = self.layout().spacing()
+        space_y = self.layout().spacing()
+
+        for size in item_sizes:
+            next_x = x + size.width() + space_x
+            if next_x - space_x > available_width and line_height > 0:
+                x = 0
+                y = y + line_height + space_y
+                next_x = x + size.width() + space_x
+                line_height = 0
+            x = next_x
+            line_height = max(line_height, size.height())
+
+        total_height = y + line_height
+        return total_height <= available_height
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasFormat('application/x-draggable-label'):

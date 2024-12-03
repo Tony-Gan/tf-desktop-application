@@ -8,8 +8,6 @@ from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_button_entry import TFButtonEntry
 from ui.components.tf_check_with_label import TFCheckWithLabel
 from ui.components.tf_date_entry import TFDateEntry
-from ui.components.tf_draggable_label import TFDraggableLabel
-from ui.components.tf_flexble_window import TFFlexibleWindow
 from ui.components.tf_label_entry import TFLabelWithTip
 from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_option_entry import TFOptionEntry
@@ -512,11 +510,13 @@ class IComponentCreator:
         self._register_component(name, button)
         return button
     
-    def create_flexible_window(self, name: str, width: int = 400, height: int = 300) -> TFFlexibleWindow:
+    def create_flexible_window(self, name: str, width: int = 400, height: int = 300):
+        from ui.components.tf_flexble_window import TFFlexibleWindow  # 在方法内部导入
         window = TFFlexibleWindow(width=width, height=height, parent=self)
         self._register_component(name, window)
         return window
 
-    def create_draggable_label(self, text: str, callback=None) -> TFDraggableLabel:
+    def create_draggable_label(self, text: str, callback=None):
+        from ui.components.tf_draggable_label import TFDraggableLabel  # 在方法内部导入
         label = TFDraggableLabel(text=text, callback=callback, parent=self)
         return label
