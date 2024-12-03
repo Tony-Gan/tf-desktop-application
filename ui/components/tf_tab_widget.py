@@ -59,7 +59,7 @@ class TFTabBar(QTabBar):
         if anim.animation is not None:
             anim.animation.stop()
         animation = QPropertyAnimation(anim, b'opacity', self)
-        animation.setDuration(250)
+        animation.setDuration(200)
         animation.setStartValue(anim.opacity)
         animation.setEndValue(1.0)
         animation.finished.connect(lambda: self.onAnimationFinished(index))
@@ -71,7 +71,7 @@ class TFTabBar(QTabBar):
         if anim.animation is not None:
             anim.animation.stop()
         animation = QPropertyAnimation(anim, b'opacity', self)
-        animation.setDuration(250)
+        animation.setDuration(200)
         animation.setStartValue(anim.opacity)
         animation.setEndValue(0.0)
         animation.finished.connect(lambda: self.onAnimationFinished(index))
@@ -115,7 +115,7 @@ class TFTabBar(QTabBar):
                 if opacity > 0:
                     painter.save()
                     painter.setOpacity(opacity)
-                    painter.setBrush(QColor("#5A6437"))
+                    painter.setBrush(QColor("#5A6473"))
                     painter.setPen(Qt.PenStyle.NoPen)
                     painter.drawPath(path)
                     painter.restore()

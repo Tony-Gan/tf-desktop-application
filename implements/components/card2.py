@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 from PyQt6.QtWidgets import QHBoxLayout, QGridLayout, QScrollArea, QFrame
 from PyQt6.QtCore import Qt
@@ -19,7 +18,7 @@ class Card2(BaseCard):
         self.showing_all = False
         self.default_skills = {}
         self.current_skills = {}
-        self._load_default_skills()
+        self.default_skills = self._load_default_skills()
         super().__init__(parent=parent)
 
     def _setup_content(self):
@@ -29,16 +28,14 @@ class Card2(BaseCard):
         self.add_child('skills_frame', self.skills_frame)
         self.add_child('buttons_frame', self.buttons_frame)
 
-        self.buttons_frame.expand_collapse_button.clicked.connect(self._toggle_skills_display)
-
     def _load_default_skills(self):
         try:
             with open(resource_path('implements/data/default_skills.json'), 'r', encoding='utf-8') as f:
-                self.default_skills = json.load(f)
+                return json.load(f)
         except Exception as e:
             TFApplication.instance().show_message(str(e), 5000, 'yellow')
 
-    def _toggle_skills_display(self):
+    def toggle_skills_display(self):
         layout = self.skills_frame.content_widget.main_layout
         while layout.count():
             item = layout.takeAt(0)
@@ -83,7 +80,7 @@ class Card2(BaseCard):
                 label_text=self.SKILL_NAME_MAPPING.get(name, name) + ':',
                 value_text=str(total_point),
                 value_size=24,
-                label_size=56,
+                label_size=60,
                 number_only=True,
                 allow_decimal=False,
                 max_digits=2,
@@ -149,7 +146,7 @@ class ButtonsFrame(TFBaseFrame):
             height=30,
             width=90,
             enabled=False,
-            on_clicked=self._on_expand_collapse_clicked
+            on_clicked=self.parent.toggle_skills_display
         )
 
         self.add_button = self.create_button(
@@ -176,8 +173,8 @@ class ButtonsFrame(TFBaseFrame):
         self.main_layout.addStretch()
         self.main_layout.addWidget(self.delete_button)
 
-    def _on_expand_collapse_clicked(self):
-        pass
+        self.add_button.hide()
+        self.delete_button.hide()
 
     def _on_add_clicked(self):
         pass
