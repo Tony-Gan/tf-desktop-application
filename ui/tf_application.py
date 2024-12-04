@@ -6,7 +6,6 @@ from PyQt6.QtCore import QTranslator
 from core.database.tf_database import TFDatabase
 from ui.components.tf_message_bar import TFMessageBar
 from utils.logging.tf_logger import TFLogger
-from ui.views.tf_output_panel import TFOutputPanel
 from ui.components.tf_message_box import TFMessageBox
 
 class TFApplication(QApplication):
@@ -109,26 +108,6 @@ class TFApplication(QApplication):
             bar (TFMessageBar): Message bar to use.
         """
         self._message_bar = bar
-
-    @property
-    def output_panel(self) -> TFOutputPanel:
-        """
-        Get the application's output panel.
-
-        Returns:
-            TFOutputPanel: The output panel instance.
-        """
-        return self._output_panel
-    
-    @output_panel.setter
-    def output_panel(self, panel: TFOutputPanel):
-        """
-        Set the application's output panel.
-
-        Args:
-            panel (TFOutputPanel): Output panel to use.
-        """
-        self._output_panel = panel
 
     @property
     def logger(self) -> TFLogger:

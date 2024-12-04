@@ -1,13 +1,13 @@
-import sys
-
-from PyQt6.QtCore import Qt, QEvent
+from PyQt6.QtCore import Qt, QEvent, pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QLineEdit, QTextEdit, QPushButton, QApplication, QWidget
+from PyQt6.QtWidgets import QLineEdit, QTextEdit
 
 from ui.tf_application import TFApplication
 from ui.components.tf_font import TEXT_FONT
 
 class TFExpandingInput(QLineEdit):
+    textChanged = pyqtSignal(str)
+
     def __init__(
             self,
             place_holder: str = None,
@@ -52,6 +52,7 @@ class TFExpandingInput(QLineEdit):
         self.blockSignals(True)
         self.setText(text)
         self.blockSignals(False)
+        self.textChanged.emit(text)
 
     def _expand(self):
         global_pos = self.mapToGlobal(self.rect().topLeft())

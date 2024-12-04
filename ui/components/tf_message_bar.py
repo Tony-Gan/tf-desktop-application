@@ -1,75 +1,139 @@
 from PyQt6.QtWidgets import QLabel
-from PyQt6.QtCore import QTimer, Qt
-from PyQt6.QtGui import QFont, QFontMetrics
+from PyQt6.QtCore import QTimer, Qt, QPropertyAnimation, QPoint, QEasingCurve
+from PyQt6.QtGui import QFontMetrics
+
+from ui.components.tf_font import NotoSerifNormal
 
 class TFMessageBar(QLabel):
-    """
-    A temporary message display widget for notifications.
-
-    This class extends QLabel to create a temporary notification bar that appears
-    at the top of the parent widget and automatically hides after a specified duration.
-
-    Args:
-        parent (QWidget, optional): The parent widget. Defaults to None.
-
-    Attributes:
-        font (QFont): Font used for message text, set to "Open Sans" 11pt.
-        objectName (str): Set to "message_label" for styling purposes.
-
-    Example:
-        >>> message_bar = TFMessageBar(parent=main_window)
-        >>> message_bar.show_message("Operation successful!", 3000, "green")
-    """
     def __init__(self, parent=None):
         super().__init__(parent)
-
+        
         self.parent = parent
-
-        self.setObjectName("message_label")
-        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        self.setObjectName("message_toast")
+        self.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.setWordWrap(True)
+        
+        self.setFont(NotoSerifNormal)
+        
+        self.setMinimumWidth(100)
+        self.setMaximumWidth(400)
 
-        font = QFont("Open Sans", 11)
-        self.setFont(font)
+        self.setStyleSheet("""
+            QLabel#message_toast {
+                border-radius: 8px;
+                padding: 10px;
+            }
+        """)
+        
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
+        self.slide_in_animation = QPropertyAnimation(self, b"pos")
+        self.slide_in_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self.slide_in_animation.setDuration(300)
+        
+        self.slide_out_animation = QPropertyAnimation(self, b"pos")
+        self.slide_out_animation.setEasingCurve(QEasingCurve.Type.InCubic)
+        self.slide_out_animation.setDuration(300)
+
+        self.slide_out_animation.finished.connect(self.hide)
+        
         self.hide()
 
+    def calculate_size(self, message: str) -> tuple:
+        font_metrics = QFontMetrics(self.font())
+        
+        single_line_width = font_metrics.horizontalAdvance(message) + 40
+        
+        target_width = min(single_line_width, self.maximumWidth())
+        target_width = max(target_width, self.minimumWidth())
+        
+        text_rect = font_metrics.boundingRect(
+            0, 0, target_width - 20,
+            2000,
+            Qt.TextFlag.TextWordWrap | Qt.TextFlag.TextExpandTabs,
+            message
+        )
+        
+        return target_width, text_rect.height() + 20
+    
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.start_slide_out()
+
+    def enterEvent(self, event):
+        current_style = self.styleSheet()
+        self.setStyleSheet(current_style + """
+            QLabel#message_toast {
+                opacity: 0.9;
+            }
+        """)
+
+    def leaveEvent(self, event):
+        current_style = self.styleSheet()
+        self.setStyleSheet(current_style.replace("opacity: 0.9;", ""))
+
+    def start_slide_out(self):
+        if self.parent:
+            current_pos = self.pos()
+            target_x = self.parent.width()
+            
+            self.slide_out_animation.setStartValue(current_pos)
+            self.slide_out_animation.setEndValue(QPoint(target_x, current_pos.y()))
+            
+            self.slide_out_animation.start()
+
     def show_message(self, message: str, display_time=2000, colour='green') -> None:
-        """Display a temporary notification message.
-
-        Shows a colored message bar at the top of the parent widget that automatically
-        hides after the specified duration.
-
-        Args:
-            message (str): The message text to display. Can include line breaks.
-            display_time (int, optional): Duration in milliseconds to show the message.
-                Defaults to 2000ms (2 seconds).
-            colour (str, optional): Background color of the message bar.
-                Can be any valid CSS color value. Defaults to 'green'.
-
-        Note:
-            - The message bar width automatically adjusts to parent widget width
-            - Height automatically adjusts based on message text length and line breaks
-            - Position is fixed at 20 pixels from the top of the parent widget
-            - Message is centered and can wrap to multiple lines
-        """
+        if self.slide_out_animation.state() == QPropertyAnimation.State.Running:
+            self.slide_out_animation.stop()
+        
         self.setText(message)
+
+        width, height = self.calculate_size(message)
+        self.setFixedSize(width, height)
+        
         if colour == 'yellow':
-            self.setStyleSheet(f"background-color: {colour}; color: black;")
+            self.setStyleSheet("""
+                QLabel#message_toast {
+                    background-color: #FFF3CD;
+                    color: #856404;
+                    border: 1px solid #FFEEBA;
+                    border-radius: 8px;
+                    padding: 10px;
+                }
+            """)
+        elif colour == 'green':
+            self.setStyleSheet("""
+                QLabel#message_toast {
+                    background-color: #D4EDDA;
+                    color: #155724;
+                    border: 1px solid #C3E6CB;
+                    border-radius: 8px;
+                    padding: 10px;
+                }
+            """)
         else:
-            self.setStyleSheet(f"background-color: {colour};")
+            self.setStyleSheet(f"""
+                QLabel#message_toast {{
+                    background-color: {colour};
+                    border-radius: 8px;
+                    padding: 10px;
+                }}
+            """)
 
         if self.parent:
-            self.setFixedWidth(self.parent.width())
-
-        font_metrics = QFontMetrics(self.font())
-        line_spacing = font_metrics.lineSpacing()
-        lines = message.split('\n')
-        height = line_spacing * len(lines) + 10
-        self.setFixedHeight(height)
+            parent_width = self.parent.width()
+            target_x = parent_width - self.width() - 20
+            target_y = 50
+            
+            start_x = parent_width
+            self.move(start_x, target_y)
+            
+            self.slide_in_animation.setStartValue(QPoint(start_x, target_y))
+            self.slide_in_animation.setEndValue(QPoint(target_x, target_y))
+            
+            self.show()
+            self.raise_()
+            self.slide_in_animation.start()
         
-        self.move(0, 30)
-
-        self.show()
-        self.raise_()
-        QTimer.singleShot(display_time, self.hide)
+        QTimer.singleShot(display_time, self.start_slide_out)

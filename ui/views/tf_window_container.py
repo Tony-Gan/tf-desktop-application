@@ -5,108 +5,50 @@ from PyQt6.QtWidgets import QWidget, QScrollArea
 
 from core.windows.tf_draggable_window import TFDraggableWindow
 from ui.tf_application import TFApplication
-from utils.registry.tf_tool_registry import TFToolRegistry
-from core.database.models import TFWindowState
 from settings.general import MAX_WIDTH, MAX_HEIGHT
 
+
 class TFWindowContainer(QWidget):
-    """
-    A container widget managing multiple draggable windows within the application.
-    
-    This class handles the creation, positioning, and state management of draggable
-    windows. It provides functionality for window placement, state persistence,
-    and window organization within the container area.
 
-    Args:
-        parent (QWidget): Parent widget. Should be set as the main window.
-
-    Example:
-        >>> # Creating a window container
-        >>> container = TFWindowContainer(parent_widget)
-        >>> 
-        >>> # Adding a new calculator window
-        >>> container.add_window(TFCalculator)
-        >>> 
-        >>> # Saving window states
-        >>> container.save_all_window_states()
-
-    Attributes:
-        windows (List[TFDraggableWindow]): List of managed draggable windows.
-        app (TFApplication): Reference to the main application instance.
-        parent (QWidget): Parent widget reference.
-    """
-    
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
         self.app = TFApplication.instance()
         self.windows: List[TFDraggableWindow] = []
         self.focused_window: Optional[TFDraggableWindow] = None
-        
-        # Set initial size to ensure scrolling works properly
-        self.setMinimumSize(MAX_WIDTH, MAX_HEIGHT)
-        
-        self._restore_windows()
 
-    def save_all_window_states(self):
-        """
-        Save the states of all current windows to the database.
+        self.setObjectName("windowContainer")
+        self.setStyleSheet("""
+            QWidget#windowContainer {
+                background-color: #181C26;
+            }
+        """)
         
-        Clears existing window states and saves the current state of all windows,
-        including their positions and titles.
-        """
-        with self.app.database.get_session() as session:
-            session.query(TFWindowState).delete()
-            
-            for window in self.windows:
-                window_state = TFWindowState(
-                    window_class=window.__class__.__name__,
-                    title=window.metadata.window_title,
-                    x_position=window.x(),
-                    y_position=window.y()
-                )
-                session.add(window_state)
-            
-            session.commit()
+        self.setMinimumSize(MAX_WIDTH, MAX_HEIGHT)
 
     def add_window(self, window_class: Type[TFDraggableWindow]) -> None:
-        """
-        Add a new window of the specified class to the container.
-        
-        Creates and positions a new window instance, ensuring it doesn't exceed
-        maximum count limits and doesn't overlap with existing windows.
-        Automatically connects necessary signals and handles window positioning.
-
-        Args:
-            window_class (Type[TFDraggableWindow]): Class of the window to create.
-        """
         current_count = sum(1 for win in self.windows if isinstance(win, window_class))
         if current_count >= window_class.metadata.max_instances:
             message = (f"Cannot add more '{window_class.metadata.window_title}'. "
                       f"Maximum count of {window_class.metadata.max_instances} reached.")
-            self.app.show_message(message, 3000, 'green')
+            self.app.show_message(message, 5000, 'yellow')
             return
 
         window = window_class(parent=self)
         window.closed.connect(self._remove_specific_window)
         window_size = window.metadata.window_size
-        
+
         x, y = 0, 0
-        while self._is_position_occupied(x, y, window_size):
-            x += window_size[0]
+
+        if self.windows:
+            offset = 20 * len(self.windows)
+            x += offset
+            y += offset
+
             if x + window_size[0] > self.width():
                 x = 0
-                y += window_size[1]
             if y + window_size[1] > self.height():
-                break
-        
-        if y + window_size[1] > self.height():
-            if self.windows:
-                rightmost_window = max(self.windows, key=lambda w: w.x() + w.width())
-                x = rightmost_window.x() + rightmost_window.width()
-                y = rightmost_window.y()
-            else:
-                x, y = 0, 0
+                y = 0
 
         window.move(x, y)
         self._append_window(window)
@@ -115,10 +57,6 @@ class TFWindowContainer(QWidget):
         self.resize_container()
 
     def resize_container(self) -> None:
-        """
-        Resize the container to accommodate all windows, considering both width and height.
-        Ensures proper scrolling in both directions.
-        """
         max_right = max((window.x() + window.width() for window in self.windows), default=0)
         max_bottom = max((window.y() + window.height() for window in self.windows), default=0)
         
@@ -143,41 +81,8 @@ class TFWindowContainer(QWidget):
         return None
     
     def bring_window_to_front(self, window: TFDraggableWindow) -> None:
-        """
-        Bring a specific window to the front of the stack.
-        
-        Raises the specified window above other windows in the container.
-
-        Args:
-            window (TFDraggableWindow): Window to bring to front.
-        """
         if window in self.windows:
             window.raise_()
-
-    def _restore_windows(self):
-        window_classes = {
-            cls.__name__: cls 
-            for cls in TFToolRegistry.get_tools().values()
-        }
-
-        with self.app.database.get_session() as session:
-            saved_states = session.query(TFWindowState).all()
-            
-            for state in saved_states:
-                if state.window_class in window_classes:
-                    window_class = window_classes[state.window_class]
-                    
-                    window = window_class(parent=self)
-                    window.closed.connect(self._remove_specific_window)
-                    window.moved.connect(self.resize_container)
-                    
-                    window.move(state.x_position, state.y_position)
-                    
-                    if state.title != window.metadata.window_title:
-                        window.title = state.title
-                    
-                    self.windows.append(window)
-                    window.show()
 
     def _remove_specific_window(self, window: TFDraggableWindow) -> None:
         if window in self.windows:
@@ -226,7 +131,7 @@ class TFWindowContainer(QWidget):
         self.focused_window = window
         if self.focused_window is not None:
             self.focused_window.focused = True
-    
+
     def sizeHint(self) -> QSize:
         return self.minimumSizeHint()
     

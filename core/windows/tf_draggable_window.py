@@ -1,95 +1,22 @@
 from time import time
-from PyQt6.QtWidgets import QFrame, QLabel, QWidget
-from PyQt6.QtGui import QMouseEvent, QFont
+from PyQt6.QtWidgets import QFrame, QLabel, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
+from core.windows.tf_mini_window import TFMiniWindow
+from ui.components.tf_animated_button import TFAnimatedButton
 from utils.registry.tf_tool_matadata import TFToolMetadata
 from ui.tf_application import TFApplication
-from ui.components.tf_settings_widget import TFCloseButton, TFMenuButton, TFIconButton
-from utils.helper import resource_path
+from ui.components.tf_settings_widget import TFCloseButton, TFMenuButton
+from ui.components.tf_font import NotoSerifNormal
 
-# Window appearance constants
-TITLE_FONT_FAMILY = "Open Sans"
-TITLE_FONT_SIZE = 11
-TITLE_X_OFFSET = 10
-TITLE_Y_OFFSET = 5
-
-# Content layout constants
 CONTENT_PADDING_LEFT = 10
 CONTENT_PADDING_TOP = 30
 CONTENT_PADDING_RIGHT = 10
 CONTENT_PADDING_BOTTOM = 10
 
-# Window snapping constant
 SNAP_THRESHOLD = 10
 
 class TFDraggableWindow(QFrame):
-    """
-    A draggable window frame that can be moved within its parent container with snapping capabilities.
-
-    This base class provides draggable window functionality with edge snapping, window management,
-    focus handling, tooltips and window controls including close and menu buttons. It serves as the base for
-    all draggable tool windows in the application and automatically registers tool implementations
-    with the TFToolRegistry.
-
-    Class Attributes:
-        metadata (Optional[TFToolMetadata]): 
-            Required tool metadata that must be defined by subclasses. Contains window 
-            configuration like size and title.
-
-    Signals:
-        moved: 
-            Emitted when the window is moved within its container.
-        mouse_released: 
-            Emitted when the mouse button is released after dragging.
-        closed:  
-            Emitted when the window is closed via the close button. Passes window object reference.
-
-    Args:
-        parent (QWidget): Parent widget containing this window.
-
-    Raises:
-        ValueError: If the subclass has not defined the required metadata attribute.
-
-    Attributes:
-        app (TFApplication): Reference to the main application instance.
-        content_container (QWidget): Container widget for the window's content area.
-        title (str): The window's title text, can be get/set.
-        focused (bool): Window focus state, affects visual appearance when true.
-        close_button (TFCloseButton): Button to close the window.
-        menu_button (TFMenuButton): Button for accessing window options menu.
-        is_dragging (bool): True when window is being dragged.
-        last_moved_time (float): Timestamp of the last window movement.
-    
-    Implementation Notes:
-        For customized developer - Inherit this class for developing new tool windows. You only need to:
-        1. Define the required metadata class attribute
-        2. Implement the initialize_window() method
-        3. Override get_tooltip_hover_text() if needed
-
-    Example:
-        >>> class MyToolWindow(TFDraggableWindow):
-        ...     metadata = TFToolMetadata(
-        ...         window_title="My Tool",
-        ...         window_size=(400, 300)
-        ...     )
-        ...     
-        ...     def initialize_window(self):
-        ...         # Add custom widgets and layout
-        ...         layout = QVBoxLayout(self.content_container)
-        ...         layout.addWidget(QLabel("My Tool Content"))
-        ...     
-        ...     def get_tooltip_hover_text(self):
-        ...         return "This is my custom tool's tooltip"
-        ... 
-
-    Note:
-        All tool windows must define a class-level `metadata` attribute of type
-        `TFToolMetadata` that specifies the window configuration. Tool classes are
-        automatically registered with the `TFToolRegistry` when defined.
-        The window implements edge snapping behavior when dragged near other windows
-        and constrains movement within the parent container bounds.
-    """
-
     moved = pyqtSignal()
     mouse_released = pyqtSignal()
     closed = pyqtSignal(object)
@@ -110,28 +37,66 @@ class TFDraggableWindow(QFrame):
         self.app = TFApplication.instance()
 
         self.setObjectName("TFDraggableWindow")
-        self.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Raised)
         self.setFixedSize(*self.metadata.window_size)
 
-        self._title_label = QLabel(self.metadata.window_title, self)
-        self._title_label.move(TITLE_X_OFFSET, TITLE_Y_OFFSET)
-        self._title_label.setFixedWidth(self.width())
-        font = QFont(TITLE_FONT_FAMILY, TITLE_FONT_SIZE)
-        self._title_label.setFont(font)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        self.setLayout(main_layout)
 
-        self._init_buttons()
+        self._create_title_bar(main_layout)
 
         self._content_container = QWidget(self)
-        container_width = (self.metadata.window_size[0] - CONTENT_PADDING_LEFT - CONTENT_PADDING_RIGHT)
-        container_height = (self.metadata.window_size[1] - CONTENT_PADDING_TOP - CONTENT_PADDING_BOTTOM)
-        self._content_container.setGeometry(
-            CONTENT_PADDING_LEFT,
-            CONTENT_PADDING_TOP,
-            container_width,
-            container_height
-        )
+        self._content_container.setObjectName("contentContainer")
+        main_layout.addWidget(self._content_container)
 
         self.initialize_window()
+
+    def _create_title_bar(self, main_layout):
+        title_bar = QWidget(self)
+        title_bar.setFixedHeight(40)
+        title_bar.setObjectName("titleBar")
+
+        title_layout = QHBoxLayout(title_bar)
+        title_layout.setContentsMargins(15, 12, 15, 5)
+        title_layout.setSpacing(0)
+
+        self._title_label = QLabel(self.metadata.window_title, title_bar)
+        self._title_label.setFont(NotoSerifNormal)
+        self._title_label.setObjectName("titleLabel")
+        self._title_label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+        title_layout.addWidget(self._title_label, alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+
+        title_layout.addStretch()
+        title_layout.setSpacing(15)
+
+        self._init_buttons(title_layout)
+
+        main_layout.addWidget(title_bar)
+
+    def _init_buttons(self, layout):
+        self._minimize_button = TFAnimatedButton(
+            icon_name="minimize",
+            tooltip="最小化",
+            size=20 ,
+            parent=self
+        )
+        self._minimize_button.clicked_signal.connect(self.minimize)
+        self._close_button = TFAnimatedButton(
+            icon_name="close",
+            tooltip="关闭",
+            size=20 ,
+            parent=self
+        )
+        self._close_button.clicked_signal.connect(self.close_window)
+
+        self.init_custom_menu_items(layout)
+
+        layout.addWidget(self._minimize_button, alignment=Qt.AlignmentFlag.AlignVCenter)
+        layout.addWidget(self._close_button, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+    def init_custom_menu_items(self, layout):
+        pass
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -236,40 +201,6 @@ class TFDraggableWindow(QFrame):
             NotImplementedError: If subclass doesn't implement this method.
         """
         raise NotImplementedError("Subclasses must implement initialize_window()")
-
-    def _init_buttons(self):
-        width = self.metadata.window_size[0]
-        hover_style = """
-            QPushButton {
-                background-color: transparent;
-                border: none;
-            }
-            QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.2);
-                border-radius: 3px;
-            }
-        """
-        self._close_button = TFCloseButton(
-            parent=self,
-            position=(width - 25, TITLE_Y_OFFSET),
-            tooltip="Close window",
-            hover_style=hover_style
-        )
-        
-        self._menu_button = TFMenuButton(
-            parent=self,
-            position=(width - 50, TITLE_Y_OFFSET),
-            tooltip="Open menu",
-            hover_style=hover_style
-        )
-        
-        self._tooltip_button = TFIconButton(
-            parent=self,
-            icon_path=resource_path('resources/images/icons/tooltips.png'),
-            position=(width - 75, TITLE_Y_OFFSET),
-            tooltip=self.get_tooltip_hover_text(),
-            hover_style=hover_style
-        )
 
     def get_tooltip_hover_text(self) -> str:
         """
@@ -377,3 +308,22 @@ class TFDraggableWindow(QFrame):
             self._dragging = False
             self.last_moved_time = time()
             self.mouse_released.emit()
+
+    def minimize(self):
+        mini_window = TFMiniWindow(self.parent(), self.title)
+        mini_window.move(self.pos())
+        mini_window.restored.connect(self._on_restore)
+        mini_window.closed.connect(self.close_window)
+        mini_window.moved.connect(self.moved.emit)
+        
+        self.hide()
+        mini_window.show()
+
+    def _on_restore(self):
+        sender = self.sender()
+        if sender:
+            self.move(sender.pos())
+        self.show()
+
+    def close_window(self):
+        self.closed.emit(self)

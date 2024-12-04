@@ -1,7 +1,8 @@
-# ui/components/tf_message_box.py
+from typing import List
 
 from PyQt6.QtWidgets import QMessageBox
-from typing import List
+
+from ui.components.tf_font import NotoSerifNormal
 
 class TFMessageBox:
     """
@@ -35,6 +36,7 @@ class TFMessageBox:
         msg_box = QMessageBox(parent)
         msg_box.setWindowTitle(title)
         msg_box.setText(message)
+        msg_box.setFont(NotoSerifNormal)
 
         if icon is not None:
             if isinstance(icon, QMessageBox.Icon):
@@ -78,6 +80,7 @@ class TFMessageBox:
         msg_box = QMessageBox(parent)
         msg_box.setWindowTitle(title)
         msg_box.setText(message)
+        msg_box.setFont(NotoSerifNormal)
         
         button_refs = {}
         
@@ -126,6 +129,7 @@ class TFMessageBox:
         msg_box.setIcon(QMessageBox.Icon.Warning)
         msg_box.setWindowTitle(title)
         msg_box.setText(message)
+        msg_box.setFont(NotoSerifNormal)
         
         button_refs = {}
         for button_text in buttons:
@@ -163,6 +167,7 @@ class TFMessageBox:
         msg_box.setIcon(QMessageBox.Icon.Information)
         msg_box.setWindowTitle(title)
         msg_box.setText(message)
+        msg_box.setFont(NotoSerifNormal)
         
         button_refs = {}
         for button_text in buttons:
@@ -200,6 +205,7 @@ class TFMessageBox:
         msg_box.setIcon(QMessageBox.Icon.Critical)
         msg_box.setWindowTitle(title)
         msg_box.setText(message)
+        msg_box.setFont(NotoSerifNormal)
         
         button_refs = {}
         for button_text in buttons:

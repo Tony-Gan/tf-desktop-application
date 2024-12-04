@@ -1,4 +1,6 @@
 from PyQt6.QtWidgets import QFrame
+from PyQt6.QtGui import QPalette, QColor
+
 
 class TFSeparator(QFrame):
     """
@@ -48,6 +50,13 @@ class TFSeparator(QFrame):
             self.setMaximumWidth(height)
         
         self.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.setStyleSheet("""
+            QFrame {
+                background-color: #2A2E3A;  /* 浅灰色，比背景稍亮 */
+                border: none;
+            }
+        """)
         
         self.setContentsMargins(margin_left, margin_top, 
                               margin_right, margin_bottom)
