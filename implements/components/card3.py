@@ -1,9 +1,11 @@
 import json
-from PyQt6.QtWidgets import QHBoxLayout, QScrollArea, QFrame
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QHBoxLayout, QScrollArea, QFrame, QSizePolicy
+from PyQt6.QtCore import Qt, QSize
 
 from implements.components.base_card import BaseCard
+from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_frame import TFBaseFrame
+from ui.components.tf_flow_layout import TFFlowLayout
 from ui.tf_application import TFApplication
 from utils.helper import resource_path
 
@@ -22,14 +24,89 @@ class Card3(BaseCard):
     def load_data(self, p_data):
         weapons = p_data.get('loadout', {}).get('weapons', [])
         skills = p_data.get('skills', {})
-        
         self.weapons_frame.load_weapons(weapons, skills)
+        self.weapons_frame.show_armors_button.show()
 
-    def save_data(self, p_data):
-        pass
+        items = p_data.get('loadout', {}).get('items', {})
+        self.items_frame.carried_item_frame.load_items(items.get('carried', []))
+        self.items_frame.backpack_item_frame.load_items(items.get('backpack', []))
 
     def enable_edit(self):
-        pass
+        self.weapons_frame.add_button.show()
+        self.weapons_frame.delete_button.show()
+        self.weapons_frame.add_button.setEnabled(True)  
+        self.weapons_frame.delete_button.setEnabled(True)
+        
+        for i in range(self.weapons_frame.content_widget.main_layout.count()):
+            weapon_entry = self.weapons_frame.content_widget.main_layout.itemAt(i).widget()
+            weapon_entry.name_entry.set_enable(True)
+            weapon_entry.skill_entry.set_enable(True)
+            weapon_entry.damage_entry.set_enable(True)
+
+        for item_button in self.items_frame.carried_item_frame.content_widget.findChildren(ItemButton):
+            item_button.setEnabled(True)
+        
+        for item_button in self.items_frame.backpack_item_frame.content_widget.findChildren(ItemButton):
+            item_button.setEnabled(True)
+
+    def save_data(self, p_data):
+        weapons = []
+        for i in range(self.weapons_frame.content_widget.main_layout.count()):
+            weapon_entry = self.weapons_frame.content_widget.main_layout.itemAt(i).widget()
+            name = weapon_entry.name_entry.get_value()
+            skill = weapon_entry.skill_entry.get_value().split('(')[0]
+            damage = weapon_entry.damage_entry.get_value()
+            
+            weapon = {
+                'name': name,
+                'type': 'N/A',
+                'category': 'N/A',
+                'skill': skill,
+                'damage': damage,
+                'range': 'N/A',
+                'penetration': 'N/A', 
+                'rof': 'N/A',
+                'ammo': 'N/A',
+                'malfunction': 'N/A',
+                'notes': 'N/A'
+            }
+            weapons.append(weapon)
+        
+        p_data['loadout']['weapons'] = weapons
+
+        carried_items = []
+        for item_button in self.items_frame.carried_item_frame.content_widget.findChildren(ItemButton):
+            carried_items.append({
+                'name': item_button.text(),
+                'notes': 'N/A'
+            })
+        
+        backpack_items = []
+        for item_button in self.items_frame.backpack_item_frame.content_widget.findChildren(ItemButton):
+            backpack_items.append({
+                'name': item_button.text(),
+                'notes': 'N/A'
+            })
+
+        if 'items' not in p_data['loadout']:
+            p_data['loadout']['items'] = {}
+        p_data['loadout']['items']['carried'] = carried_items
+        p_data['loadout']['items']['backpack'] = backpack_items
+
+        self.weapons_frame.add_button.hide()
+        self.weapons_frame.delete_button.hide()
+        
+        for i in range(self.weapons_frame.content_widget.main_layout.count()):
+            weapon_entry = self.weapons_frame.content_widget.main_layout.itemAt(i).widget()
+            weapon_entry.name_entry.set_enable(False)
+            weapon_entry.skill_entry.set_enable(False)
+            weapon_entry.damage_entry.set_enable(False)
+
+        for item_button in self.items_frame.carried_item_frame.content_widget.findChildren(ItemButton):
+            item_button.setEnabled(False)
+        
+        for item_button in self.items_frame.backpack_item_frame.content_widget.findChildren(ItemButton):
+            item_button.setEnabled(False)
 
 
 class WeaponsFrame(TFBaseFrame):
@@ -37,15 +114,17 @@ class WeaponsFrame(TFBaseFrame):
         super().__init__(level=1, radius=5, parent=parent)
 
     def _setup_content(self):
+        self.setFixedHeight(200)
         scroll = QScrollArea(self)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
         self.content_widget = TFBaseFrame(level=1, parent=scroll)
         self.content_widget.main_layout.setSpacing(10)
         self.content_widget.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.content_widget.main_layout.setContentsMargins(10, 10, 10, 10)
         scroll.setWidget(self.content_widget)
 
         self.button_frame = TFBaseFrame(level=1, layout_type=QHBoxLayout, parent=self)
@@ -84,6 +163,7 @@ class WeaponsFrame(TFBaseFrame):
         self.button_frame.main_layout.addWidget(self.delete_button)
         self.button_frame.main_layout.addStretch()
 
+        self.show_armors_button.hide()
         self.add_button.hide()
         self.delete_button.hide()
 
@@ -112,7 +192,6 @@ class WeaponsFrame(TFBaseFrame):
 
 
 class WeaponEntry(TFBaseFrame):
-    # TODO: 点击后显示Notes
     def __init__(self, parent=None):
         super().__init__(level=1, radius=5, layout_type=QHBoxLayout, parent=parent)
 
@@ -178,7 +257,82 @@ class WeaponEntry(TFBaseFrame):
 
 class ItemsFrame(TFBaseFrame):
     def __init__(self, parent=None):
+        super().__init__(layout_type=QHBoxLayout, level=1, radius=5, parent=parent)
+
+    def _setup_content(self):
+        self.carried_item_frame = CarriedItemFrame(self)
+        self.backpack_item_frame = BackpackItemFrame(self)
+
+        self.add_child('carried_item_frame', self.carried_item_frame)
+        self.add_child('backpack_item_frame', self.backpack_item_frame)
+
+
+class ItemButton(TFBaseButton):
+    def __init__(self, text: str, parent=None):
+        super().__init__(
+            text=text,
+            parent=parent,
+            border_radius=10,
+            font_size=10,
+            height=24,
+            enabled=False
+        )
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.setMinimumWidth(10)
+
+    def sizeHint(self):
+        metrics = self.fontMetrics()
+        width = metrics.horizontalAdvance(self.text()) + 10
+        return QSize(width, 24)
+    
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            # TODO: 处理点击事件
+            print("Yo!")
+        super().mousePressEvent(event)
+
+
+class ItemContainer(TFBaseFrame):
+    def __init__(self, title: str, parent=None):
+        self.title = title
         super().__init__(level=1, radius=5, parent=parent)
 
     def _setup_content(self):
-        pass
+        self.title_label = self.create_label(
+            text=self.title,
+            height=24,
+            fixed_width=None,
+            serif=True
+        )
+        
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
+        self.content_widget = TFBaseFrame(level=1, layout_type=TFFlowLayout, parent=scroll)
+        scroll.setWidget(self.content_widget)
+
+        self.main_layout.addWidget(self.title_label)
+        self.main_layout.addWidget(scroll)
+
+    def load_items(self, items):
+        flow_layout = self.content_widget.layout()
+        flow_layout.clear()
+        
+        for item in items:
+            name = item.get('name', '')
+            if name:
+                btn = ItemButton(name)
+                flow_layout.addWidget(btn)
+
+
+class CarriedItemFrame(ItemContainer):
+    def __init__(self, parent=None):
+        super().__init__(title="随身物品", parent=parent)
+
+
+class BackpackItemFrame(ItemContainer):
+    def __init__(self, parent=None):
+        super().__init__(title="背包物品", parent=parent)

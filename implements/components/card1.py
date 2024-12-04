@@ -8,6 +8,8 @@ from PyQt6.QtGui import QPixmap
 
 from implements.components.base_card import BaseCard
 from ui.components.tf_base_frame import TFBaseFrame
+from ui.components.tf_number_receiver import TFNumberReceiver
+from ui.components.tf_font import NotoSerifNormal
 from ui.tf_application import TFApplication
 from utils.helper import resource_path
 
@@ -67,17 +69,18 @@ class Card1(BaseCard):
             'pow': 'POW',
             'edu': 'EDU',
             'luk': 'LUK',
-            'hp': 'HP',
-            'mp': 'MP',
-            'san': 'SAN',
             'mov': 'MOV',
             'db': 'DB',
             'build': 'BUILD'
         }
         
-        stats_values = {}
         basic_stats = p_data.get('basic_stats', {})
         missing_stats = []
+        stats_values = {}
+
+        for stat in ['hp', 'mp', 'san']:
+            stats_values[f'{stat}_current'] = basic_stats[f'curr_{stat}']
+            stats_values[f'{stat}_max'] = basic_stats[stat]
 
         for json_key, ui_key in stats_mapping.items():
             value = basic_stats.get(json_key)
@@ -95,11 +98,78 @@ class Card1(BaseCard):
         if self.parent:
             self.parent.title = f"{char_name}"
 
-    def save_data(self, p_data):
-        pass
-
     def enable_edit(self):
-        pass
+        self.upper_frame.avatar_frame.upload_button.show()
+        
+        basic_info = self.upper_frame.basic_info_frame
+        for key in ['PL', '姓名', '母语', '护甲']:
+            if key in basic_info._components:
+                basic_info._components[key].set_enable(True)
+        
+        basic_info.background_button.setEnabled(True)
+        basic_info.potrait_button.setEnabled(True)
+        
+        stats = self.stats_frame
+        for key in ['hp', 'mp', 'san']:
+            stats._components[f'{key}_current'].parent().setEnabled(True)
+        
+        for key in [
+            'str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu', 'luk',
+            'mov', 'db', 'build'
+        ]:
+            if key in stats._components:
+                stats._components[key].set_enable(True)
+
+    def save_data(self, p_data):
+        basic_info = self.upper_frame.basic_info_frame
+        values = basic_info.get_values()
+        
+        p_data['player_info']['player_name'] = values['PL']
+        p_data['character_info']['char_name'] = values['姓名']
+        p_data['character_info']['language_own'] = values['母语']
+        
+        if 'armour' not in p_data['loadout']:
+            p_data['loadout']['armour'] = {}
+        p_data['loadout']['armour']['point'] = int(values['护甲'])
+
+        avatar_values = self.upper_frame.avatar_frame.get_values()
+        if 'avatar_path' in avatar_values:
+            p_data['character_info']['avatar_path'] = avatar_values['avatar_path']
+
+        stats = self.stats_frame
+        stats_values = stats.get_values()
+
+        stats_mapping = {
+            'str': 'str', 'con': 'con', 'siz': 'siz',
+            'dex': 'dex', 'app': 'app', 'int': 'int',
+            'pow': 'pow', 'edu': 'edu', 'luk': 'luk',
+            'mov': 'mov', 'db': 'db', 'build': 'build'
+        }
+        for ui_key, json_key in stats_mapping.items():
+            p_data['basic_stats'][json_key] = int(stats_values[ui_key])
+
+        for stat in ['hp', 'mp', 'san']:
+            p_data['basic_stats'][f'curr_{stat}'] = int(stats_values[f'{stat}_current'])
+            p_data['basic_stats'][stat] = int(stats_values[f'{stat}_max'])
+
+        self.upper_frame.avatar_frame.upload_button.hide()
+        
+        for key in ['PL', '姓名', '母语', '护甲']:
+            if key in basic_info._components:
+                basic_info._components[key].set_enable(False)
+        
+        basic_info.background_button.setEnabled(False)
+        basic_info.potrait_button.setEnabled(False)
+        
+        for key in ['hp', 'mp', 'san']:
+            stats._components[f'{key}_current'].parent().setEnabled(False)
+        
+        for key in [
+            'str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu', 'luk',
+            'mov', 'db', 'build'
+        ]:
+            if key in stats._components:
+                stats._components[key].set_enable(False)
 
 
 class UpperFrame(TFBaseFrame):
@@ -274,11 +344,25 @@ class StatsFrame(TFBaseFrame):
 
     def _setup_content(self):
         self.main_layout.setContentsMargins(10, 10, 10, 10)
-        for i, key in enumerate([
+
+        standard_stats = [
             'STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU', 'LUK',
-            'HP', 'MP', 'SAN', 'MOV', 'DB', 'BUILD'
-        ]):
+            'MOV', 'DB', 'BUILD'
+        ]
+        
+        dynamic_stats = ['HP', 'MP', 'SAN']
+        for i, stat in enumerate(dynamic_stats):
             row = i // 3
+            col = i % 3
+            entry = self.create_dual_number_receiver(
+                label_text=stat,
+                current_value=0,
+                max_value=0
+            )
+            self.main_layout.addWidget(entry, row, col)
+        
+        for i, key in enumerate(standard_stats):
+            row = (i // 3) + 1
             col = i % 3
             entry = self.create_value_entry(
                 name=key.lower(),
@@ -292,3 +376,58 @@ class StatsFrame(TFBaseFrame):
                 enable=False
             )
             self.main_layout.addWidget(entry, row, col)
+
+    def create_dual_number_receiver(self, label_text: str, current_value: int, max_value: int) -> None:
+        entry_container = TFBaseFrame(level=1, layout_type=QHBoxLayout, parent=self)
+        entry_container.main_layout.setSpacing(0)
+        entry_container.main_layout.setContentsMargins(0, 0, 0, 0)
+        
+        label = entry_container.create_label(
+            text=label_text,
+            fixed_width=40,
+            alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            height=24
+        )
+        label.setFont(NotoSerifNormal)
+        
+        current_receiver = TFNumberReceiver(
+            text=str(current_value),
+            alignment=Qt.AlignmentFlag.AlignCenter,
+            width=22,
+            height=24,
+            allow_decimal=False,
+            max_digits=2,
+            parent=entry_container
+        )
+        
+        separator = entry_container.create_label(
+            text="/",
+            alignment=Qt.AlignmentFlag.AlignCenter,
+            height=24
+        )
+        
+        max_receiver = TFNumberReceiver(
+            text=str(max_value),
+            alignment=Qt.AlignmentFlag.AlignCenter,
+            width=22,
+            height=24,
+            allow_decimal=False,
+            max_digits=2,
+            parent=entry_container
+        )
+        
+        entry_container.main_layout.addWidget(label)
+        entry_container.main_layout.addWidget(current_receiver)
+        entry_container.main_layout.addSpacing(1)
+        entry_container.main_layout.addWidget(separator)
+        entry_container.main_layout.addSpacing(1)
+        entry_container.main_layout.addWidget(max_receiver)
+        entry_container.main_layout.addStretch()
+
+        entry_container.setEnabled(False)
+
+        stat_lower = label_text.lower()
+        self._register_component(f'{stat_lower}_current', current_receiver)
+        self._register_component(f'{stat_lower}_max', max_receiver)
+
+        return entry_container

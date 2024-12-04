@@ -28,28 +28,49 @@ class TFPcCardV2(TFDraggableWindow):
     def __init__(self, parent=None):
         self.edit_mode = False
         self.p_data = {}
+        self._current_file_path = None
         super().__init__(parent)
         
-        self.shortcut = QShortcut(QKeySequence("Ctrl+O"), self)
-        self.shortcut.activated.connect(self._shortcut_handler)
-        self.shortcut.setEnabled(False)
+        self.open_shortcut = QShortcut(QKeySequence("Ctrl+O"), self)
+        self.open_shortcut.activated.connect(self._open_shortcut_handler)
+        self.open_shortcut.setEnabled(False)
+
+        self.edit_shortcut = QShortcut(QKeySequence("Ctrl+F"), self)
+        self.edit_shortcut.activated.connect(self._edit_shortcut_handler)
+        self.edit_shortcut.setEnabled(False)
+
+        self.save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.save_shortcut.activated.connect(self._save_shortcut_handler)
+        self.save_shortcut.setEnabled(False)
         
         self.parent().set_focused_window(self)
 
-    def _shortcut_handler(self):
+    def _open_shortcut_handler(self):
         if self.focused or len(self.parent().windows) == 1:
             self._load_character()
+
+    def _edit_shortcut_handler(self):
+        if self.focused or len(self.parent().windows) == 1:
+            self._enable_edit()
+
+    def _save_shortcut_handler(self):
+        if self.focused or len(self.parent().windows) == 1 and self.edit_mode:
+            self._enable_edit()
     
     @property
     def focused(self) -> bool:
         focused = super().focused
-        self.shortcut.setEnabled(focused or len(self.parent().windows) == 1)
+        self.open_shortcut.setEnabled(focused or len(self.parent().windows) == 1)
+        self.edit_shortcut.setEnabled(focused or len(self.parent().windows) == 1)
+        self.save_shortcut.setEnabled(focused or len(self.parent().windows) == 1)
         return focused
 
     @focused.setter
     def focused(self, value: bool):
         super(TFPcCardV2, self.__class__).focused.fset(self, value)
-        self.shortcut.setEnabled(value or len(self.parent().windows) == 1)
+        self.open_shortcut.setEnabled(value or len(self.parent().windows) == 1)
+        self.edit_shortcut.setEnabled(value or len(self.parent().windows) == 1)
+        self.save_shortcut.setEnabled(value or len(self.parent().windows) == 1)
 
     def initialize_window(self):
         main_layout = QVBoxLayout(self.content_container)
@@ -79,7 +100,7 @@ class TFPcCardV2(TFDraggableWindow):
     def init_custom_menu_items(self, layout):
         self._load_character_button = TFAnimatedButton(
             icon_name="load",
-            tooltip="加载角色",
+            tooltip="加载角色(Ctrl+O)",
             size=20 ,
             parent=self
         )
@@ -87,7 +108,7 @@ class TFPcCardV2(TFDraggableWindow):
 
         self._enable_edit_button = TFAnimatedButton(
             icon_name="edit",
-            tooltip="编辑角色",
+            tooltip="编辑角色(Ctrl+F)",
             size=20 ,
             parent=self
         )
@@ -133,6 +154,7 @@ class TFPcCardV2(TFDraggableWindow):
             TFApplication.instance().show_message('角色卡加载成功', 5000, 'green')
             
             self.p_data = data
+            self._current_file_path = file_path
             for card in self.cards:
                 card.load_data(self.p_data)
                 
@@ -145,9 +167,14 @@ class TFPcCardV2(TFDraggableWindow):
             return
         if not self.edit_mode:
             self.edit_mode = True
+            TFApplication.instance().show_message("启动编辑模式", 5000, 'green')
             for card in self.cards:
                 card.enable_edit()
         else:
             self.edit_mode = False
             for card in self.cards:
                 card.save_data(self.p_data)
+
+            with open(self._current_file_path, 'w', encoding='utf-8') as file:
+                json.dump(self.p_data, file, ensure_ascii=False, indent=2)
+            TFApplication.instance().show_message('角色卡保存成功', 5000, 'green')

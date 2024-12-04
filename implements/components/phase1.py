@@ -132,6 +132,9 @@ class Phase1(BasePhase):
         for key, entry in self.lower_frame.basic_stats_group.derived_entries.items():
             if entry.get_value() != "N/A":
                 basic_stats[key.lower()] = entry.get_value()
+                if key.lower() in ["hp", "mp", "san"]:
+                    extra_key = "curr_" + key.lower()
+                    basic_stats[extra_key] = entry.get_value()
                 
         self.p_data['basic_stats'].update(basic_stats)
 

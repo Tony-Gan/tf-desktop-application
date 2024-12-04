@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent, QFont
 
-from ui.components.tf_font import LABEL_FONT
+from ui.components.tf_font import NotoSerifNormal
 
 class TFNumberReceiver(QLineEdit):
     """
@@ -32,7 +32,7 @@ class TFNumberReceiver(QLineEdit):
     def __init__(self, 
                  text="0", 
                  alignment: Qt.AlignmentFlag=Qt.AlignmentFlag.AlignLeft, 
-                 font: QFont=LABEL_FONT,
+                 font: QFont=NotoSerifNormal,
                  allow_decimal=True,
                  allow_negative=False,
                  width=50,

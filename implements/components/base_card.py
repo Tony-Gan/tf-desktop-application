@@ -4,6 +4,7 @@ from ui.tf_application import TFApplication
 
 class BaseCard(TFBaseFrame):
     def __init__(self, parent=None):
+        self.parent = parent
         super().__init__(radius=5, parent=parent)
 
     def _setup_content(self):
