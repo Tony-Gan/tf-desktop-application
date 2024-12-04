@@ -509,3 +509,12 @@ class IComponentCreator:
         )
         self._register_component(name, button)
         return button
+    
+    def create_flexible_window(self, name: str, width: int = 400, height: int = 300) -> TFFlexibleWindow:
+        window = TFFlexibleWindow(width=width, height=height, parent=self)
+        self._register_component(name, window)
+        return window
+
+    def create_draggable_label(self, text: str, callback=None) -> TFDraggableLabel:
+        label = TFDraggableLabel(text=text, callback=callback, parent=self)
+        return label
