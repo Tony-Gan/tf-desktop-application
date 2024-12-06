@@ -1,9 +1,11 @@
 import json
+from typing import Any, List, Tuple
 
 from PyQt6.QtWidgets import QHBoxLayout, QGridLayout, QScrollArea, QFrame
 from PyQt6.QtCore import Qt
 
 from implements.components.base_card import BaseCard
+from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame
 from utils.helper import resource_path
 
@@ -242,7 +244,202 @@ class ButtonsFrame(TFBaseFrame):
         self.delete_button.hide()
 
     def _on_add_clicked(self):
-        pass
+        card = self.parent
+        dialog = AddSkillDialog(
+            parent=self,
+            current_skills=card.current_skills,
+            default_skills=card.default_skills
+        )
+        
+        while True:
+            if dialog.exec() == TFBaseDialog.DialogCode.Rejected:
+                break
+                
+            skill_name, base_value = dialog.get_validated_data()
+            
+            card.current_skills[skill_name] = {
+                'occupation_point': 0,
+                'interest_point': 0,
+                'extra_point': 0,
+                'total_point': base_value,
+                'is_occupation': False,
+                'growth_signal': False
+            }
+            
+            if not card.showing_all:
+                card._show_modified_skills()
+            else:
+                card._show_all_skills()
+                
+            break
 
     def _on_delete_clicked(self):
-        pass
+        card = self.parent
+        dialog = DeleteSkillDialog(
+            parent=self,
+            current_skills=card.current_skills
+        )
+        
+        if dialog.exec() == TFBaseDialog.DialogCode.Accepted:
+            skills_to_delete = dialog.get_validated_data()
+            
+            if skills_to_delete:
+                for skill_name in skills_to_delete:
+                    if skill_name in card.current_skills:
+                        del card.current_skills[skill_name]
+                
+                layout = card.skills_frame.content_widget.main_layout
+                while layout.count():
+                    item = layout.takeAt(0)
+                    if item.widget():
+                        item.widget().deleteLater()
+                
+                if card.showing_all:
+                    all_skills = {}
+                    all_skills.update(card.current_skills)
+                    for skill_name, default_value in card.default_skills.items():
+                        if skill_name not in card.current_skills:
+                            all_skills[skill_name] = {
+                                'total_point': default_value,
+                                'is_default': True
+                            }
+                    card._display_skills(all_skills)
+                else:
+                    card._display_skills(card.current_skills)
+
+
+class AddSkillDialog(TFBaseDialog):
+    def __init__(self, parent=None, current_skills=None, default_skills=None):
+        self.current_skills = current_skills or {}
+        self.default_skills = default_skills or {}
+        
+        self.categories = {"独立技能"}
+        for skill in self.default_skills.keys():
+            if ':' in skill:
+                category = skill.split(':')[0]
+                self.categories.add(category)
+        
+        super().__init__(
+            title="新增技能",
+            parent=parent,
+            button_config=[
+                {"text": "确定", "callback": self._on_ok_clicked},
+                {"text": "取消", "callback": self.reject, "role": "reject"}
+            ]
+        )
+
+    def _setup_content(self) -> None:
+        self.resize(350, 200)
+        self.main_layout.setSpacing(15)
+
+        self.category = self.create_option_entry(
+            name="category",
+            label_text="技能类别:",
+            options=sorted(self.categories),
+            current_value="独立技能",
+            label_size=70,
+            value_size=150
+        )
+        
+        self.skill_name = self.create_value_entry(
+            name="skill_name",
+            label_text="技能名称:",
+            label_size=70,
+            value_size=150
+        )
+
+        self.main_layout.addWidget(self.category)
+        self.main_layout.addWidget(self.skill_name)
+        self.main_layout.addStretch()
+
+    def validate(self) -> List[Tuple[Any, str]]:
+        category = self.category.get_value()
+        name = self.skill_name.get_value().strip()
+        
+        if not name:
+            return [(self.skill_name, "技能名称不能为空")]
+        
+        full_skill_name = name if category == "独立技能" else f"{category}:{name}"
+        
+        if full_skill_name in self.current_skills:
+            return [(self.skill_name, "此技能已存在")]
+        
+        return []
+
+    def get_validated_data(self) -> tuple:
+        category = self.category.get_value()
+        name = self.skill_name.get_value().strip()
+        
+        full_skill_name = name if category == "独立技能" else f"{category}:{name}"
+        
+        base_value = self.default_skills.get(full_skill_name, 1)
+        
+        return full_skill_name, base_value
+    
+
+class DeleteSkillDialog(TFBaseDialog):
+    def __init__(self, parent=None, current_skills=None):
+        self.current_skills = current_skills or {}
+        self.skill_checks = {}
+        
+        self.categorized_skills = {}
+        for skill_name in self.current_skills.keys():
+            if ':' in skill_name:
+                category, name = skill_name.split(':', 1)
+            else:
+                category = '独立技能'
+                name = skill_name
+            
+            if category not in self.categorized_skills:
+                self.categorized_skills[category] = []
+            self.categorized_skills[category].append((name, skill_name))
+        
+        super().__init__(
+            title="删除技能",
+            layout_type=QGridLayout,
+            parent=parent,
+            button_config=[
+                {"text": "确定", "callback": self._on_ok_clicked},
+                {"text": "取消", "callback": self.reject, "role": "reject"}
+            ]
+        )
+
+    def _setup_content(self) -> None:
+        self.resize(600, 400)
+        row = 0
+        
+        for category, skills in sorted(self.categorized_skills.items()):
+            category_label = self.create_label(
+                text=f"【{category}】",
+                serif=True,
+                height=30
+            )
+            self.main_layout.addWidget(category_label, row, 0, 1, 4)
+            row += 1
+            
+            col = 0
+            for name, full_name in sorted(skills):
+                check = self.create_check_with_label(
+                    name=full_name,
+                    label_text=name,
+                    checked=False,
+                    height=24
+                )
+                self.skill_checks[full_name] = check
+                self.main_layout.addWidget(check, row, col)
+                
+                col += 1
+                if col >= 4:
+                    col = 0
+                    row += 1
+            
+            if col != 0:
+                row += 1
+
+    def get_validated_data(self) -> List[str]:
+        return [
+            skill_name
+            for skill_name, check in self.skill_checks.items()
+            if check.get_value()
+        ]
+    

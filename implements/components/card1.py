@@ -7,6 +7,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 
 from implements.components.base_card import BaseCard
+from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.components.tf_number_receiver import TFNumberReceiver
 from ui.components.tf_font import NotoSerifNormal
@@ -157,9 +158,6 @@ class Card1(BaseCard):
         for key in ['PL', '姓名', '母语', '护甲']:
             if key in basic_info._components:
                 basic_info._components[key].set_enable(False)
-        
-        basic_info.background_button.setEnabled(False)
-        basic_info.potrait_button.setEnabled(False)
         
         for key in ['hp', 'mp', 'san']:
             stats._components[f'{key}_current'].parent().setEnabled(False)
@@ -314,7 +312,6 @@ class BasicInfoFrame(TFBaseFrame):
             text='背景故事',
             height=24,
             width=90,
-            enabled=False,
             on_clicked=self._on_background_clicked
         )
         self.main_layout.addSpacing(15)
@@ -325,17 +322,40 @@ class BasicInfoFrame(TFBaseFrame):
             text='人物特质',
             height=24,
             width=90,
-            enabled=False,
             on_clicked=self._on_potrait_clicked
         )
         self.main_layout.addSpacing(3)
         self.main_layout.addWidget(self.potrait_button)
 
     def _on_background_clicked(self):
-        pass
+        pc_card = self.parent.parent.parent
+        if pc_card.p_data == {}:
+            TFApplication.instance().show_message('请先加载人物卡', 5000, 'yellow')
+            return
+
+        dialog = BackgroundDialog(
+            parent=self,
+            p_data=pc_card.p_data,
+            edit_mode=pc_card.edit_mode
+        )
+        
+        if dialog.exec() == TFBaseDialog.DialogCode.Accepted and pc_card.edit_mode:
+            TFApplication.instance().show_message('角色背景故事已保存', 5000, 'green')
 
     def _on_potrait_clicked(self):
-        pass
+        pc_card = self.parent.parent.parent
+        if pc_card.p_data == {}:
+            TFApplication.instance().show_message('请先加载人物卡', 5000, 'yellow')
+            return
+
+        dialog = PortraitDialog(
+            parent=self,
+            p_data=pc_card.p_data,
+            edit_mode=pc_card.edit_mode
+        )
+        
+        if dialog.exec() == TFBaseDialog.DialogCode.Accepted and pc_card.edit_mode:
+            TFApplication.instance().show_message('角色特质已保存', 5000, 'green')
 
 
 class StatsFrame(TFBaseFrame):
@@ -431,3 +451,115 @@ class StatsFrame(TFBaseFrame):
         self._register_component(f'{stat_lower}_max', max_receiver)
 
         return entry_container
+
+
+class BackgroundDialog(TFBaseDialog):
+    def __init__(self, parent=None, p_data=None, edit_mode=False):
+        self.p_data = p_data
+        self.edit_mode = edit_mode
+        self.original_text = p_data.get('background', {}).get('background', '')
+        super().__init__(
+            title="背景故事",
+            parent=parent,
+            button_config=[
+                {"text": "确定", "callback": self._on_ok_clicked},
+                {"text": "取消", "callback": self.reject, "role": "reject"}
+            ]
+        )
+        self.resize(600, 400)
+
+    def _setup_content(self) -> None:
+        self.text_edit = self.create_text_edit(
+            name="background_text",
+            text=self.original_text,
+            width=580,
+            height=360,
+            read_only=not self.edit_mode,
+            word_wrap=True
+        )
+        
+        self.main_layout.addWidget(self.text_edit)
+
+    def get_validated_data(self) -> str:
+        return self.text_edit.toPlainText()
+
+    def _on_ok_clicked(self) -> None:
+        if self.edit_mode:
+            self._result = self.get_validated_data()
+            if self.p_data and 'background' in self.p_data:
+                self.p_data['background']['background'] = self._result
+        self.accept()
+
+
+class PortraitEntryFrame(TFBaseFrame):
+    def __init__(self, title: str, content: str, edit_mode: bool = False, parent=None):
+        self.title = title
+        self.content = content
+        self.edit_mode = edit_mode
+        super().__init__(parent=parent)
+
+    def _setup_content(self) -> None:
+        self.title_label = self.create_label(
+            text=self.title,
+            height=24,
+            serif=True
+        )
+        
+        self.text_edit = self.create_text_edit(
+            name=f"portrait_{self.title}",
+            text=self.content,
+            width=580,
+            height=60,
+            read_only=not self.edit_mode,
+            word_wrap=True
+        )
+        
+        self.main_layout.addWidget(self.title_label)
+        self.main_layout.addWidget(self.text_edit)
+
+    def get_content(self) -> str:
+        return self.text_edit.toPlainText()
+    
+
+class PortraitDialog(TFBaseDialog):
+    def __init__(self, parent=None, p_data=None, edit_mode=False):
+        self.p_data = p_data
+        self.edit_mode = edit_mode
+        self.portrait_frames = {}
+        self.original_data = p_data.get('background', {}).get('portraits', {}).copy()
+        
+        super().__init__(
+            title="人物特质",
+            parent=parent,
+            button_config=[
+                {"text": "确定", "callback": self._on_ok_clicked},
+                {"text": "取消", "callback": self.reject, "role": "reject"}
+            ]
+        )
+        self.resize(600, 600)
+
+    def _setup_content(self) -> None:
+        portraits_data = self.p_data.get('background', {}).get('portraits', {})
+        
+        for title, content in portraits_data.items():
+            entry_frame = PortraitEntryFrame(
+                title=title,
+                content=content,
+                edit_mode=self.edit_mode,
+                parent=self
+            )
+            self.portrait_frames[title] = entry_frame
+            self.main_layout.addWidget(entry_frame)
+
+    def get_validated_data(self) -> dict:
+        return {
+            title: frame.get_content()
+            for title, frame in self.portrait_frames.items()
+        }
+
+    def _on_ok_clicked(self) -> None:
+        if self.edit_mode:
+            self._result = self.get_validated_data()
+            if self.p_data and 'background' in self.p_data:
+                self.p_data['background']['portraits'] = self._result
+        self.accept()

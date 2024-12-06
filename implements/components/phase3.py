@@ -404,17 +404,15 @@ class WeaponEntry(TFBaseFrame):
         )
 
         skill_name = self.weapon_data["weapon_type"].skill.standard_text
-        print(skill_name)
-        print(self.parent.parent.parent.p_data.get("skills", {}))
         default_value = 0
         for s in self.parent.parent.parent.skills:
             if s.name == skill_name:
                 default_value = s.default_point
                 break
         level = -1
-        for k, v in self.parent.parent.parent.p_data.get("skills", {}):
+        for k, v in self.parent.parent.parent.p_data.get("skills", {}).items():
             if skill_name in k:
-                level = v
+                level = v['total_point']
                 break
         skill_value = default_value if level == -1 else level
         display_skill_name = skill_name
@@ -935,7 +933,7 @@ class CharacterPreviewDialog(TFBaseDialog):
             stats_frame = TFBaseFrame(QGridLayout, parent=content_widget)
             
             stats = self.p_data['basic_stats']
-            non_empty_stats = [(k, v) for k, v in stats.items() if v]
+            non_empty_stats = [(k, v) for k, v in stats.items() if v and k.lower()[:4] != 'curr']
             
             for i, (key, value) in enumerate(non_empty_stats):
                 entry = stats_frame.create_value_entry(

@@ -1,9 +1,12 @@
 import json
+from typing import Any, Dict, List, Tuple
 from PyQt6.QtWidgets import QHBoxLayout, QScrollArea, QFrame, QSizePolicy
 from PyQt6.QtCore import Qt, QSize
 
 from implements.components.base_card import BaseCard
+from implements.components.data_reader import load_weapon_types_from_json
 from ui.components.tf_base_button import TFBaseButton
+from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.components.tf_flow_layout import TFFlowLayout
 from ui.tf_application import TFApplication
@@ -26,6 +29,8 @@ class Card3(BaseCard):
         skills = p_data.get('skills', {})
         self.weapons_frame.load_weapons(weapons, skills)
         self.weapons_frame.show_armors_button.show()
+
+        self.weapon_types = load_weapon_types_from_json()
 
         items = p_data.get('loadout', {}).get('items', {})
         self.items_frame.carried_item_frame.load_items(items.get('carried', []))
@@ -174,10 +179,35 @@ class WeaponsFrame(TFBaseFrame):
         print("Yo!")
 
     def _on_add_clicked(self):
-        print("Yo!")
+        card = self.parent
+        dialog = WeaponAddDialog(
+            parent=self,
+            weapon_types=card.weapon_types
+        )
+        
+        if dialog.exec() == TFBaseDialog.DialogCode.Accepted:
+            weapon_data = dialog.get_validated_data()
+            
+            entry = WeaponEntry(parent=card.weapons_frame.content_widget)
+            entry.load_data(weapon_data, card.parent.p_data.get('skills', {}))
+            
+            card.weapons_frame.content_widget.main_layout.addWidget(entry)
+            
+            entry.name_entry.set_enable(True)
+            entry.skill_entry.set_enable(True)
+            entry.damage_entry.set_enable(True)
 
     def _on_delete_clicked(self):
-        print("Yo!")
+        dialog = WeaponDeleteDialog(parent=self)
+        
+        if dialog.exec() == TFBaseDialog.DialogCode.Accepted:
+            indices_to_delete = dialog.get_validated_data()
+            
+            if indices_to_delete:
+                for index in sorted(indices_to_delete, reverse=True):
+                    item = self.content_widget.main_layout.takeAt(index)
+                    if item.widget():
+                        item.widget().deleteLater()
 
     def load_weapons(self, weapons, skills):
         for i in reversed(range(self.content_widget.main_layout.count())):
@@ -272,8 +302,8 @@ class ItemButton(TFBaseButton):
         super().__init__(
             text=text,
             parent=parent,
-            border_radius=10,
-            font_size=10,
+            border_radius=3,
+            font_size=9,
             height=24,
             enabled=False
         )
@@ -336,3 +366,233 @@ class CarriedItemFrame(ItemContainer):
 class BackpackItemFrame(ItemContainer):
     def __init__(self, parent=None):
         super().__init__(title="背包物品", parent=parent)
+
+
+class WeaponAddDialog(TFBaseDialog):
+    def __init__(self, parent=None, weapon_types=None):
+        self.weapon_types = weapon_types or []
+        
+        self.categories = set()
+        for weapon in self.weapon_types:
+            self.categories.add(weapon.category.value)
+        
+        super().__init__(
+            title="添加武器",
+            parent=parent,
+            button_config=[
+                {"text": "确定", "callback": self._on_ok_clicked},
+                {"text": "取消", "callback": self.reject, "role": "reject"}
+            ]
+        )
+
+    def _setup_content(self) -> None:
+        self.resize(350, 500) 
+        self.main_layout.setSpacing(15)
+
+        self.category = self.create_option_entry(
+            name="category",
+            label_text="武器类别:",
+            options=["选择类型"] + sorted(self.categories),
+            current_value="选择类型",
+            label_size=70,
+            value_size=150
+        )
+        
+        self.weapon = self.create_option_entry(
+            name="weapon",
+            label_text="具体武器:",
+            options=["请先选择类型"],
+            current_value="请先选择类型",
+            label_size=70,
+            value_size=150,
+            enable=False
+        )
+        
+        self.name = self.create_value_entry(
+            name="custom_name",
+            label_text="武器名称:",
+            label_size=70,
+            value_size=150
+        )
+
+        self.skill = self.create_value_entry(
+            name="skill",
+            label_text="技能:",
+            value_text="N/A",
+            label_size=70,
+            value_size=150,
+            enable=False
+        )
+
+        self.damage = self.create_value_entry(
+            name="damage",
+            label_text="伤害:",
+            value_text="N/A",
+            label_size=70,
+            value_size=150,
+            enable=False
+        )
+
+        self.weapon_range = self.create_value_entry(
+            name="range",
+            label_text="射程:",
+            value_text="N/A",
+            label_size=70,
+            value_size=150,
+            enable=False
+        )
+
+        self.penetration = self.create_value_entry(
+            name="penetration",
+            label_text="穿透:",
+            value_text="N/A",
+            label_size=70,
+            value_size=150,
+            enable=False
+        )
+
+        self.rof = self.create_value_entry(
+            name="rof",
+            label_text="射速:",
+            value_text="N/A",
+            label_size=70,
+            value_size=150,
+            enable=False
+        )
+
+        self.ammo = self.create_value_entry(
+            name="ammo",
+            label_text="弹药:",
+            value_text="N/A",
+            label_size=70,
+            value_size=150,
+            enable=False
+        )
+
+        self.malfunction = self.create_value_entry(
+            name="malfunction",
+            label_text="故障值:",
+            value_text="N/A",
+            label_size=70,
+            value_size=150,
+            enable=False
+        )
+
+        for widget in [self.category, self.weapon, self.name, self.skill,
+                    self.damage, self.weapon_range, self.penetration,
+                    self.rof, self.ammo, self.malfunction]:
+            self.main_layout.addWidget(widget)
+
+        self.main_layout.addStretch()
+
+        self.category.value_changed.connect(self._on_category_changed)
+        self.weapon.value_changed.connect(self._on_weapon_changed)
+
+    def _on_category_changed(self, category: str) -> None:
+        if category == "选择类型":
+            self.weapon.combo_box.setEnabled(False)
+            self.weapon.set_value("请先选择类型")
+            return
+
+        weapons = [w for w in self.weapon_types if w.category.value == category]
+        weapon_names = [w.name for w in weapons]
+        
+        self.weapon.combo_box.setEnabled(True)
+        self.weapon.update_options(["选择武器"] + weapon_names)
+        self.weapon.set_value("选择武器")
+
+    def validate(self) -> List[Tuple[Any, str]]:
+        category = self.category.get_value()
+        weapon = self.weapon.get_value()
+        
+        if category == "选择类型":
+            return [(self.category, "请选择武器类别")]
+        if weapon == "选择武器" or weapon == "请先选择类型":
+            return [(self.weapon, "请选择具体武器")]
+        
+        return []
+
+    def get_validated_data(self) -> Dict[str, str]:
+        weapon_name = self.weapon.get_value()
+        custom_name = self.name.get_value().strip()
+        
+        weapon_type = next(w for w in self.weapon_types if w.name == weapon_name)
+        
+        return {
+            'name': custom_name if custom_name else weapon_name,
+            'type': weapon_type.name,
+            'category': weapon_type.category.value,
+            'skill': weapon_type.skill.standard_text,
+            'damage': weapon_type.damage.standard_text,
+            'range': weapon_type.range.standard_text,
+            'penetration': weapon_type.penetration.value,
+            'rof': weapon_type.rate_of_fire,
+            'ammo': weapon_type.ammo if weapon_type.ammo else 'N/A',
+            'malfunction': weapon_type.malfunction if weapon_type.malfunction else 'N/A',
+            'notes': 'N/A'
+        }
+
+
+    def _on_weapon_changed(self, weapon_name: str) -> None:
+        if weapon_name in ["选择武器", "请先选择类型"]:
+            for field in [self.skill, self.damage, self.weapon_range, 
+                        self.penetration, self.rof, self.ammo, self.malfunction]:
+                field.set_value("N/A")
+            return
+
+        for weapon in self.weapon_types:
+            if weapon.name == weapon_name:
+                self.skill.set_value(weapon.skill.standard_text)
+                self.damage.set_value(weapon.damage.standard_text)
+                self.weapon_range.set_value(weapon.range.standard_text)
+                self.penetration.set_value(weapon.penetration.value)
+                self.rof.set_value(str(weapon.rate_of_fire))  # 转换为字符串
+                self.ammo.set_value(str(weapon.ammo) if weapon.ammo else "N/A")
+                self.malfunction.set_value(str(weapon.malfunction) if weapon.malfunction else "N/A")
+                break
+
+
+class WeaponDeleteDialog(TFBaseDialog):
+    def __init__(self, parent=None):
+        self.weapon_entries = []
+        for i in range(parent.content_widget.main_layout.count()):
+            weapon_entry = parent.content_widget.main_layout.itemAt(i).widget()
+            self.weapon_entries.append(weapon_entry)
+
+        super().__init__(
+            title="删除武器",
+            parent=parent,
+            button_config=[
+                {"text": "确定", "callback": self._on_ok_clicked},
+                {"text": "取消", "callback": self.reject, "role": "reject"}
+            ]
+        )
+
+    def _setup_content(self) -> None:
+        self.resize(400, 300)
+        self.main_layout.setSpacing(10)
+
+        self.weapon_checks = {}
+        for weapon_entry in self.weapon_entries:
+            name = weapon_entry.name_entry.get_value()
+            damage = weapon_entry.damage_entry.get_value()
+
+            check = self.create_check_with_label(
+                name=name,
+                label_text=f"{name} - {damage}",
+                checked=False,
+                height=24
+            )
+            self.weapon_checks[name] = check
+            self.main_layout.addWidget(check)
+            
+        self.main_layout.addStretch()
+
+    def get_validated_data(self) -> List[int]:
+        indices_to_delete = []
+        for i, weapon_entry in enumerate(self.weapon_entries):
+            name = weapon_entry.name_entry.get_value()
+            if self.weapon_checks[name].get_value():
+                indices_to_delete.append(i)
+        return indices_to_delete
+    
