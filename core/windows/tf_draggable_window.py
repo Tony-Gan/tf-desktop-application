@@ -46,14 +46,14 @@ class TFDraggableWindow(QFrame):
 
         self._create_title_bar(main_layout)
 
-        self._content_container = QWidget(self)
+        self._content_container = QFrame(self)
         self._content_container.setObjectName("contentContainer")
         main_layout.addWidget(self._content_container)
 
         self.initialize_window()
 
     def _create_title_bar(self, main_layout):
-        title_bar = QWidget(self)
+        title_bar = QFrame(self)
         title_bar.setFixedHeight(40)
         title_bar.setObjectName("titleBar")
 
