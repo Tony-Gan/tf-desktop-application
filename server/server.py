@@ -1,95 +1,161 @@
-import logging
-from dataclasses import dataclass
-from typing import Dict, Set
-import uuid
+import asyncio
+import json
+import websockets
+from websockets.exceptions import ConnectionClosed
 
-from flask import Flask, request
-from flask_socketio import SocketIO, emit, join_room, leave_room
+rooms = {}
+#  rooms[token] = {
+#     "admin": websocket or None,
+#     "admin_sid": str,
+#     "clients": { "sid": websocket },
+#     "typing_timer": asyncio.Task or None,
+#     "last_content": str
+# }
 
-app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins='*')
+# 全局SID计数器
+global_sid_counter = 0
 
-@dataclass
-class TokenRoom:
-    admin_sid: str
-    connected_users: Set[str]
+def get_new_sid():
+    global global_sid_counter
+    global_sid_counter += 1
+    return str(global_sid_counter)
 
-token_rooms: Dict[str, TokenRoom] = {}
-sid_to_token: Dict[str, str] = {}
+async def broadcast_to_clients(token, message):
+    """向房间内所有clients广播消息"""
+    room = rooms.get(token)
+    if room and room["clients"]:
+        msg = json.dumps(message)
+        await asyncio.wait([ws.send(msg) for ws in room["clients"].values()])
 
-@socketio.on('connect')
-def handle_connect():
-    logging.info(f"Client connected: {request.sid}")
+async def send_to_admin(token, message):
+    """向房间的admin发送消息"""
+    room = rooms.get(token)
+    if room and room["admin"]:
+        await room["admin"].send(json.dumps(message))
 
-@socketio.on('disconnect')
-def handle_disconnect():
-    sid = request.sid
-    if sid in sid_to_token:
-        token = sid_to_token[sid]
-        if token in token_rooms:
-            room = token_rooms[token]
-            if sid == room.admin_sid:
-                # Admin disconnected, notify all users and clean up
-                emit('admin_disconnected', room=token)
-                for user_sid in room.connected_users:
-                    if user_sid in sid_to_token:
-                        leave_room(token, user_sid)
-                        del sid_to_token[user_sid]
-                del token_rooms[token]
-            elif sid in room.connected_users:
-                # User disconnected
-                room.connected_users.remove(sid)
-                leave_room(token, sid)
-                emit('user_disconnected', {'sid': sid}, room=token)
-        del sid_to_token[sid]
+async def handle_typing_timeout(token):
+    # 在2秒防抖后执行的函数：向B广播最终内容
+    room = rooms.get(token)
+    if room and room["admin"] and room["last_content"] is not None:
+        # 广播给B
+        update_msg = {
+            "type": "update",
+            "content": room["last_content"]
+        }
+        await broadcast_to_clients(token, update_msg)
 
-@socketio.on('register_admin')
-def handle_admin_register(data):
-    sid = request.sid
-    token = str(uuid.uuid4())[:6]  # 生成唯一的6位token
+async def handle_message(ws, msg):
+    # msg是JSON格式的字符串
+    data = json.loads(msg)
+    msg_type = data.get("type")
 
-    token_rooms[token] = TokenRoom(admin_sid=sid, connected_users=set())
-    sid_to_token[sid] = token
+    if msg_type == "join":
+        role = data.get("role")
+        token = data.get("token")
+        if not token:
+            await ws.send(json.dumps({"type":"error","message":"no token provided"}))
+            return
 
-    join_room(token)
-    return {'token': token}
+        # 检查房间
+        if token not in rooms:
+            # 若admin加入，创建新房间
+            if role == "admin":
+                sid = get_new_sid()
+                rooms[token] = {
+                    "admin": ws,
+                    "admin_sid": sid,
+                    "clients": {},
+                    "typing_timer": None,
+                    "last_content": ""
+                }
+                await ws.send(json.dumps({"type":"joined","sid":sid}))
+            else:
+                # 客户端试图加入一个不存在的房间
+                await ws.send(json.dumps({"type":"error","message":"no such room"}))
+        else:
+            # 房间存在
+            room = rooms[token]
+            if role == "admin":
+                # 已经有admin了？
+                if room["admin"] is not None and room["admin"] != ws:
+                    await ws.send(json.dumps({"type":"error","message":"admin already exists"}))
+                else:
+                    # 重复admin加入暂不处理，可扩展
+                    await ws.send(json.dumps({"type":"error","message":"admin already set"}))
+            else:
+                # role = client
+                if room["admin"] is None:
+                    # 无admin
+                    await ws.send(json.dumps({"type":"error","message":"no admin in this room"}))
+                else:
+                    sid = get_new_sid()
+                    room["clients"][sid] = ws
+                    # 通知client加入成功
+                    await ws.send(json.dumps({"type":"joined","sid":sid}))
+                    # 通知admin有新用户加入
+                    await send_to_admin(token, {"type":"user_joined","sid":sid})
 
-@socketio.on('join_room')
-def handle_join_room(data):
-    token = data.get('token')
-    sid = request.sid
+    elif msg_type == "typing":
+        # 收到admin的typing消息
+        token = data.get("token")
+        content = data.get("content","")
+        if token in rooms:
+            room = rooms[token]
+            if room["admin"] == ws:
+                # 是admin发送的typing
+                room["last_content"] = content
+                # 重置定时器
+                if room["typing_timer"] and not room["typing_timer"].done():
+                    room["typing_timer"].cancel()
+                # 设置2秒后触发广播
+                room["typing_timer"] = asyncio.create_task(
+                    asyncio.sleep(2)
+                )
+                # 在2秒后调用 handle_typing_timeout
+                def done_callback(task):
+                    # 任务完成后执行广播
+                    asyncio.create_task(handle_typing_timeout(token))
+                room["typing_timer"].add_done_callback(done_callback)
 
-    if token not in token_rooms:
-        return {'status': 'error', 'message': 'Invalid Token'}
+    # 可以扩展更多类型的消息，如 A 请求用户列表等
+    # 当实现用户列表时，我们可以遍历 room["clients"].keys()
 
-    # 如果用户已经在其他房间，先离开那个房间
-    if sid in sid_to_token:
-        old_token = sid_to_token[sid]
-        if old_token in token_rooms:
-            leave_room(old_token)
-            if sid in token_rooms[old_token].connected_users:
-                token_rooms[old_token].connected_users.remove(sid)
 
-    room = token_rooms[token]
-    room.connected_users.add(sid)
-    sid_to_token[sid] = token
+async def remove_connection(ws):
+    # 查找ws属于哪个房间，并处理离线逻辑
+    for token, room in list(rooms.items()):
+        # 检查admin
+        if room["admin"] == ws:
+            # admin断开
+            # 通知所有客户端admin离线
+            await broadcast_to_clients(token, {"type":"disconnect","reason":"admin closed"})
+            # 关闭房间
+            del rooms[token]
+            break
+        else:
+            # 检查clients
+            for sid, cws in list(room["clients"].items()):
+                if cws == ws:
+                    # 这个client断开
+                    del room["clients"][sid]
+                    # 通知admin有用户离开
+                    if room["admin"]:
+                        await send_to_admin(token, {"type":"user_left","sid":sid})
+                    break
 
-    join_room(token)
-    emit('user_joined', {'sid': sid}, room=token)
-    return {'status': 'success'}
+async def handler(ws, path):
+    try:
+        async for message in ws:
+            await handle_message(ws, message)
+    except ConnectionClosed:
+        pass
+    finally:
+        await remove_connection(ws)
 
-@socketio.on('admin_message')
-def handle_admin_message(data):
-    sid = request.sid
-    if sid not in sid_to_token:
-        return
+async def main():
+    async with websockets.serve(handler, "0.0.0.0", 8765):
+        print("Server started on ws://0.0.0.0:8765")
+        await asyncio.Future()  # run forever
 
-    token = sid_to_token[sid]
-    if token not in token_rooms or token_rooms[token].admin_sid != sid:
-        return
-
-    message = data.get('message', '')
-    emit('message', {'message': message}, room=token)
-
-if __name__ == '__main__':
-    socketio.run(app, debug=True, port=5000, allow_unsafe_werkzeug=True)
+if __name__ == "__main__":
+    asyncio.run(main())
