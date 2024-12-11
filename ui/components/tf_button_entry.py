@@ -6,7 +6,7 @@ from PyQt6.QtGui import QFont
 
 from ui.components.if_state_controll import IStateController
 from ui.components.tf_base_button import TFBaseButton
-from ui.components.tf_font import Merriweather
+from ui.components.tf_font import NotoSerifLight
 from ui.components.tf_tooltip import TFTooltip
 
 class TFButtonEntry(QFrame, IStateController):
@@ -16,14 +16,14 @@ class TFButtonEntry(QFrame, IStateController):
     def __init__(
         self,
         label_text: str = "",
-        label_font: QFont = Merriweather,
+        label_font: QFont = NotoSerifLight,
         label_size: int = 100,
         label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
         button_text: str = "Confirm",
         entry_text: str = "",
         entry_size: int = 100,
         button_size: int = 100,
-        entry_font: QFont = Merriweather,
+        entry_font: QFont = NotoSerifLight,
         height: int = 24,
         placeholder_text: str = "",
         alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
@@ -100,7 +100,6 @@ class TFButtonEntry(QFrame, IStateController):
             width=button_size,
             height=height,
             font_size=10,
-            font_family="Merriweather",
             enabled=button_enabled,
             tooltip=button_tooltip,
             border_radius=border_radius,

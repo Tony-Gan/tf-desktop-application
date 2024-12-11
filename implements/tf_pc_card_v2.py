@@ -101,7 +101,7 @@ class TFPcCardV2(TFDraggableWindow):
         self._load_character_button = TFAnimatedButton(
             icon_name="load",
             tooltip="加载角色(Ctrl+O)",
-            size=20 ,
+            size=20,
             parent=self
         )
         self._load_character_button.clicked_signal.connect(self._load_character)
@@ -109,7 +109,7 @@ class TFPcCardV2(TFDraggableWindow):
         self._enable_edit_button = TFAnimatedButton(
             icon_name="edit",
             tooltip="编辑角色(Ctrl+F)",
-            size=20 ,
+            size=20,
             parent=self
         )
         self._enable_edit_button.clicked_signal.connect(self._enable_edit)

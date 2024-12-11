@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from PyQt6.QtWidgets import QFrame, QVBoxLayout, QScrollArea, QHBoxLayout, QDialog, QFileDialog, QGridLayout
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QResizeEvent
+from PyQt6.QtGui import QFont
 
 from implements.components.base_phase import BasePhase
 from implements.components.data_enum import Category

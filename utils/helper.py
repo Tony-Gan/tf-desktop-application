@@ -36,3 +36,23 @@ def format_datetime(datetime_str,
     except (ValueError, TypeError):
         return default_value
     
+def get_current_datetime(show_time=False,
+                        show_timezone=False, 
+                        show_seconds=False):
+    current_dt = datetime.now()
+    
+    output_format = "%Y-%m-%d"
+    
+    if show_time:
+        if show_seconds:
+            output_format += " %H:%M:%S"
+        else:
+            output_format += " %H:%M"
+            
+    formatted_dt = current_dt.strftime(output_format)
+    
+    if show_timezone:
+        formatted_dt += f" {datetime.now().astimezone().strftime('%Z')}"
+        
+    return formatted_dt
+    

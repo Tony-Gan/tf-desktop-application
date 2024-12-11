@@ -75,23 +75,11 @@ class UpperFrame(TFBaseFrame):
         super().__init__(QHBoxLayout, level=1, radius=10, parent=parent)
 
     def _setup_content(self) -> None:
-        self.upper_left_frame = UpperLeftFrame(self)
-        self.experience_packages_frame = ExperiencePackageFrame(self)
-
-        self.add_child('upper_left_frame', self.upper_left_frame)
-        self.add_child('experience_packages_frame', self.experience_packages_frame)
-
-
-class UpperLeftFrame(TFBaseFrame):
-    def __init__(self,  parent=None):
-        super().__init__(QVBoxLayout, level=1, radius=10, parent=parent)
-
-    def _setup_content(self) -> None:
         self.spells_frame = SpellsFrame(self)
-        self.combat_skills_frame = CombatSkillsFrame(self)
+        self.upper_right_frame = UpperRightFrame(self)
 
         self.add_child('spells_frame', self.spells_frame)
-        self.add_child('combat_skills_frame', self.combat_skills_frame)
+        self.add_child('upper_right_frame', self.upper_right_frame)
 
 
 class SpellsFrame(TFBaseFrame):
@@ -100,6 +88,18 @@ class SpellsFrame(TFBaseFrame):
 
     def _setup_content(self) -> None:
         pass
+
+
+class UpperRightFrame(TFBaseFrame):
+    def __init__(self,  parent=None):
+        super().__init__(QVBoxLayout, level=1, radius=10, parent=parent)
+
+    def _setup_content(self) -> None:
+        self.combat_skills_frame = CombatSkillsFrame(self)
+        self.experience_package_frame = ExperiencePackageFrame(self)
+
+        self.add_child('combat_skills_frame', self.combat_skills_frame)
+        self.add_child('experience_package_frame', self.experience_package_frame)
 
 
 class CombatSkillsFrame(TFBaseFrame):
