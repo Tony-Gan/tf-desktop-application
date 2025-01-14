@@ -1,7 +1,9 @@
 from time import time
-from PyQt6.QtWidgets import QFrame, QLabel, QWidget, QVBoxLayout, QHBoxLayout
+
+from PyQt6.QtWidgets import QFrame, QLabel, QWidget, QVBoxLayout, QHBoxLayout, QGraphicsOpacityEffect
 from PyQt6.QtGui import QMouseEvent
-from PyQt6.QtCore import Qt, QPoint, pyqtSignal
+from PyQt6.QtCore import Qt, QPoint, pyqtSignal, QPropertyAnimation 
+
 from core.windows.tf_mini_window import TFMiniWindow
 from ui.components.tf_animated_button import TFAnimatedButton
 from utils.registry.tf_tool_matadata import TFToolMetadata
@@ -38,6 +40,22 @@ class TFDraggableWindow(QFrame):
 
         self.setObjectName("TFDraggableWindow")
         self.setFixedSize(*self.metadata.window_size)
+
+        self._opacity_effect = QGraphicsOpacityEffect(self)
+        self._opacity_effect.setOpacity(0.0)
+        self.setGraphicsEffect(self._opacity_effect)
+
+        self._fade_in_animation = QPropertyAnimation(self._opacity_effect, b"opacity", self)
+        self._fade_in_animation.setDuration(150)
+        self._fade_in_animation.setStartValue(0.0)
+        self._fade_in_animation.setEndValue(1.0)
+
+        self._fade_out_animation = QPropertyAnimation(self._opacity_effect, b"opacity", self)
+        self._fade_out_animation.setDuration(150)
+        self._fade_out_animation.setStartValue(1.0)
+        self._fade_out_animation.setEndValue(0.0)
+
+        self._fade_out_animation.finished.connect(self._on_fade_out_finished)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -325,5 +343,17 @@ class TFDraggableWindow(QFrame):
             self.move(sender.pos())
         self.show()
 
+    def showEvent(self, event):
+        self._fade_out_animation.stop()
+        self._opacity_effect.setOpacity(0.0)
+
+        super().showEvent(event)
+        self._fade_in_animation.start()
+
     def close_window(self):
+        self._fade_in_animation.stop()
+        self._fade_out_animation.start()
+
+    def _on_fade_out_finished(self):
         self.closed.emit(self)
+        super().close()
