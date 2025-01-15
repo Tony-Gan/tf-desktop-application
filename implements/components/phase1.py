@@ -824,7 +824,7 @@ class StatsInformationGroup(TFBaseFrame):
                 enable=False
             )
 
-            custom_luck = "Yes" if points_config.get("custom_luck", False) else "No"
+            custom_luck = "是" if points_config.get("custom_luck", False) else "否"
             self.entries['allow_custom_luck'] = self.create_value_entry(
                 name="allow_custom_luck",
                 label_text="自定义LUK:",
