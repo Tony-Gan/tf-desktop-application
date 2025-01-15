@@ -114,3 +114,26 @@ class TFDiceRoller(TFDraggableWindow):
         self.current_mode = 'PL'
         self.stack.setCurrentIndex(2)
         self.current_mode = 2
+
+    def closeEvent(self, event):
+        """
+        Properly handle cleanup of WebSocket clients before closing the window
+        """
+        # Close KPFrame's WebSocket if it exists
+        if self.page1 and hasattr(self.page1, 'ws_client') and self.page1.ws_client:
+            if self.page1.ws_client.isRunning():
+                self.page1.ws_client.stop()
+                self.page1.ws_client.quit()
+                self.page1.ws_client.wait()
+                self.page1.ws_client = None
+
+        # Close PLFrame's WebSocket if it exists
+        if self.page2 and hasattr(self.page2, 'ws_client') and self.page2.ws_client:
+            if self.page2.ws_client.isRunning():
+                self.page2.ws_client.stop()
+                self.page2.ws_client.quit()
+                self.page2.ws_client.wait()
+                self.page2.ws_client = None
+
+        # Call parent's closeEvent after cleanup
+        super().closeEvent(event)

@@ -18,6 +18,8 @@ WIDTH = 100
 class TFMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setMouseTracking(True)
+
         self.app = TFApplication.instance()
         self.setWindowTitle('摸会儿鱼')
         self.setWindowIcon(QIcon(resource_path("resources/images/icons/app.png")))
@@ -32,7 +34,7 @@ class TFMainWindow(QMainWindow):
             }
             QWidget#centralWidget {
                 background-color: #181C26;
-                border-radius: 20px;
+                border-radius: 12px;
             }
         """)
 
@@ -45,6 +47,10 @@ class TFMainWindow(QMainWindow):
         self.resize_border = 5
 
         self._setup_ui()
+
+        self.central_widget.setMouseTracking(True)
+        for child in self.central_widget.findChildren(QWidget):
+            child.setMouseTracking(True)
         
     def _setup_ui(self):
         self.central_widget = QFrame(self)
@@ -541,6 +547,16 @@ class AboutDialog(TFBaseDialog):
 
         label = content_widget.create_label(
             '角色构筑器V2完成 - 2024/12/03', 
+            alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter,
+            height=24
+        )
+        label.setFont(label_font)
+        content_widget.main_layout.addWidget(label)
+
+        content_widget.main_layout.addSpacing(50)
+
+        label = content_widget.create_label(
+            'UI整体优化完成（放假回来了） - 2025/01/15', 
             alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter,
             height=24
         )
