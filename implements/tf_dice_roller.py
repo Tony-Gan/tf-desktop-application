@@ -14,7 +14,7 @@ class TFDiceRoller(TFDraggableWindow):
     metadata = TFToolMetadata(
         name="摸鱼骰子",
         window_title="骰子",
-        window_size=(800, 480),
+        window_size=(800, 600),
         description="Dice Roller Tool",
         max_instances=1
     )

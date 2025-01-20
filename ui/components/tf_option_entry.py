@@ -103,6 +103,7 @@ class TFOptionEntry(QFrame, IStateController):
         self.value_changed.emit(value)
 
     def _setup_filter(self) -> None:
+        self.combo_box.setEditable(True)
         completer = QCompleter(self.options, self.combo_box)
         completer.setCompletionRole(Qt.ItemDataRole.DisplayRole)
         completer.setFilterMode(Qt.MatchFlag.MatchContains)
