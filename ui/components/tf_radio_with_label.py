@@ -27,6 +27,20 @@ class TFRadioWithLabel(QFrame, IStateController):
         QFrame.__init__(self, parent)
         IStateController.__init__(self)
 
+        self.setObjectName("tfRadioWithLabel")
+
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+
+        self.setStyleSheet("""
+            #tfRadioWithLabel {
+                border-radius: 4px; 
+                background-color: transparent;
+            }
+            #tfRadioWithLabel:hover {
+                background-color: rgba(200, 200, 200, 0.2);
+            }
+        """)
+
         self.show_tooltip = show_tooltip
 
         self._setup_ui(
@@ -55,17 +69,17 @@ class TFRadioWithLabel(QFrame, IStateController):
         self.setFrameShape(QFrame.Shape.NoFrame)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(2, 0, 2, 0)
+        layout.setContentsMargins(6, 0, 6, 0)
         layout.setSpacing(spacing)
 
         self.radio = QRadioButton()
         self.radio.setChecked(checked)
+
         self.radio.toggled.connect(self._on_toggled)
 
         self.label = QLabel(label_text)
         self.label.setFont(label_font)
         self.label.setAlignment(label_alignment)
-        self.label.mousePressEvent = self._on_label_clicked
 
         layout.addWidget(self.radio)
         layout.addWidget(self.label)
@@ -77,6 +91,12 @@ class TFRadioWithLabel(QFrame, IStateController):
             layout.addSpacing(2)
 
         layout.addStretch()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.radio.setChecked(True)
+            self.value_changed.emit(self.radio.isChecked())
+        super().mousePressEvent(event)
 
     def _on_label_clicked(self, event) -> None:
         self.radio.setChecked(True)

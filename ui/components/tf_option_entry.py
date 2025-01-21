@@ -32,68 +32,73 @@ class TFOptionEntry(QFrame, IStateController):
         QFrame.__init__(self, parent)
         IStateController.__init__(self)
 
+        self.enable_filter = enable_filter
         self.extra_value_width = extra_value_width
         self.options = options or []
         self.show_tooltip = show_tooltip
-        self._setup_ui(
-            label_text, current_value,
-            label_size, value_size, label_font, value_font,
-            height, enable, enable_filter,
-            show_tooltip, tooltip_text
-        )
 
-    def _setup_ui(
-            self,
-            label_text: str,
-            current_value: str,
-            label_size: int,
-            value_size: int,
-            label_font: QFont,
-            value_font: QFont,
-            height: int,
-            enable: bool,
-            enable_filter: bool,
-            show_tooltip: bool,
-            tooltip_text: str
-    ) -> None:
-        self.setFixedHeight(height)
+        self.label_text = label_text
+        self.current_value = current_value
+        self.label_size = label_size
+        self.value_size = value_size
+        self.label_font = label_font
+        self.value_font = value_font
+        self.height_ = height
+        self.enable = enable
+        self.tooltip_text = tooltip_text
+
+        self.completer = None
+
+        self._setup_ui()
+
+    def _setup_ui(self) -> None:
+        self.setFixedHeight(self.height_)
         self.setFrameShape(QFrame.Shape.NoFrame)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.label = QLabel(label_text)
-        self.label.setFont(label_font)
-        self.label.setFixedWidth(label_size)
-        self.label.setFixedHeight(height)
+        self.label = QLabel(self.label_text, self)
+        self.label.setFont(self.label_font)
+        self.label.setFixedWidth(self.label_size)
+        self.label.setFixedHeight(self.height_)
 
-        self.combo_box = TFComboBox()
-        self.combo_box.setFont(value_font)
-        self.combo_box.setFixedHeight(height)
+        self.combo_box = TFComboBox(self)
+        self.combo_box.setFont(self.value_font)
+        self.combo_box.setFixedHeight(self.height_)
+
         if self.extra_value_width:
-            self.combo_box.setFixedWidth(value_size + self.extra_value_width)
+            total_width = self.value_size + self.extra_value_width
         else:
-            self.combo_box.setFixedWidth(value_size)
+            total_width = max(self.value_size, 100)
+
+        self.combo_box.setFixedWidth(total_width)
+
         self.combo_box.addItems(self.options)
-        if current_value:
-            index = self.combo_box.findText(current_value)
+
+        if self.current_value:
+            index = self.combo_box.findText(self.current_value)
             if index >= 0:
                 self.combo_box.setCurrentIndex(index)
+            else:
+                if self.enable_filter:
+                    self.combo_box.setEditText(self.current_value)
+
         self.combo_box.currentTextChanged.connect(self.on_option_selected)
 
-        if enable_filter:
+        if self.enable_filter:
             self._setup_filter()
 
-        self.combo_box.setEnabled(enable)
+        self.combo_box.setEnabled(self.enable)
 
         layout.addWidget(self.label)
         layout.addSpacing(2)
         layout.addWidget(self.combo_box)
 
-        if show_tooltip and tooltip_text:
-            icon_size = height - 4
-            self.tooltip_icon = TFTooltip(icon_size, tooltip_text)
+        if self.show_tooltip and self.tooltip_text:
+            icon_size = self.height_ - 4
+            self.tooltip_icon = TFTooltip(icon_size, self.tooltip_text, self)
             layout.addSpacing(2)
             layout.addWidget(self.tooltip_icon)
 
@@ -104,16 +109,24 @@ class TFOptionEntry(QFrame, IStateController):
 
     def _setup_filter(self) -> None:
         self.combo_box.setEditable(True)
-        completer = QCompleter(self.options, self.combo_box)
-        completer.setCompletionRole(Qt.ItemDataRole.DisplayRole)
-        completer.setFilterMode(Qt.MatchFlag.MatchContains)
-        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.combo_box.setCompleter(completer)
+        self.completer = QCompleter(self.options, self.combo_box)
+        self.completer.setCompletionRole(Qt.ItemDataRole.DisplayRole)
+        self.completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        self.completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.combo_box.setCompleter(self.completer)
+        if self.combo_box.isEditable():
+            line_edit = self.combo_box.lineEdit()
+            if line_edit:
+                line_edit.setAlignment(Qt.AlignmentFlag.AlignLeft)
+                line_edit.setStyleSheet("QLineEdit { padding-left: 0px; margin: 0px; }")
 
     def update_options(self, options: List[str]) -> None:
         self.options = options
         self.combo_box.clear()
         self.combo_box.addItems(options)
+
+        if self.enable_filter and self.completer is not None:
+            self.completer.model().setStringList(options)
 
     def get_value(self) -> str:
         return self.combo_box.currentText()
@@ -122,9 +135,12 @@ class TFOptionEntry(QFrame, IStateController):
         index = self.combo_box.findText(value)
         if index >= 0:
             self.combo_box.setCurrentIndex(index)
+        else:
+            if self.enable_filter:
+                self.combo_box.setEditText(value)
 
     def update_tooltip(self, text: str) -> None:
-        if self.show_tooltip:
+        if self.show_tooltip and hasattr(self, 'tooltip_icon'):
             self.tooltip_icon.update_tooltip(text)
 
 
@@ -133,4 +149,3 @@ class TFComboBox(QComboBox):
         super().showPopup()
         popup = self.view().window()
         popup.move(popup.x(), popup.y() + 3)
-

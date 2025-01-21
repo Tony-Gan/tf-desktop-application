@@ -22,7 +22,10 @@ async def broadcast_to_clients(token, message):
     room = rooms.get(token)
     if room and room["clients"]:
         msg = json.dumps(message)
-        tasks = [asyncio.create_task(ws.send(msg)) for ws in room["clients"].values()]
+        tasks = []
+        for client_info in room["clients"].values():
+            ws_client = client_info["ws"]
+            tasks.append(asyncio.create_task(ws_client.send(msg)))
         if tasks:
             await asyncio.wait(tasks)
 
@@ -76,10 +79,17 @@ async def handle_message(ws, msg):
                 if room["admin"] is None:
                     await ws.send(json.dumps({"type":"error","message":"no admin in this room"}))
                 else:
-                    sid = display_name if display_name else get_new_sid()
-                    room["clients"][sid] = ws
+                    sid = get_new_sid()
+                    room["clients"][sid] = {
+                        "ws": ws, 
+                        "display_name": display_name
+                    }
                     await ws.send(json.dumps({"type":"joined","sid":sid}))
-                    await send_to_admin(token, {"type":"user_joined","sid":sid})
+                    await send_to_admin(token, {
+                        "type": "user_joined",
+                        "sid": sid,
+                        "display_name": display_name
+                    })
 
     elif msg_type == "typing":
         token = data.get("token")
@@ -97,6 +107,61 @@ async def handle_message(ws, msg):
                     asyncio.create_task(handle_typing_timeout(token))
                 room["typing_timer"].add_done_callback(done_callback)
 
+    elif msg_type == "name_update":
+        token = data.get("token")
+        if not token:
+            await ws.send(json.dumps({"type": "error", "message": "No token in name_update"}))
+            return
+
+        room = rooms.get(token)
+        if not room:
+            await ws.send(json.dumps({"type": "error", "message": "Room not found"}))
+            return
+
+        old_name = data.get("old_name", "")
+        new_name = data.get("new_name", "")
+        user_sid = data.get("sid", "")
+
+        if user_sid in room["clients"] and room["clients"][user_sid]["ws"] == ws: 
+            room["clients"][user_sid]["display_name"] = new_name   ### ← (需要修改，更新display_name)
+
+            if room["admin"]:
+                await send_to_admin(token, {
+                    "type": "name_update",
+                    "old_name": old_name,
+                    "new_name": new_name,
+                    "sid": user_sid
+                })
+        else:
+            await ws.send(json.dumps({"type": "error", "message": "Invalid sid for name_update"}))
+
+    elif msg_type == "name_update_confirmed":
+        token = data.get("token")
+        old_name = data.get("old_name", "")
+        new_name = data.get("new_name", "")
+        sid = data.get("sid", "")
+
+        room = rooms.get(token)
+        if not room:
+            return
+
+        if sid in room["clients"]:
+            ws_pl = room["clients"][sid]["ws"]
+            await ws_pl.send(json.dumps({
+                "type": "name_update_confirmed",
+                "old_name": old_name,
+                "new_name": new_name
+            }))
+
+    elif msg_type == "dice_result":
+        token = data.get("token")
+        dice_text = data.get("dice_text", "")
+        if token in rooms:
+            await broadcast_to_clients(token, {
+                "type": "dice_result",
+                "dice_text": dice_text
+            })
+
 async def remove_connection(ws):
     for token, room in list(rooms.items()):
         if room["admin"] == ws:
@@ -104,8 +169,8 @@ async def remove_connection(ws):
             del rooms[token]
             break
         else:
-            for sid, cws in list(room["clients"].items()):
-                if cws == ws:
+            for sid, cws_dict in list(room["clients"].items()):
+                if cws_dict["ws"] == ws:
                     del room["clients"][sid]
                     if room["admin"]:
                         await send_to_admin(token, {"type":"user_left","sid":sid})

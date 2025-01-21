@@ -9,10 +9,13 @@ from PyQt6.QtCore import QThread, pyqtSignal
 class WebSocketClient(QThread):
     connection_error = pyqtSignal(str)
     joined_room = pyqtSignal(str)
-    user_joined = pyqtSignal(str)
-    user_left = pyqtSignal(str)
+    user_joined = pyqtSignal(str, str)
+    user_left = pyqtSignal(str, str) 
     admin_closed = pyqtSignal()
     disconnected = pyqtSignal()
+    name_update_received = pyqtSignal(str, str, str)
+    name_update_confirmed = pyqtSignal(str, str)
+    dice_result_received = pyqtSignal(str)
 
     def __init__(self, room_id: str, role: str, display_name: str = "", parent=None):
         super().__init__(parent)
@@ -60,19 +63,39 @@ class WebSocketClient(QThread):
                     self.joined_room.emit(sid)
                     
             elif msg_type == 'user_joined':
-                sid = data.get('sid')
+                sid = data.get('sid', '')
+                display_name = data.get('display_name', '')
                 if sid:
-                    self.user_joined.emit(sid)
-                    
+                    self.user_joined.emit(sid, display_name)
+
             elif msg_type == 'user_left':
-                sid = data.get('sid')
+                sid = data.get('sid', '')
+                display_name = data.get('display_name', '')
                 if sid:
-                    self.user_left.emit(sid)
+                    self.user_left.emit(sid, display_name)
                     
             elif msg_type == 'disconnect':
                 reason = data.get('reason')
                 if reason == 'admin_closed':
                     self.admin_closed.emit()
+
+            elif msg_type == 'name_update_confirmed':
+                old_name = data.get('old_name')
+                new_name = data.get('new_name')
+                if old_name and new_name:
+                    self.name_update_confirmed.emit(old_name, new_name)
+
+            elif msg_type == 'name_update':
+                if self.role == "admin": 
+                    old_name = data.get('old_name')
+                    new_name = data.get('new_name')
+                    sid = data.get('sid')
+                    if old_name is not None and new_name is not None and sid is not None:
+                        self.name_update_received.emit(old_name, new_name, sid)
+                
+            elif msg_type == "dice_result":
+                dice_text = data.get("dice_text", "")
+                self.dice_result_received.emit(dice_text)
                     
         except json.JSONDecodeError:
             self.connection_error.emit('Invalid message format')
@@ -131,7 +154,6 @@ class WebSocketClient(QThread):
         try:
             self.loop.run_forever()
         finally:
-            # 清理
             self.loop.run_until_complete(self._close_ws())
             self.loop.run_until_complete(self.loop.shutdown_asyncgens())
             self.loop.close()

@@ -526,10 +526,9 @@ class OccupationSkillEntry(TFBaseFrame):
 
     def handle_skill_selection(self, selected_skill: Skill):
         if self.selected_skill:
-            if self.selected_skill.occupation_point > 0:
-                self.selected_skill.occupation_point = 0
-                self.selected_skill.is_occupation = False
-                self.parnet.parent.basic_info_frame.update_points_information()
+            self.selected_skill.occupation_point = 0
+            self.selected_skill.is_occupation = False
+            self.parent.parent.basic_info_frame.update_points_information()
 
         self.selected_skill = selected_skill
         self.skill_label.setText(selected_skill.display_name)

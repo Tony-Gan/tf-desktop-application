@@ -1,5 +1,6 @@
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QPushButton
+from PyQt6.QtCore import Qt, QMimeData, QPoint
+from PyQt6.QtGui import QDrag, QPixmap, QPainter, QDragEnterEvent, QDropEvent
 
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.components.tf_option_entry import TFOptionEntry
@@ -9,12 +10,74 @@ from utils.helper import get_current_datetime
 from utils.tf_dice import TFDice
 
 
+class DraggableButton(QPushButton):
+    def __init__(self, text: str, parent=None):
+        super().__init__(text, parent)
+        self.drag_start_pos = None
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.drag_start_pos = event.position()
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() & Qt.MouseButton.LeftButton:
+            if self.drag_start_pos is not None:
+                distance = (event.position() - self.drag_start_pos).manhattanLength()
+                if distance > TFApplication.startDragDistance():
+                    self.start_drag()
+                    self.drag_start_pos = None
+                    return
+        super().mouseMoveEvent(event)
+
+    def start_drag(self):
+        drag = QDrag(self)
+        mime_data = QMimeData()
+        mime_data.setText(self.text())
+        drag.setMimeData(mime_data)
+
+        pixmap = QPixmap(self.size())
+        pixmap.fill(Qt.GlobalColor.transparent)
+
+        painter = QPainter(pixmap)
+        self.render(painter, QPoint(0, 0))
+        painter.end()
+
+        drag.setPixmap(pixmap)
+        drag.setHotSpot(self.rect().center())
+
+        drag.exec(Qt.DropAction.CopyAction)
+
+
+class DroppableOptionEntry(TFOptionEntry):
+    def __init__(self, *args, **kwargs):
+        kwargs['enable_filter'] = True
+        super().__init__(*args, **kwargs)
+
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasText():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        text = event.mimeData().text()
+        if text:
+            self.combo_box.setEditText(text)
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+
 class KPFrame(TFBaseFrame):
 
     def __init__(self, parent=None):
         self.room_id = WebSocketClient.generate_room_id().upper()
         self.current_pl_count = 0
-        self.player_list = []
+
+        self.pl_frames = {}
 
         super().__init__(layout_type=QHBoxLayout, parent=parent)
 
@@ -25,6 +88,7 @@ class KPFrame(TFBaseFrame):
         self.ws_client.user_left.connect(self._on_user_left)
         self.ws_client.admin_closed.connect(self._on_admin_closed)
         self.ws_client.disconnected.connect(self._on_disconnected)
+        self.ws_client.name_update_received.connect(self._handle_name_update)
         self.ws_client.start()
 
     def _setup_content(self):
@@ -53,18 +117,13 @@ class KPFrame(TFBaseFrame):
             height=24,
             label_size=75,
             value_size=30,
+            enable=False
         )
         self.left_panel.main_layout.addWidget(self.current_pl_entry)
 
-        self.players_text_edit = self.create_text_edit(
-            name="players_text_edit",
-            text="",
-            width=480,
-            height=150,
-            placeholder_text="还没有PL哦",
-            read_only=True
-        )
-        self.left_panel.main_layout.addWidget(self.players_text_edit)
+        self.pl_list_container = TFBaseFrame(layout_type=QVBoxLayout, parent=self.left_panel)
+        self.pl_list_container.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.left_panel.add_child("pl_list_container", self.pl_list_container)
 
         self.right_panel = TFBaseFrame(layout_type=QVBoxLayout, parent=self)
         self.add_child("right_panel", self.right_panel)
@@ -90,7 +149,6 @@ class KPFrame(TFBaseFrame):
         self.dice_result_text_edit.setHtml(new_text)
 
     def handle_dice_result(self, dice_command: str, dice_info: str, result: dict) -> None:
-        print(result)
         if not result["success"]:
             time_str = get_current_datetime(show_time=True, show_seconds=True)
             error_text = f'<span style="color: #B58B00">[{time_str}]</span> - 掷骰出错：{result["error"]}'
@@ -116,6 +174,11 @@ class KPFrame(TFBaseFrame):
             text = f"{timestamp} - 未知的掷骰类型：{result['type']}"
             
         self._add_dice_result(text)
+        self.ws_client.send_message({
+            "type": "dice_result",
+            "dice_text": text,
+            "token": self.room_id
+        })
 
     def _on_copy_room_id(self):
         room_id = self.room_id_entry.get_text()
@@ -134,18 +197,31 @@ class KPFrame(TFBaseFrame):
     def _on_joined_room(self, sid: str):
         pass
 
-    def _on_user_joined(self, user_sid: str):
+    def _on_user_joined(self, user_sid: str, display_name: str):
         self.current_pl_count += 1
         self.update_component_value("current_pl", str(self.current_pl_count))
 
-        display_name = user_sid
-        if len(self.player_list) > 0:
-            if user_sid in self.player_list:
-                return
-                
-        self.player_list.append(display_name)
-        self._refresh_player_list_display()
-        self.dice_panel.update_player_list(self.player_list)
+        if not display_name:
+            display_name = user_sid
+
+        pl_frame = TFBaseFrame(layout_type=QHBoxLayout, parent=self.pl_list_container)
+        
+        pl_button = DraggableButton(display_name, parent=pl_frame)
+        pl_button.setFixedWidth(150)
+
+        info_button = self.create_button(
+            name=f"info_button_{user_sid}",
+            text="信息",
+            width=60,
+            on_clicked=lambda: self._on_pl_info_clicked(user_sid)
+        )
+
+        pl_frame.main_layout.addWidget(pl_button)
+        pl_frame.main_layout.addWidget(info_button)
+
+        self.pl_list_container.add_child(f"pl_frame_{user_sid}", pl_frame)
+
+        self.pl_frames[user_sid] = (pl_frame, pl_button, info_button, display_name)
 
         time_str = get_current_datetime(show_time=True, show_seconds=True)
         join_text = f'<span style="color: #008000">[{time_str}] - PL {display_name} 加入了房间</span>'
@@ -153,28 +229,22 @@ class KPFrame(TFBaseFrame):
         
         TFApplication.instance().show_message(f"PL {display_name} 加入了房间！", 3000, 'green')
 
+    def _on_pl_info_clicked(self, user_sid: str):
+        TFApplication.instance().show_message(f"你点击了 {user_sid} 的信息按钮", 2000, 'green')
+
     def _on_user_left(self, user_sid: str):
-        try:
-            if user_sid in self.player_list:
-                self.player_list.remove(user_sid)
-                self.current_pl_count -= 1
-                
-                if not self.isVisible():
-                    return
-                    
-                self.update_component_value("current_pl", str(self.current_pl_count))
-                self._refresh_player_list_display()
-                
-                if hasattr(self, 'dice_panel'):
-                    self.dice_panel.update_player_list(self.player_list)
+        if user_sid in self.pl_frames:
+            (pl_frame, pl_button, info_button, old_display_name) = self.pl_frames[user_sid]
+            pl_frame.setParent(None)
+            del self.pl_frames[user_sid]
+            self.current_pl_count -= 1
+            self.update_component_value("current_pl", str(self.current_pl_count))
+            
+            time_str = get_current_datetime(show_time=True, show_seconds=True)
+            leave_text = f'<span style="color: #FFA500">[{time_str}] - PL {old_display_name} 离开了房间</span>'
+            self._add_dice_result(leave_text)
 
-                time_str = get_current_datetime(show_time=True, show_seconds=True)
-                leave_text = f'<span style="color: #FFA500">[{time_str}] - PL {user_sid} 离开了房间</span>'
-                self._add_dice_result(leave_text)
-
-                TFApplication.instance().show_message(f"PL - {user_sid} 离开了房间", 3000, 'yellow')
-        except RuntimeError:
-            pass
+            TFApplication.instance().show_message(f"PL - {old_display_name} 离开了房间", 3000, 'yellow')
 
     def _on_admin_closed(self):
         TFApplication.instance().show_message("KP关闭了房间", 3000, 'yellow')
@@ -184,26 +254,97 @@ class KPFrame(TFBaseFrame):
         disconnect_text = f'<span style="color: #FF0000">[{time_str}] - 与服务器的连接已断开</span>'
         self._add_dice_result(disconnect_text)
 
-        self.player_list.clear()
+        for sid, (pl_frame, pl_label, info_button, old_name) in list(self.pl_frames.items()):
+            pl_frame.setParent(None)
+        self.pl_frames.clear()
+
         self.current_pl_count = 0
         self.update_component_value("current_pl", "0")
-        self._refresh_player_list_display()
+
         self.dice_panel.update_player_list([])
 
         TFApplication.instance().show_message("与服务器的连接已断开", 5000, 'red')
 
-    def _refresh_player_list_display(self):
-        if not self.player_list:
-            self.update_component_value("players_text_edit", "还没有PL加入房间")
+    def _handle_name_update(self, old_name: str, new_name: str, sid: str):
+        time_str = get_current_datetime(show_time=True, show_seconds=True)
+        self._add_dice_result(
+            f'<span style="color: #B58B00">[{time_str}] - 收到名称更新请求: {old_name} → {new_name} (sid: {sid})</span>'
+        )
+        
+        if sid in self.pl_frames:
+            (pl_frame, pl_label, info_button, current_name) = self.pl_frames[sid]
+            pl_label.setText(new_name)
+            self.pl_frames[sid] = (pl_frame, pl_label, info_button, new_name)
+
+            update_text = f'<span style="color: #008000">[{time_str}] - PL更新名称：{old_name} → {new_name}</span>'
+            self._add_dice_result(update_text)
+            
+            TFApplication.instance().show_message(f"PL更新名称：{old_name} → {new_name}", 3000, 'green')
+            
+            self.ws_client.send_message({
+                "type": "name_update_confirmed",
+                "old_name": old_name,
+                "new_name": new_name,
+                "sid": sid,
+                "token": self.room_id
+            })
         else:
-            text = "\n".join(f"{i+1}. {player}" for i, player in enumerate(self.player_list))
-            self.update_component_value("players_text_edit", text)
+            self._add_dice_result(
+                f'<span style="color: #FF0000">[{time_str}] - 找不到对应的PL (sid: {sid})</span>'
+            )
+
+    def closeEvent(self, event):
+        try:
+            if hasattr(self, 'dice_panel'):
+                if hasattr(self.dice_panel, 'ws_client') and self.dice_panel.ws_client:
+                    if self.dice_panel.ws_client.isRunning():
+                        self.dice_panel.ws_client.stop()
+                        self.dice_panel.ws_client.quit()
+                        self.dice_panel.ws_client.wait(1000)
+                        self.dice_panel.ws_client = None
+
+            if hasattr(self, 'ws_client') and self.ws_client:
+                if self.ws_client.isRunning():
+                    self.ws_client.send_message({"type": "admin_close"})
+                    self.ws_client.stop()
+                    self.ws_client.quit()
+                    self.ws_client.wait(1000)
+                    self.ws_client = None
+        except Exception as e:
+            print(f"Error during cleanup: {str(e)}")
+        finally:
+            super().closeEvent(event)
 
 
 class DicePanelFrame(TFBaseFrame):
     def __init__(self, parent=None):
         self.parent = parent
         super().__init__(layout_type=QVBoxLayout, parent=parent)
+
+    def create_droppable_option_entry(
+            self,
+            name: str,
+            label_text: str = "",
+            options=None,
+            current_value: str = "",
+            label_size: int = 80,
+            value_size: int = 36,
+            height: int = 24,
+            parent=None
+    ) -> DroppableOptionEntry:
+        if options is None:
+            options = []
+        entry = DroppableOptionEntry(
+            label_text=label_text,
+            options=options,
+            current_value=current_value,
+            label_size=label_size,
+            value_size=value_size,
+            height=height,
+            parent=parent
+        )
+        self._register_component(name, entry)
+        return entry
 
     def _setup_content(self):
         self.dice_type = self.create_option_entry(
@@ -269,14 +410,15 @@ class DicePanelFrame(TFBaseFrame):
         self._setup_standard_dice_panel()
 
     def _setup_standard_dice_panel(self):
-        self.roll_target = self.create_option_entry(
+        self.roll_target = self.create_droppable_option_entry(
             name="roll_target",
             label_text="掷骰对象",
             options=[],
             current_value="",
             label_size=80,
             value_size=100,
-            enable_filter=False
+            height=24,
+            parent=self.content_panel
         )
         self.content_panel.main_layout.addWidget(self.roll_target)
 
@@ -313,14 +455,14 @@ class DicePanelFrame(TFBaseFrame):
         self.content_panel.main_layout.addWidget(self.roll_info)
 
     def _setup_skill_dice_panel(self):
-        self.skill_roll_target = self.create_option_entry(
+        self.skill_roll_target = self.create_droppable_option_entry(
             name="skill_roll_target",
             label_text="掷骰对象",
             options=[],
             current_value="",
             label_size=80,
             value_size=100,
-            enable_filter=True
+            parent=self.content_panel
         )
         self.content_panel.main_layout.addWidget(self.skill_roll_target)
 
@@ -333,8 +475,8 @@ class DicePanelFrame(TFBaseFrame):
             label_text="掷骰技能",
             options=[],
             current_value="",
-            label_size=80,
-            value_size=100,
+            label_size=70,
+            value_size=50,
             enable_filter=True
         )
         skill_level_frame.main_layout.addWidget(self.skill)
@@ -374,25 +516,25 @@ class DicePanelFrame(TFBaseFrame):
         targets_frame1.main_layout.setContentsMargins(0, 0, 0, 0)
         self.content_panel.main_layout.addWidget(targets_frame1)
 
-        self.vs_roll_target1 = self.create_option_entry(
+        self.vs_roll_target1 = self.create_droppable_option_entry(
             name="vs_roll_target1",
             label_text="掷骰对象1",
             options=[],
             current_value="",
             label_size=80,
             value_size=80,
-            enable_filter=True
+            parent=targets_frame1
         )
         targets_frame1.main_layout.addWidget(self.vs_roll_target1)
 
-        self.vs_skill1 = self.create_option_entry(
+        self.vs_skill1 = self.create_droppable_option_entry(
             name="vs_skill1",
             label_text="技能1",
             options=[],
             current_value="",
             label_size=45,
             value_size=80,
-            enable_filter=True
+            parent=targets_frame1
         )
         targets_frame1.main_layout.addWidget(self.vs_skill1)
 
@@ -543,7 +685,6 @@ class DicePanelFrame(TFBaseFrame):
                 self.parent.handle_dice_result(dice_command, dice_info, result)
 
     def update_player_list(self, player_list):
-        """更新玩家列表，添加安全检查"""
         try:
             components_to_update = [
                 "roll_target", "skill_roll_target", 
@@ -556,5 +697,5 @@ class DicePanelFrame(TFBaseFrame):
                     if hasattr(component, 'combo_box') and component.combo_box:
                         component.update_options(player_list)
         except RuntimeError:
-            # 忽略组件已被删除的错误
             pass
+

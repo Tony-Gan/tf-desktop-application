@@ -16,7 +16,7 @@ class TFDiceRoller(TFDraggableWindow):
         window_title="骰子",
         window_size=(800, 600),
         description="Dice Roller Tool",
-        max_instances=2
+        max_instances=4
     )
 
     def __init__(self, parent=None):
@@ -116,10 +116,6 @@ class TFDiceRoller(TFDraggableWindow):
         self.current_mode = 2
 
     def closeEvent(self, event):
-        """
-        Properly handle cleanup of WebSocket clients before closing the window
-        """
-        # Close KPFrame's WebSocket if it exists
         if self.page1 and hasattr(self.page1, 'ws_client') and self.page1.ws_client:
             if self.page1.ws_client.isRunning():
                 self.page1.ws_client.stop()
@@ -127,7 +123,6 @@ class TFDiceRoller(TFDraggableWindow):
                 self.page1.ws_client.wait()
                 self.page1.ws_client = None
 
-        # Close PLFrame's WebSocket if it exists
         if self.page2 and hasattr(self.page2, 'ws_client') and self.page2.ws_client:
             if self.page2.ws_client.isRunning():
                 self.page2.ws_client.stop()
@@ -135,5 +130,4 @@ class TFDiceRoller(TFDraggableWindow):
                 self.page2.ws_client.wait()
                 self.page2.ws_client = None
 
-        # Call parent's closeEvent after cleanup
         super().closeEvent(event)
