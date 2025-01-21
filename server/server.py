@@ -47,6 +47,7 @@ async def handle_message(ws, msg):
     if msg_type == "join":
         role = data.get("role")
         token = data.get("token")
+        display_name = data.get("display_name", "")
         if not token:
             await ws.send(json.dumps({"type":"error","message":"no token provided"}))
             return
@@ -75,7 +76,7 @@ async def handle_message(ws, msg):
                 if room["admin"] is None:
                     await ws.send(json.dumps({"type":"error","message":"no admin in this room"}))
                 else:
-                    sid = get_new_sid()
+                    sid = display_name if display_name else get_new_sid()
                     room["clients"][sid] = ws
                     await ws.send(json.dumps({"type":"joined","sid":sid}))
                     await send_to_admin(token, {"type":"user_joined","sid":sid})

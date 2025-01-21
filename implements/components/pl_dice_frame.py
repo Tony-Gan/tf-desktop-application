@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout
+from PyQt6.QtCore import Qt
 
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.tf_application import TFApplication
@@ -80,23 +81,44 @@ class PLFrame(TFBaseFrame):
             width=480,
             height=250,
             placeholder_text="掷骰结果和信息会出现在这里...",
-            read_only=True
+            read_only=True,
+            scroll_policy=(Qt.ScrollBarPolicy.ScrollBarAlwaysOff, Qt.ScrollBarPolicy.ScrollBarAlwaysOn),
+            enable_rich_text=True
         )
         self.right_panel.layout().addWidget(self.dice_result_text_edit)
 
     def _on_enter_room(self):
         room_id = self.enter_room_entry.entry_field.text().strip().upper()
-        name = self.player_name_entry.value_field.text().strip()
+        display_name = self._get_display_name()
 
         if not room_id:
             TFApplication.instance().show_message("房间号为空", 5000, 'yellow')
             return
 
+        self._add_debug_message(f"尝试进入房间: {room_id}")
+        self._add_debug_message(f"服务器地址: ws://127.0.0.1:8765")
+
+        self.enter_room_entry.button.setEnabled(False)
+        self.enter_room_entry.entry_field.setEnabled(False)
+        
+        self.player_name_entry.value_field.setEnabled(False)
+        self.pc_name_entry.value_field.setEnabled(False)
+
         if self.ws_client:
-            self.ws_client.close()
+            if self.ws_client.isRunning():
+                self._add_debug_message("关闭现有连接...", 'warning')
+                self.ws_client.stop()
+                self.ws_client.quit()
+                self.ws_client.wait()
             self.ws_client = None
 
-        self.ws_client = WebSocketClient(room_id=room_id, role="player", parent=self)
+        self._add_debug_message("创建新的连接...")
+        self.ws_client = WebSocketClient(
+            room_id=room_id,
+            role="player",
+            display_name=display_name,
+            parent=self
+        )
         self.ws_client.connection_error.connect(self._on_connection_error)
         self.ws_client.joined_room.connect(self._on_joined_room)
         self.ws_client.user_joined.connect(self._on_user_joined)
@@ -105,10 +127,22 @@ class PLFrame(TFBaseFrame):
         self.ws_client.disconnected.connect(self._on_disconnected)
         self.ws_client.start()
 
-        self.my_name = name if name else "" 
+        self.my_name = display_name
     
     def _on_pc_data_upload(self):
         pass
+
+    def _get_display_name(self):
+        pl_name = self.player_name_entry.value_field.text().strip()
+        pc_name = self.pc_name_entry.value_field.text().strip()
+        
+        if pl_name and pc_name:
+            return f"[{pl_name}] - [{pc_name}]"
+        elif pl_name:
+            return f"[{pl_name}] - [OB]"
+        elif pc_name:
+            return f"[未命名] - [{pc_name}]"
+        return self.my_name
 
     def _on_placeholder_clicked(self):
         old_text = self.get_component_value("dice_result_text_edit") or ""
@@ -116,15 +150,22 @@ class PLFrame(TFBaseFrame):
         self.update_component_value("dice_result_text_edit", new_text)
 
     def _on_connection_error(self, err_msg: str):
-        TFApplication.instance().show_message(err_msg, 5000, 'yellow')
+        self._add_debug_message(f"连接错误: {err_msg}", 'error')
+        TFApplication.instance().show_message(f"连接错误: {err_msg}", 5000, 'red')
+        
+        self._enable_input_fields()
+        
+        if self.ws_client:
+            if self.ws_client.isRunning():
+                self.ws_client.stop()
+                self.ws_client.quit()
+                self.ws_client.wait()
+            self.ws_client = None
 
     def _on_joined_room(self, sid: str):
+        self._add_debug_message(f"成功加入房间！(SID: {sid})")
         if not self.my_name:
             self.my_name = sid
-
-        old_text = self.get_component_value("dice_result_text_edit") or ""
-        new_text = old_text + f"\nYou joined room as '{self.my_name}' (sid: {sid})."
-        self.update_component_value("dice_result_text_edit", new_text)
 
     def _on_user_joined(self, user_sid: str):
         pass
@@ -136,6 +177,45 @@ class PLFrame(TFBaseFrame):
         TFApplication.instance().show_message("KP离开了房间，链接断开", 5000, 'yellow')
 
     def _on_disconnected(self):
-        old_text = self.get_component_value("dice_result_text_edit") or ""
-        new_text = old_text + "\nDisconnected from the server."
-        self.update_component_value("dice_result_text_edit", new_text)
+        self._add_debug_message("与服务器断开连接", 'warning')
+        TFApplication.instance().show_message("与服务器断开连接", 3000, 'yellow')
+
+        self._enable_input_fields()
+
+        self.ws_client = None
+        self.my_name = ""
+
+    def _add_debug_message(self, message: str, level='info'):
+        from datetime import datetime
+        timestamp = datetime.now().strftime('%H:%M:%S')
+        
+        if level == 'error':
+            color = '#FF0000'
+        elif level == 'warning':
+            color = '#FFA500'
+        else:
+            color = '#000000'
+            
+        message = f'<div style="color: {color}">[{timestamp}] {message}</div>'
+        
+        old_text = self.dice_result_text_edit.toHtml()
+        new_text = message + (old_text if old_text else "")
+        self.dice_result_text_edit.setHtml(new_text)
+
+    def _enable_input_fields(self):
+        self.enter_room_entry.button.setEnabled(True)
+        self.enter_room_entry.entry_field.setEnabled(True)
+        self.player_name_entry.value_field.setEnabled(True)
+        self.pc_name_entry.value_field.setEnabled(True)
+
+    def closeEvent(self, event):
+        try:
+            if self.ws_client and self.ws_client.isRunning():
+                self.ws_client.send_message({"type": "leave"})
+                self.ws_client.wait(100)
+                self.ws_client.stop()
+                self.ws_client.quit()
+                self.ws_client.wait()
+        except:
+            pass
+        event.accept()

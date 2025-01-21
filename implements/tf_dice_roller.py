@@ -16,7 +16,7 @@ class TFDiceRoller(TFDraggableWindow):
         window_title="骰子",
         window_size=(800, 600),
         description="Dice Roller Tool",
-        max_instances=1
+        max_instances=2
     )
 
     def __init__(self, parent=None):

@@ -192,27 +192,15 @@ class TFDice:
 
     @staticmethod
     def command_entry(cmd: str):
-        """
-        根据指令字符串 cmd，分析要进行的功能，然后调用相应方法。
-        指令格式:
-          1) r   [dice_str]           => 普通掷骰, 例如: r 3d10+4
-          2) ra  [skill] [可选: bN或pN] => 技能检定, 例如: ra 50 / ra 50 b1 / ra 30 p2
-          3) rav [skill1] [可选:bN/pN] [skill2] [可选:bN/pN] [可选:s] => 对抗检定, 例如: rav 50 60 / rav 50 b1 60 p2 / rav 24 35 s
-          4) rah 同 rav，只是指令不同（可以复用相同逻辑） 
-          5) rh  => 暂时留空, 暗骰
-        """
-
         cmd = cmd.strip()
         if not cmd:
             return {"success": False, "error": "Empty command."}
 
-        # 将指令部分和参数部分分开
         parts = cmd.split(' ', 1)
         command_main = parts[0].lower()
         command_args = parts[1].strip() if len(parts) > 1 else ""
 
         if command_main == 'r':
-            # 普通掷骰
             ok, formula, results, total = TFDice.roll(command_args)
             return {
                 "success": ok,
@@ -223,9 +211,6 @@ class TFDice:
             }
 
         elif command_main == 'ra':
-            # 技能检定
-            # 格式: ra skill [bN|pN]?
-            # 例如: ra 50, ra 50 b1, ra 50 p3
             pattern = r'^\s*(\d+)(?:\s+(b|p)(\d+))?\s*$'
             match = re.match(pattern, command_args, re.IGNORECASE)
             if not match:
@@ -240,9 +225,9 @@ class TFDice:
 
             if adv_type and adv_count:
                 if adv_type.lower() == 'b':
-                    advantage_dice = int(adv_count)  # 优势
+                    advantage_dice = int(adv_count)
                 else:
-                    advantage_dice = -int(adv_count) # 劣势
+                    advantage_dice = -int(adv_count)
 
             ok, final_result, all_results, check_level = TFDice.skill_check(
                 skill_level, rule_type=1, advantage_dice=advantage_dice
@@ -258,13 +243,6 @@ class TFDice:
             }
 
         elif command_main in ('rav', 'rah'):
-            # 对抗检定
-            # 格式: rav skill1 [bN|pN]? skill2 [bN|pN]? [s]?
-            # 例如:
-            #   rav 50 60
-            #   rav 50 b1 60 p2
-            #   rah 24 b3 35 s
-            #   （最后的 s 表示严格模式，否则不是）
             pattern = r'^\s*(\d+)(?:\s+(b|p)(\d+))?\s+(\d+)(?:\s+(b|p)(\d+))?(?:\s+(s))?\s*$'
             match = re.match(pattern, command_args, re.IGNORECASE)
             if not match:
@@ -278,7 +256,7 @@ class TFDice:
             adv_type2  = match.group(5)
             adv_count2 = match.group(6)
 
-            strict_flag = match.group(7)  # 's' 或 None
+            strict_flag = match.group(7)
 
             skill1 = int(skill1_str)
             skill2 = int(skill2_str)
@@ -319,7 +297,6 @@ class TFDice:
             }
 
         elif command_main == 'rh':
-            # 暗骰 - 这里先做占位，未来可以根据需求实现
             return {
                 "success": True,
                 "type": "hidden_roll",

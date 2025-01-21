@@ -34,13 +34,15 @@ class TFValueEntry(QFrame, IStateController):
             expanding_text_width: int = 300,
             expanding_text_height: int = 100,
             show_tooltip: bool = False,
-            tooltip_text: str = "", 
+            tooltip_text: str = "",
+            force_english: bool = False,
             parent: Optional[QFrame] = None
     ) -> None:
         QFrame.__init__(self, parent)
         IStateController.__init__(self)
 
         self.show_tooltip = show_tooltip
+        self.force_english = force_english
 
         self._setup_ui(
             label_text, value_text, label_size, value_size, label_font, value_font, enable,
@@ -112,8 +114,15 @@ class TFValueEntry(QFrame, IStateController):
             self.value_field.setText(str(value_text))
 
         self.value_field.setFixedWidth(value_size)
-
         self.value_field.textChanged.connect(self.value_changed.emit)
+
+        if self.force_english:
+            self.value_field.setAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled, False)
+            self.value_field.setInputMethodHints(
+                Qt.InputMethodHint.ImhLatinOnly |
+                Qt.InputMethodHint.ImhPreferLowercase |
+                Qt.InputMethodHint.ImhNoAutoUppercase
+            )
 
         layout.addWidget(self.label)
         layout.addWidget(self.value_field)
