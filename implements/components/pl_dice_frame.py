@@ -26,7 +26,7 @@ class PLFrame(TFBaseFrame):
             button_callback=self._on_player_name_update,
             button_tooltip="修改PL名称",
             label_size=80,
-            entry_size=120,
+            entry_size=80,
             button_size=50,
             height=24,
         )
@@ -58,6 +58,8 @@ class PLFrame(TFBaseFrame):
         )
         self.left_panel.layout().addWidget(self.pc_data_entry)
 
+        self.left_panel.main_layout.addStretch()
+
         self.right_panel = TFBaseFrame(layout_type=QVBoxLayout, parent=self)
         self.add_child("right_panel", self.right_panel)
 
@@ -73,7 +75,7 @@ class PLFrame(TFBaseFrame):
         self.dice_result_text_edit = self.create_text_edit(
             name="dice_result_text_edit",
             text="",
-            width=480,
+            width=400,
             height=250,
             placeholder_text="掷骰结果和信息会出现在这里...",
             read_only=True,

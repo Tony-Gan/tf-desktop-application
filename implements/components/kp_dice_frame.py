@@ -78,6 +78,7 @@ class KPFrame(TFBaseFrame):
         self.current_pl_count = 0
 
         self.pl_frames = {}
+        self.pc_data = {}
 
         super().__init__(layout_type=QHBoxLayout, parent=parent)
 

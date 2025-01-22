@@ -1,11 +1,7 @@
 from typing import Optional
 
-from PyQt6.QtWidgets import (
-    QHBoxLayout, QLabel, QFrame, QRadioButton
-)
-from PyQt6.QtCore import (
-    Qt, pyqtSignal, QPropertyAnimation, pyqtProperty
-)
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QFrame, QRadioButton
+from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation, pyqtProperty
 from PyQt6.QtGui import QFont, QColor
 
 from ui.components.if_state_controll import IStateController
@@ -14,12 +10,6 @@ from ui.components.tf_tooltip import TFTooltip
 
 
 class TFRadioWithLabel(QFrame, IStateController):
-    """
-    为鼠标悬停添加渐入渐出动画：
-      - 正常状态：透明
-      - 悬停状态：rgba(200,200,200,0.2)
-    """
-
     value_changed = pyqtSignal(bool)
 
     def __init__(
@@ -38,21 +28,15 @@ class TFRadioWithLabel(QFrame, IStateController):
         
         IStateController.__init__(self)
 
-        # 设置对象名（如果想在其他地方用样式表，也可以）
         self.setObjectName("tfRadioWithLabel")
 
-        # 固定高度、无边框
         self.setFixedHeight(height)
         self.setFrameShape(QFrame.Shape.NoFrame)
 
-        # 默认背景色：全透明
         self._bg_color = QColor(0, 0, 0, 0)
 
-        # 创建属性动画，用于在 enter/leave 时渐变背景
         self._animation = QPropertyAnimation(self, b"bgColor")
-        self._animation.setDuration(200)  # 动画时长：毫秒
-        # 你也可以设置缓动曲线
-        # self._animation.setEasingCurve(QEasingCurve.InOutQuad)
+        self._animation.setDuration(200)
 
         self.show_tooltip = show_tooltip
 
