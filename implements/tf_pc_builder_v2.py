@@ -38,7 +38,7 @@ class TFPcBuilderV2(TFDraggableWindow):
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.setSpacing(5)
         
-        self.progress_bar = ProgressFrame()
+        self.progress_bar = ProgressFrame(self)
 
         self.stacked_widget = QStackedWidget(self)
         self.stacked_widget.setObjectName("section_frame")
