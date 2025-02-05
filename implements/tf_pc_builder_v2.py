@@ -5,10 +5,10 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QColor, QPixmap
 
 from core.windows.tf_draggable_window import TFDraggableWindow
-from implements.components.base_phase import BasePhase
 from ui.components.tf_base_frame import TFBaseFrame
 from utils.helper import resource_path
 from utils.registry.tf_tool_matadata import TFToolMetadata
+from implements.components.base_phase import BasePhase
 from implements.components.phase0 import Phase0
 from implements.components.phase1 import Phase1
 from implements.components.phase2 import Phase2
