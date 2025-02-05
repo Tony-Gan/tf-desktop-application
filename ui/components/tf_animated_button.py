@@ -2,6 +2,9 @@ from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, pyqtProperty, pyqtSignal, Qt
 from PyQt6.QtGui import QPainter, QPixmap, QCursor
 
+from utils.helper import resource_path
+
+
 class TFAnimatedButton(QPushButton):
     clicked_signal = pyqtSignal(str)
 
@@ -14,10 +17,10 @@ class TFAnimatedButton(QPushButton):
         if tooltip:
             self.setToolTip(tooltip)
 
-        self.normal_icon = QPixmap(f"resources/images/icons/{icon_name}.png").scaled(
+        self.normal_icon = QPixmap(resource_path(f"resources/images/icons/{icon_name}.png")).scaled(
             size*2, size*2, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
         )
-        self.hover_icon = QPixmap(f"resources/images/icons/{icon_name}_hover.png").scaled(
+        self.hover_icon = QPixmap(resource_path(f"resources/images/icons/{icon_name}_hover.png")).scaled(
             size*2, size*2, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
         )
         

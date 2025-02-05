@@ -63,7 +63,7 @@ class Phase0(BasePhase):
         destiny_entry.dice_count_entry.set_value("3")
         destiny_entry.allow_stats_exchange_entry.set_checked(False)
         destiny_entry.exchange_count_entry.set_value("1")
-        destiny_entry.exchange_count_entry.set_enable(False)
+        destiny_entry.exchange_count_entry.set_enabled(False)
         destiny_entry.setEnabled(False)
         
         general_entry = self.general_entry
@@ -514,10 +514,10 @@ class DestinyEntry(TFBaseFrame):
         self.main_layout.addWidget(self.exchange_count_entry, 1, 1)
         self.main_layout.addItem(dummy_spacer, 1, 2)
 
-        self.exchange_count_entry.set_enable(False)
+        self.exchange_count_entry.set_enabled(False)
 
     def _handle_exchange_change(self, state: bool):
-        self.exchange_count_entry.set_enable(state)
+        self.exchange_count_entry.set_enabled(state)
 
 
 class GeneralEntry(TFBaseFrame):

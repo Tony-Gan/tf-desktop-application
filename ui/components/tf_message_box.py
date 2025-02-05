@@ -5,13 +5,6 @@ from PyQt6.QtWidgets import QMessageBox
 from ui.components.tf_font import NotoSerifNormal
 
 class TFMessageBox:
-    """
-    A customized message box wrapper for the application.
-    
-    This class provides a consistent interface for showing different types of
-    message boxes throughout the application.
-    """
-
     @staticmethod
     def custom(
             parent,
@@ -20,19 +13,6 @@ class TFMessageBox:
             icon=None,
             button_text: str = "OK"
     ) -> None:
-        """Show a custom message box with specified icon and a single button.
-
-        Args:
-            parent: Parent widget
-            title (str): Window title
-            message (str): Message to display
-            icon: Icon to display. Can be either:
-                - QMessageBox.Icon enum value
-                - str: Path to icon file
-                - None: No icon
-            button_text (str, optional): Text for the confirm button.
-                Defaults to "OK".
-        """
         msg_box = QMessageBox(parent)
         msg_box.setWindowTitle(title)
         msg_box.setText(message)
@@ -60,20 +40,6 @@ class TFMessageBox:
         buttons: List[str] = None,
         default_button: str = None
     ) -> str:
-        """Show a question message box with custom buttons.
-        
-        Args:
-            parent: Parent widget
-            title (str): Window title
-            message (str): Message to display
-            buttons (List[str], optional): List of button texts. 
-                Defaults to ["Yes", "No", "Cancel"].
-            default_button (str, optional): Text of the default button.
-                Must be one of the buttons in the buttons list.
-        
-        Returns:
-            str: Text of the clicked button
-        """
         if buttons is None:
             buttons = ["Yes", "No", "Cancel"]
             
@@ -110,18 +76,6 @@ class TFMessageBox:
         message: str,
         buttons: List[str] = None
     ) -> str:
-        """Show a warning message box.
-        
-        Args:
-            parent: Parent widget
-            title (str): Window title
-            message (str): Message to display
-            buttons (List[str], optional): List of button texts. 
-                Defaults to ["OK"].
-        
-        Returns:
-            str: Text of the clicked button
-        """
         if buttons is None:
             buttons = ["OK"]
             
@@ -148,18 +102,6 @@ class TFMessageBox:
         message: str,
         buttons: List[str] = None
     ) -> str:
-        """Show an information message box.
-        
-        Args:
-            parent: Parent widget
-            title (str): Window title
-            message (str): Message to display
-            buttons (List[str], optional): List of button texts. 
-                Defaults to ["OK"].
-        
-        Returns:
-            str: Text of the clicked button
-        """
         if buttons is None:
             buttons = ["OK"]
             
@@ -186,18 +128,6 @@ class TFMessageBox:
         message: str,
         buttons: List[str] = None
     ) -> str:
-        """Show an error message box.
-        
-        Args:
-            parent: Parent widget
-            title (str): Window title
-            message (str): Message to display
-            buttons (List[str], optional): List of button texts. 
-                Defaults to ["OK"].
-        
-        Returns:
-            str: Text of the clicked button
-        """
         if buttons is None:
             buttons = ["OK"]
             

@@ -1,0 +1,147 @@
+法术模型
+
+/* 基础信息部分 */
+- id                    String  唯一ID
+- name                  Dict
+    - zh                String  法术中文名
+    - en                String  法术英文名
+- level                 Int     环数，0-9，0为戏法
+- ritual                Bool    是否允许仪式施法
+- classes               List    可使用此法术的职业列表，可多选
+- tag                   List    功能标签列表，可多选。可从以下各列表中选择，组成最终tag
+
+--- tag 系统说明 ---
+战斗定位 - [攻击, 治疗, 防护, 召唤]
+效果类型 - [位移, 控场, 探知, 隐形]
+作用范围 - [单体, 范围, 自身, 锥形, 球形, 柱形]
+伤害类型 - [火焰, 冷冻, 力场, 黯蚀, 心灵, 强酸, 光耀, 毒素, 闪电, 雷鸣, 穿刺, 挥砍, 钝击]
+特殊机制 - [仪式, 反制, 诅咒, 升环施法, 结界, 魅惑]
+-------------------
+
+/* 施法规则部分 */
+- casting_time          Dict
+    - type              String  施法消耗类型，可选自[动作, 附赠动作, 反应, 分钟, 小时, 轮]
+    - value             Int     施法消耗数值，与施法消耗类型组成施法消耗
+    - trigger           String  当施法消耗类型为反应时，用此字段进行描述
+- range                 Dict
+    - type              String  范围类型，可选自[自身, 触及, 范围, 视野, 特殊]
+    - dist_unit         String  距离单位，例如尺，自身和触及的为Null
+    - dist_value        Int     距离数值，与距离单位组成施法距离，自身和触及的为-1
+    - notes             String  当范围为"特殊"时填写，否则为Null
+- components            Dict
+    - verbal            Bool    是否需要言语
+    - somatic           Bool    是否需要姿势
+    - material          Dict
+        - required      Bool    是否需要材料
+        - cost          List    材料详细
+            - material  String  材料名
+            - consume   Bool    是否消耗
+        - description   String  材料描述
+
+/* 持续时间部分 */
+- duration              Dict
+    - type              String  持续类型，可选自[瞬时, 限时]
+    - duration_unit     String  持续时间单位，例如小时，瞬时法术为Null
+    - duration_value    String  持续时间数值，可能为骰子结果，与持续时间单位组成持续时间，瞬发法术为-1
+- concentration         Bool    是否需要专注，当为True时type必须为限时
+
+/* 描述与来源 */
+- description           String  法术效果文本
+- higher_level          String  升环施法效果，没有则为Null
+- source                String  来源书籍，可选自[PHB, XGE, TCE]等
+
+/* 学派扩展部分 */
+- school                List    法术学派，可选自[防护, 咒法, 预言, 附魔, 塑能, 幻术, 死灵, 变化]，根据选择的不同需要填写下列对应学派的信息
+- school_specific       Dict    每个对应的学派需要将对应学派的专有字段放入其中作为Value，以学派名作为Key
+
+--- 学派扩展部分格式 ---
+例：
+{
+    "school": ["防护", "咒法"]
+    "school_specific": {
+        "防护学派": {
+            defense_type.....
+            ......
+        }
+        "咒法学派": {
+            summon_type......
+            ......
+        }
+    }
+}
+-----------------------
+
+/* 防护学派 */
+- defense_type          List    护盾抵御的伤害类型，例如["魔法", "力场"]
+- spell_immunity        List    对特定学派魔法免疫
+- damage_resistance     List    提供的伤害抗性类型，例如["天界生物"]
+- counter_spell_level   Int     可反制的法术最高环级
+- dispel_difficulty     Int     解除魔法豁免DC
+
+/* 咒法学派 */
+- summon_type           List    召唤生物类型，例如["异界生物", "构装体", "不死生物", "物体"]
+- creature              Dict    召唤相关设置
+    - type              String  召唤生物类别
+    - cr_max            Int     最大挑战等级
+    - quantity          Int     召唤数量
+    - control_dc        String  控制检定规则
+- teleport              Dict    传送相关设置
+    - range_unit        String  传送距离单位
+    - range_value       Integer 传送距离数值
+    - passenger         String  可携带生物数描述
+
+/* 预言学派 */
+- detect                List    侦测目标类型，例如["魔法", "谎言", "陷阱"]
+- senses                List    赋予的特殊感官
+- revelation            Dict    信息揭示规则
+    - accuracy          String  信息精确度描述，例如"精确位置"
+    - time_scope        String  可探查的时间范围，例如"过去24小时"
+
+/* 附魔学派 */
+- mind_effect           Dict    心智影响
+    - save_type         String  豁免类型
+    - duration_unit     String  持续时间单位
+    - duration_value    Int     持续时间数值
+    - obedience_level   String  控制强度描述
+- command_triggers      List    可下达的命令  
+
+/* 塑能学派 */
+- damage                Dict
+    - type              String  伤害类型
+    - dice              String  伤害掷骰
+    - save              String  豁免类型
+    - half_on_success   Bool    豁免半伤
+- area                  Dict
+    - shape             String  范围形状，可选自[线形, 球型, 锥形, 立方体, 柱形]
+    - size_unit         String  作用范围单位
+    - size_value        Int     作用范围数值
+
+/* 幻术学派 */
+- illusion              Dict
+    - illusion_type     String  幻术类型，例如["幻影", "拟像", "全息图"]
+    - senses            List    影响的感官类型，例如[视觉, 触觉]
+    - interaction       Dict    交互规则
+        - invest_dc     Int     调查幻象的DC
+        - disbelieve_ef String  识破后的效果
+    - physical_effect   Dict    物理效果详细设置
+        - linked_school String  链接的学派
+        - effect_ref    String  引用的伤害数据
+
+/* 死灵学派 */
+- undead                Dict    不死生物操纵相关
+    - create            Bool    是否能创造
+    - control_cr        Int     可控不死生物最大CR
+    - minion_bonus      String  仆从增益效果
+- life_drain            String  生命吸收量
+
+/* 变化学派 */
+- alteration            Dict    变化相关规则
+    - type              String  改变类型，可选自["形态", "物质", "时间"]
+    - range_unit        String  变化的单位
+    - range_value       Int     变化的数值
+    - target            String  可改变的目标类型
+    - revert            String  复原条件
+    - description       String  变化描述
+- element_conv          Dict
+    - from_element      String  元素转换自
+    - to_element        String  元素转换为

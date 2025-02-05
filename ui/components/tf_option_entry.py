@@ -143,6 +143,11 @@ class TFOptionEntry(QFrame, IStateController):
         if self.show_tooltip and hasattr(self, 'tooltip_icon'):
             self.tooltip_icon.update_tooltip(text)
 
+    def set_enabled(self, enable: bool, option_only: bool=True) -> None:
+        self.combo_box.setEnabled(enable)
+        if not option_only:
+            self.label.setEnabled(enable)
+
 
 class TFComboBox(QComboBox):
     def showPopup(self):

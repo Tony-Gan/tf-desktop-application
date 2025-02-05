@@ -108,7 +108,7 @@ class Card2(BaseCard):
         for i in range(layout.count()):
             widget = layout.itemAt(i).widget()
             if hasattr(widget, 'set_enable'): 
-                widget.set_enable(True)
+                widget.set_enabled(True)
                 
         self.buttons_frame.add_button.show()
         self.buttons_frame.delete_button.show()

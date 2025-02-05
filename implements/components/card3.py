@@ -44,9 +44,9 @@ class Card3(BaseCard):
         
         for i in range(self.weapons_frame.content_widget.main_layout.count()):
             weapon_entry = self.weapons_frame.content_widget.main_layout.itemAt(i).widget()
-            weapon_entry.name_entry.set_enable(True)
-            weapon_entry.skill_entry.set_enable(True)
-            weapon_entry.damage_entry.set_enable(True)
+            weapon_entry.name_entry.set_enabled(True)
+            weapon_entry.skill_entry.set_enabled(True)
+            weapon_entry.damage_entry.set_enabled(True)
 
         for item_button in self.items_frame.carried_item_frame.content_widget.findChildren(ItemButton):
             item_button.setEnabled(True)
@@ -103,9 +103,9 @@ class Card3(BaseCard):
         
         for i in range(self.weapons_frame.content_widget.main_layout.count()):
             weapon_entry = self.weapons_frame.content_widget.main_layout.itemAt(i).widget()
-            weapon_entry.name_entry.set_enable(False)
-            weapon_entry.skill_entry.set_enable(False)
-            weapon_entry.damage_entry.set_enable(False)
+            weapon_entry.name_entry.set_enabled(False)
+            weapon_entry.skill_entry.set_enabled(False)
+            weapon_entry.damage_entry.set_enabled(False)
 
         for item_button in self.items_frame.carried_item_frame.content_widget.findChildren(ItemButton):
             item_button.setEnabled(False)
@@ -193,9 +193,9 @@ class WeaponsFrame(TFBaseFrame):
             
             card.weapons_frame.content_widget.main_layout.addWidget(entry)
             
-            entry.name_entry.set_enable(True)
-            entry.skill_entry.set_enable(True)
-            entry.damage_entry.set_enable(True)
+            entry.name_entry.set_enabled(True)
+            entry.skill_entry.set_enabled(True)
+            entry.damage_entry.set_enabled(True)
 
     def _on_delete_clicked(self):
         dialog = WeaponDeleteDialog(parent=self)

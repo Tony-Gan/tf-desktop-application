@@ -27,7 +27,7 @@ class TFValueEntry(QFrame, IStateController):
             alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
             label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
             number_only: bool = False,
-            allow_decimal: bool = True,
+            allow_decimal: bool = False,
             allow_negative: bool = False,
             max_digits: Optional[int] = None,
             expanding: bool = False,
@@ -35,107 +35,94 @@ class TFValueEntry(QFrame, IStateController):
             expanding_text_height: int = 100,
             show_tooltip: bool = False,
             tooltip_text: str = "",
-            force_english: bool = False,
             parent: Optional[QFrame] = None
     ) -> None:
         QFrame.__init__(self, parent)
         IStateController.__init__(self)
 
+        self.label_text = label_text
+        self.label_size = label_size
+        self.label_font = label_font
+        self.value_text = value_text
+        self.value_size = value_size
+        self.value_font = value_font
+
+        self.enable = enable
+
+        self.height = height
+        self.label_alignment = label_alignment
+        self.value_alignment = alignment
+
+        self.number_only = number_only
+        self.allow_decimal = allow_decimal
+        self.allow_negative = allow_negative
+        self.max_digits = max_digits
+
+        self.expanding = expanding
+        self.expanding_text_width = expanding_text_width
+        self.expanding_text_height = expanding_text_height
+
         self.show_tooltip = show_tooltip
-        self.force_english = force_english
+        self.tooltip_text = tooltip_text
 
-        self._setup_ui(
-            label_text, value_text, label_size, value_size, label_font, value_font, enable,
-            height, alignment, label_alignment, number_only, allow_decimal, allow_negative,
-            max_digits, expanding, expanding_text_width, expanding_text_height,
-            show_tooltip, tooltip_text
-        )
+        self._setup_ui()
 
-    def _setup_ui(
-            self,
-            label_text: str,
-            value_text: str,
-            label_size: int,
-            value_size: int,
-            label_font: QFont,
-            value_font: QFont,
-            enable: bool,
-            height: int,
-            alignment: Qt.AlignmentFlag,
-            label_alignment: Qt.AlignmentFlag,
-            number_only: bool,
-            allow_decimal: bool,
-            allow_negative: bool,
-            max_digits: Optional[int],
-            expanding: bool,
-            expanding_text_width: int,
-            expanding_text_height: int,
-            show_tooltip: bool,
-            tooltip_text: str 
-    ) -> None:
-        self.setFixedHeight(height)
+    def _setup_ui(self) -> None:
+        self.setFixedHeight(self.height)
         self.setFrameShape(QFrame.Shape.NoFrame)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
 
-        self.label = QLabel(label_text)
-        self.label.setFont(label_font)
-        self.label.setFixedWidth(label_size)
-        self.label.setFixedHeight(height)
-        self.label.setAlignment(label_alignment)
+        self.label = QLabel(self.label_text)
+        self.label.setFont(self.label_font)
+        self.label.setFixedWidth(self.label_size)
+        self.label.setFixedHeight(self.height)
+        self.label.setAlignment(self.label_alignment)
 
-        if number_only:
+        if self.number_only:
             self.value_field = TFNumberReceiver(
-                text=str(value_text),
-                alignment=alignment,
-                font=value_font,
-                allow_decimal=allow_decimal,
-                allow_negative=allow_negative,
-                max_digits=max_digits,
+                text=str(self.value_text),
+                alignment=self.value_alignment,
+                font=self.value_font,
+                allow_decimal=self.allow_decimal,
+                allow_negative=self.allow_negative,
+                max_digits=self.max_digits,
                 parent=self
             )
-        elif expanding:
+        elif self.expanding:
             self.value_field = TFExpandingInput(
-                line_width=value_size,
-                line_height=height,
-                text_width=expanding_text_width,
-                text_height=expanding_text_height,
-                font=value_font,
+                line_width=self.value_size,
+                line_height=self.height,
+                text_width=self.expanding_text_width,
+                text_height=self.expanding_text_height,
+                font=self.value_font,
                 parent=self
             )
-            self.value_field.setText(str(value_text))
+            self.value_field.setText(str(self.value_text))
         else:
             self.value_field = QLineEdit()
-            self.value_field.setFont(value_font)
-            self.value_field.setFixedHeight(height)
-            self.value_field.setAlignment(alignment)
-            self.value_field.setText(str(value_text))
+            self.value_field.setFont(self.value_font)
+            self.value_field.setFixedHeight(self.height)
+            self.value_field.setAlignment(self.value_alignment)
+            self.value_field.setText(str(self.value_text))
 
-        self.value_field.setFixedWidth(value_size)
+        self.value_field.setFixedWidth(self.value_size)
         self.value_field.textChanged.connect(self.value_changed.emit)
-
-        if self.force_english:
-            self.value_field.setAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled, False)
-            self.value_field.setInputMethodHints(
-                Qt.InputMethodHint.ImhLatinOnly |
-                Qt.InputMethodHint.ImhPreferLowercase |
-                Qt.InputMethodHint.ImhNoAutoUppercase
-            )
 
         layout.addWidget(self.label)
         layout.addWidget(self.value_field)
 
-        if show_tooltip and tooltip_text:
-            icon_size = height - 4
-            self.tooltip_icon = TFTooltip(icon_size, tooltip_text)
+        if self.show_tooltip and self.tooltip_text:
+            icon_size = self.height - 4
+            self.tooltip_icon = TFTooltip(icon_size, self.tooltip_text)
             layout.addSpacing(5)
             layout.addWidget(self.tooltip_icon)
             layout.addSpacing(2)
         layout.addStretch()
 
-        self.value_field.setEnabled(enable)
+        self.value_field.setEnabled(self.enable)
 
     def get_value(self) -> str:
         if isinstance(self.value_field, TFExpandingInput):
@@ -149,9 +136,10 @@ class TFValueEntry(QFrame, IStateController):
         else:
             self.value_field.setText(str(value))
 
-    def set_enable(self, enable: bool) -> None:
-        self.label.setEnabled(enable)
+    def set_enabled(self, enable: bool, entry_only: bool=True) -> None:
         self.value_field.setEnabled(enable)
+        if not entry_only:
+            self.label.setEnabled(enable)
 
     def update_tooltip(self, text: str) -> None:
         if self.show_tooltip:

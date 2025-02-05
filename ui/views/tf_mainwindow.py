@@ -288,7 +288,7 @@ class MenuFrame(TFBaseFrame):
         icon_layout.setContentsMargins(0, 0, 0, 0)
         icon_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_label = QLabel()
-        icon = QPixmap("resources/images/icons/app.ico").scaled(
+        icon = QPixmap(resource_path("resources/images/icons/app.ico")).scaled(
             32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
         )
         icon_label.setPixmap(icon)

@@ -141,7 +141,7 @@ class TFButtonEntry(QFrame, IStateController):
     def set_entry_enabled(self, enabled: bool) -> None:
         self.entry_field.setEnabled(enabled)
         
-    def set_enable(self, enable: bool) -> None:
+    def set_enabled(self, enable: bool) -> None:
         self.entry_field.setEnabled(enable)
         self.button.setEnabled(enable)
         

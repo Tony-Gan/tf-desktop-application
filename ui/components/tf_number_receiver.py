@@ -5,30 +5,6 @@ from PyQt6.QtGui import QKeyEvent, QFont
 from ui.components.tf_font import NotoSerifNormal
 
 class TFNumberReceiver(QLineEdit):
-    """
-    A specialized line edit widget that only accepts numeric input including decimals.
-    
-    This widget extends QLineEdit to create a number-only input field that handles
-    decimal points and prevents invalid characters. Leading zeros are automatically
-    handled.
-
-    Args:
-        text (str, optional): Initial text value. Defaults to "0".
-        alignment (Qt.AlignmentFlag, optional): Text alignment. Defaults to AlignLeft.
-        font (QFont, optional): Font settings. Defaults to Montserrat 12pt.
-        parent (QWidget, optional): Parent widget. Defaults to None.
-
-    Example:
-        >>> # Create a right-aligned number input
-        >>> number_input = TFNumberReceiver(
-        ...     text="0",
-        ...     alignment=Qt.AlignmentFlag.AlignRight,
-        ...     font=QFont("Arial", 14)
-        ... )
-        >>> 
-        >>> # Create default number input
-        >>> basic_input = TFNumberReceiver()
-    """
     def __init__(self, 
                  text="0", 
                  alignment: Qt.AlignmentFlag=Qt.AlignmentFlag.AlignLeft, 
@@ -51,9 +27,6 @@ class TFNumberReceiver(QLineEdit):
             self.setFixedHeight(height)
 
     def keyPressEvent(self, event: QKeyEvent | None):
-        """
-        Handle key press events to enforce numeric input rules.
-        """
         if self.max_digits is not None:
             current_digits = self._count_digits(self.text())
             is_digit = event.text().isdigit()

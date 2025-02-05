@@ -29,50 +29,43 @@ class TFCheckWithLabel(QFrame, IStateController):
 
         self.show_tooltip = show_tooltip
 
-        self._setup_ui(
-            label_text,
-            label_font,
-            checked,
-            height,
-            spacing,
-            label_alignment,
-            show_tooltip,
-            tooltip_text
-        )
+        self.label_text = label_text
+        self.label_font = label_font
+        self.label_alignment = label_alignment
 
-    def _setup_ui(
-            self,
-            label_text: str,
-            label_font: QFont,
-            checked: bool,
-            height: int,
-            spacing: int,
-            label_alignment: Qt.AlignmentFlag,
-            show_tooltip: bool,
-            tooltip_text: str
-    ) -> None:
-        self.setFixedHeight(height)
+        self.height = height
+        self.spacing = spacing
+
+        self.checked = checked
+
+        self.show_tooltip = show_tooltip
+        self.tooltip_text = tooltip_text
+
+        self._setup_ui()
+
+    def _setup_ui(self) -> None:
+        self.setFixedHeight(self.height)
         self.setFrameShape(QFrame.Shape.NoFrame)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(2, 0, 2, 0)
-        layout.setSpacing(spacing)
+        layout.setSpacing(self.spacing)
 
         self.check = QCheckBox()
-        self.check.setChecked(checked)
+        self.check.setChecked(self.checked)
         self.check.stateChanged.connect(lambda state: self.value_changed.emit(bool(state)))
 
-        self.label = QLabel(label_text)
-        self.label.setFont(label_font)
-        self.label.setAlignment(label_alignment)
+        self.label = QLabel(self.label_text)
+        self.label.setFont(self.label_font)
+        self.label.setAlignment(self.label_alignment)
         self.label.mousePressEvent = self._on_label_clicked
 
         layout.addWidget(self.check)
         layout.addWidget(self.label)
 
-        if show_tooltip and tooltip_text:
-            icon_size = height - 4
-            self.tooltip_icon = TFTooltip(icon_size, tooltip_text)
+        if self.show_tooltip and self.tooltip_text:
+            icon_size = self.height - 4
+            self.tooltip_icon = TFTooltip(icon_size, self.tooltip_text)
             layout.addWidget(self.tooltip_icon)
             layout.addSpacing(2)
 
@@ -90,3 +83,8 @@ class TFCheckWithLabel(QFrame, IStateController):
     def update_tooltip(self, text: str) -> None:
         if self.show_tooltip:
             self.tooltip_icon.update_tooltip(text)
+
+    def set_enabled(self, enable, check_only=True):
+        self.check.setEnabled(enable)
+        if not check_only:
+            self.label.setEnabled(enable)

@@ -381,8 +381,7 @@ class DicePanelFrame(TFBaseFrame):
             name="dice_command",
             label_text="掷骰指令",
             label_size=80,
-            value_size=240,
-            force_english=True
+            value_size=240
         )
         self.content_panel.main_layout.addWidget(self.dice_command)
 

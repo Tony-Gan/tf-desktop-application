@@ -74,7 +74,7 @@ class Phase1(BasePhase):
         char_info = self.upper_frame.character_info_group
         char_info.char_name_entry.set_value("")
         char_info.age_entry.set_value("")
-        char_info.age_entry.set_enable(True)
+        char_info.age_entry.set_enabled(True)
         char_info.gender_entry.set_value("None")
         char_info.natinality_entry.set_value("")
         char_info.residence_entry.set_value("")
@@ -89,7 +89,7 @@ class Phase1(BasePhase):
                 stats_entries = self.lower_frame.basic_stats_group.stats_entries
                 for entry in stats_entries.values():
                     entry.set_value("0")
-                    entry.set_enable(True)
+                    entry.set_enabled(True)
                 self.lower_frame.basic_stats_group._update_derived_stats()
                 self.lower_frame.basic_stats_group.hide()
                 self.lower_frame.dice_result_frame.show()
@@ -100,7 +100,7 @@ class Phase1(BasePhase):
                 stats = self.lower_frame.basic_stats_group.stats_entries
                 for entry in stats.values():
                     entry.set_value("0")
-                    entry.set_enable(True)
+                    entry.set_enabled(True)
                 self.lower_frame.basic_stats_group._update_derived_stats()
 
     def initialize(self):
@@ -284,7 +284,7 @@ class Phase1(BasePhase):
 
 
         self.age_reduction_button.setEnabled(False)
-        self.upper_frame.character_info_group.age_entry.set_enable(False)
+        self.upper_frame.character_info_group.age_entry.set_enabled(False)
         self.lower_frame.basic_stats_group.setEnabled(False)
         if modifications:
             TFApplication.instance().show_message("\n".join(modifications), 5000, "green")
@@ -456,10 +456,10 @@ class LowerFrame(TFBaseFrame):
             self.basic_stats_group.total_points = available_points
 
             for stat, entry in self.basic_stats_group.stats_entries.items():
-                entry.set_enable(True)
+                entry.set_enabled(True)
                 entry.set_value("0")
                 if stat == 'LUK' and not allow_custom_luck:
-                    entry.set_enable(False)
+                    entry.set_enabled(False)
                     dice_result = sum(random.randint(1, 6) for _ in range(3)) * 5
                     entry.set_value(str(dice_result))
                     self.basic_stats_group.total_points += dice_result
@@ -492,7 +492,7 @@ class LowerFrame(TFBaseFrame):
                 entry = self.basic_stats_group.stats_entries.get(stat)
                 if entry:
                     entry.set_value(str(value))
-                    entry.set_enable(False)
+                    entry.set_enabled(False)
                     
             self.basic_stats_group._update_derived_stats()
 

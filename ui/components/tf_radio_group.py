@@ -30,30 +30,24 @@ class TFRadioGroup(QFrame, IStateController):
         self.options = options
         self.current_value = current_value
         self.radio_buttons = []
-        
-        self._setup_ui(
-            label_font,
-            layout_type,
-            height,
-            spacing,
-            show_tooltip,
-            tooltip_text
-        )
 
-    def _setup_ui(
-            self,
-            label_font: QFont,
-            layout_type: type,
-            height: int,
-            spacing: int,
-            show_tooltip: bool,
-            tooltip_text: str
-    ) -> None:
+        self.label_font = label_font
+        self.layout_type = layout_type
+        
+        self.height = height
+        self.spacing = spacing
+
+        self.show_tooltip = show_tooltip
+        self.tooltip_text = tooltip_text
+        
+        self._setup_ui()
+
+    def _setup_ui(self) -> None:
         self.setFrameShape(QFrame.Shape.NoFrame)
         
-        self.main_layout = layout_type(self)
+        self.main_layout = self.layout_type(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_layout.setSpacing(spacing)
+        self.main_layout.setSpacing(self.spacing)
         
         self.button_group = QButtonGroup(self)
         self.button_group.setExclusive(True)
@@ -61,11 +55,11 @@ class TFRadioGroup(QFrame, IStateController):
         for option in self.options:
             radio = TFRadioWithLabel(
                 label_text=option,
-                label_font=label_font,
+                label_font=self.label_font,
                 checked=(option == self.current_value),
-                height=height,
-                show_tooltip=show_tooltip,
-                tooltip_text=tooltip_text
+                height=self.height,
+                show_tooltip=self.show_tooltip,
+                tooltip_text=self.tooltip_text
             )
             self.radio_buttons.append(radio)
             self.button_group.addButton(radio.radio)
@@ -77,14 +71,12 @@ class TFRadioGroup(QFrame, IStateController):
             self.value_changed.emit(radio.get_text())
 
     def get_value(self) -> Optional[str]:
-        """Returns the text of selected option, or None if nothing selected"""
         for radio in self.radio_buttons:
             if radio.get_value():
                 return radio.get_text()
         return None
 
     def set_value(self, value: str) -> None:
-        """Sets the radio button with matching text as checked"""
         for radio in self.radio_buttons:
             if radio.get_text() == value:
                 radio.set_checked(True)

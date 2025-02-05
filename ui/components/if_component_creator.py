@@ -129,8 +129,7 @@ class IComponentCreator:
             expanding_text_width: int = 300,
             expanding_text_height: int = 100,
             show_tooltip: bool = False,
-            tooltip_text: str = "",
-            force_english: bool = False
+            tooltip_text: str = ""
     ) -> TFValueEntry:
         entry = TFValueEntry(
             label_text=label_text,
@@ -150,7 +149,6 @@ class IComponentCreator:
             expanding_text_height=expanding_text_height,
             show_tooltip=show_tooltip,
             tooltip_text=tooltip_text,
-            force_english=force_english,
             parent=self
         )
         self._register_component(name, entry)

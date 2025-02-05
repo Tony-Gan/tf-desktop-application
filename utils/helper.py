@@ -3,7 +3,10 @@ import sys
 from datetime import datetime
 
 def resource_path(relative_path):
-    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    if hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
 def format_datetime(datetime_str, 

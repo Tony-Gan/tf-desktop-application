@@ -105,7 +105,7 @@ class Card1(BaseCard):
         basic_info = self.upper_frame.basic_info_frame
         for key in ['PL', '姓名', '母语', '护甲']:
             if key in basic_info._components:
-                basic_info._components[key].set_enable(True)
+                basic_info._components[key].set_enabled(True)
         
         basic_info.background_button.setEnabled(True)
         basic_info.potrait_button.setEnabled(True)
@@ -119,7 +119,7 @@ class Card1(BaseCard):
             'mov', 'db', 'build'
         ]:
             if key in stats._components:
-                stats._components[key].set_enable(True)
+                stats._components[key].set_enabled(True)
 
     def save_data(self, p_data):
         basic_info = self.upper_frame.basic_info_frame
@@ -157,7 +157,7 @@ class Card1(BaseCard):
         
         for key in ['PL', '姓名', '母语', '护甲']:
             if key in basic_info._components:
-                basic_info._components[key].set_enable(False)
+                basic_info._components[key].set_enabled(False)
         
         for key in ['hp', 'mp', 'san']:
             stats._components[f'{key}_current'].parent().setEnabled(False)
@@ -167,7 +167,7 @@ class Card1(BaseCard):
             'mov', 'db', 'build'
         ]:
             if key in stats._components:
-                stats._components[key].set_enable(False)
+                stats._components[key].set_enabled(False)
 
 
 class UpperFrame(TFBaseFrame):
