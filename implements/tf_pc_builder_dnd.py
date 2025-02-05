@@ -6,6 +6,7 @@ from PyQt6.QtGui import QPainter, QColor, QPixmap
 
 from core.windows.tf_draggable_window import TFDraggableWindow
 from implements.coc_components.base_phase import BasePhase
+from implements.dnd_components.phase0 import Phase0
 from implements.tf_pc_builder_v2 import ProgressFrame
 from ui.components.tf_base_frame import TFBaseFrame
 from utils.helper import resource_path
@@ -16,7 +17,7 @@ class TFDnDPcBuilder(TFDraggableWindow):
     metadata = TFToolMetadata(
         name="DnD建卡器v1",
         window_title="DnD5E 角色构筑器",
-        window_size=(960, 800),
+        window_size=(960, 600),
         description="DnD5E PC builder",
         max_instances=1
     )
@@ -44,8 +45,8 @@ class TFDnDPcBuilder(TFDraggableWindow):
         self.stacked_widget.setCurrentIndex(0)
         self.frames[0].on_enter()
 
-        self.stacked_widget.setFixedWidth(845)
-        self.progress_bar.setFixedWidth(100)
+        self.stacked_widget.setFixedWidth(825)
+        self.progress_bar.setFixedWidth(120)
 
         main_layout.addWidget(self.progress_bar)
         main_layout.addWidget(self.stacked_widget)
