@@ -1,13 +1,13 @@
 import json
 from typing import List
 
-from implements.components.data_enum import Category, Penetration
-from implements.components.data_type import CombatSkill, Spell, WeaponType, Range, Damage, WeaponSkill, Skill, Occupation
+from implements.coc_components.data_enum import Category, Penetration
+from implements.coc_components.data_type import CombatSkill, Spell, WeaponType, Range, Damage, WeaponSkill, Skill, Occupation
 from utils.helper import resource_path
 
 
 def load_occupations_from_json() -> List[Occupation]:
-    with open(resource_path("implements/data/occupations.json"), "r", encoding="utf-8") as f:
+    with open(resource_path("implements/coc_data/occupations.json"), "r", encoding="utf-8") as f:
         data = json.load(f)
     return [Occupation.from_json(entry) for entry in data]
 
@@ -17,7 +17,7 @@ def load_spells_from_json() -> List[Spell]:
 def load_skills_from_json( dex: int, edu: int) -> List[Skill]:
     skills = []
 
-    with open(resource_path("implements/data/default_skills.json"), 'r', encoding='utf-8') as file:
+    with open(resource_path("implements/coc_data/default_skills.json"), 'r', encoding='utf-8') as file:
         data = json.load(file)
 
         for skill_key, default_point in data.items():
@@ -41,7 +41,7 @@ def load_skills_from_json( dex: int, edu: int) -> List[Skill]:
 
 def load_weapon_types_from_json() -> List[WeaponType]:
     weapon_types = []
-    with open(resource_path("implements/data/weapon_types.json"), 'r', encoding='utf-8') as file:
+    with open(resource_path("implements/coc_data/weapon_types.json"), 'r', encoding='utf-8') as file:
         data = json.load(file)
         for item in data:
             weapon_skill = WeaponSkill(item["skill"])
@@ -67,7 +67,7 @@ def load_weapon_types_from_json() -> List[WeaponType]:
 def load_combat_skills_from_json() -> List[CombatSkill]:
     combat_skills = []
 
-    with open(resource_path("implements/data/combat_skills.json"), 'r', encoding='utf-8') as file:
+    with open(resource_path("implements/coc_data/combat_skills.json"), 'r', encoding='utf-8') as file:
         data = json.load(file)
 
         for name, details in data.items():

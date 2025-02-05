@@ -2,7 +2,7 @@ from typing import List, Tuple
 from PyQt6.QtWidgets import QGridLayout, QSizePolicy, QSpacerItem
 from PyQt6.QtGui import QFont
 
-from implements.components.base_phase import BasePhase
+from implements.coc_components.base_phase import BasePhase
 from ui.components.if_state_controll import IStateController
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_frame import TFBaseFrame

@@ -3,8 +3,8 @@ from typing import Any, Dict, List, Tuple
 from PyQt6.QtWidgets import QHBoxLayout, QScrollArea, QFrame, QSizePolicy
 from PyQt6.QtCore import Qt, QSize
 
-from implements.components.base_card import BaseCard
-from implements.components.data_reader import load_weapon_types_from_json
+from implements.coc_components.base_card import BaseCard
+from implements.coc_components.data_reader import load_weapon_types_from_json
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame
@@ -260,7 +260,7 @@ class WeaponEntry(TFBaseFrame):
     def load_data(self, weapon, skills):
         default_skills = {}
         try:
-            with open(resource_path('implements/data/default_skills.json'), 'r', encoding='utf-8') as f:
+            with open(resource_path('implements/coc_data/default_skills.json'), 'r', encoding='utf-8') as f:
                 default_skills = json.load(f)
         except Exception as e:
             TFApplication.instance().show_message(str(e), 5000, 'yellow')

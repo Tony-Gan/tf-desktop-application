@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QFileDialog, QVBoxLayout, 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor, QFont
 
-from implements.components.base_phase import BasePhase
+from implements.coc_components.base_phase import BasePhase
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame

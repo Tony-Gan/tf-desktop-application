@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QGridLayout, QFileDialog
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 
-from implements.components.base_card import BaseCard
+from implements.coc_components.base_card import BaseCard
 from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.components.tf_number_receiver import TFNumberReceiver

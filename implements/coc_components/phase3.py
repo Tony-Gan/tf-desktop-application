@@ -5,10 +5,10 @@ from PyQt6.QtWidgets import QFrame, QVBoxLayout, QScrollArea, QHBoxLayout, QDial
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
-from implements.components.base_phase import BasePhase
-from implements.components.data_enum import Category
-from implements.components.data_reader import load_weapon_types_from_json, load_skills_from_json
-from implements.components.data_type import WeaponType
+from implements.coc_components.base_phase import BasePhase
+from implements.coc_components.data_enum import Category
+from implements.coc_components.data_reader import load_weapon_types_from_json, load_skills_from_json
+from implements.coc_components.data_type import WeaponType
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame

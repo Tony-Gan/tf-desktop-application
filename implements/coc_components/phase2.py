@@ -4,9 +4,9 @@ from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QScrollArea, 
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QColor
 
-from implements.components.base_phase import BasePhase
-from implements.components.data_reader import load_skills_from_json, load_occupations_from_json
-from implements.components.data_type import Occupation, Skill
+from implements.coc_components.base_phase import BasePhase
+from implements.coc_components.data_reader import load_skills_from_json, load_occupations_from_json
+from implements.coc_components.data_type import Occupation, Skill
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame

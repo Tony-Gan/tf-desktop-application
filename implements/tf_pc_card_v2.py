@@ -9,11 +9,11 @@ from ui.components.tf_animated_button import TFAnimatedButton
 from ui.components.tf_tab_widget import TFTabWidget
 from ui.tf_application import TFApplication
 from utils.registry.tf_tool_matadata import TFToolMetadata
-from implements.components.card1 import Card1
-from implements.components.card2 import Card2
-from implements.components.card3 import Card3
-from implements.components.card4 import Card4
-from implements.components.card5 import Card5
+from implements.coc_components.card1 import Card1
+from implements.coc_components.card2 import Card2
+from implements.coc_components.card3 import Card3
+from implements.coc_components.card4 import Card4
+from implements.coc_components.card5 import Card5
 
 
 class TFPcCardV2(TFDraggableWindow):

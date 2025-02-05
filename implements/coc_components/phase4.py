@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout
 
-from implements.components.base_phase import BasePhase
-from implements.components.data_reader import load_combat_skills_from_json, load_spells_from_json
+from implements.coc_components.base_phase import BasePhase
+from implements.coc_components.data_reader import load_combat_skills_from_json, load_spells_from_json
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_frame import TFBaseFrame
 

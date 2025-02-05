@@ -2,8 +2,8 @@ from PyQt6.QtWidgets import QVBoxLayout, QStackedWidget
 from PyQt6.QtCore import Qt
 
 from core.windows.tf_draggable_window import TFDraggableWindow
-from implements.components.kp_dice_frame import KPFrame
-from implements.components.pl_dice_frame import PLFrame
+from implements.coc_components.kp_dice_frame import KPFrame
+from implements.coc_components.pl_dice_frame import PLFrame
 from ui.components.tf_animated_button import TFAnimatedButton
 from ui.components.tf_base_button import TFBaseButton
 from ui.components.tf_base_frame import TFBaseFrame

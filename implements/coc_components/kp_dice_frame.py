@@ -5,7 +5,7 @@ from PyQt6.QtGui import QDrag, QPixmap, QPainter, QDragEnterEvent, QDropEvent
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.components.tf_option_entry import TFOptionEntry
 from ui.tf_application import TFApplication
-from implements.components.websocket_client import WebSocketClient
+from implements.coc_components.websocket_client import WebSocketClient
 from utils.helper import get_current_datetime
 from utils.tf_dice import TFDice
 

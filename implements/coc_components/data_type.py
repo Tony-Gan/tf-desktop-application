@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Union
 
-from implements.components.data_enum import Penetration, Category
+from implements.coc_components.data_enum import Penetration, Category
 
 @dataclass
 class Skill:

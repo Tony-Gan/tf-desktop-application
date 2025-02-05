@@ -1,4 +1,4 @@
-from implements.components.base_card import BaseCard
+from implements.coc_components.base_card import BaseCard
 
 
 class Card5(BaseCard):

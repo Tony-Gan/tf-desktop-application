@@ -4,7 +4,7 @@ from typing import Any, List, Tuple
 from PyQt6.QtWidgets import QHBoxLayout, QGridLayout, QScrollArea, QFrame
 from PyQt6.QtCore import Qt
 
-from implements.components.base_card import BaseCard
+from implements.coc_components.base_card import BaseCard
 from ui.components.tf_base_dialog import TFBaseDialog
 from ui.components.tf_base_frame import TFBaseFrame
 from utils.helper import resource_path
@@ -32,7 +32,7 @@ class Card2(BaseCard):
         self.add_child('buttons_frame', self.buttons_frame)
 
     def _load_default_skills(self):
-        with open(resource_path('implements/data/default_skills.json'), 'r', encoding='utf-8') as f:
+        with open(resource_path('implements/coc_data/default_skills.json'), 'r', encoding='utf-8') as f:
             return json.load(f)
 
     def toggle_skills_display(self):

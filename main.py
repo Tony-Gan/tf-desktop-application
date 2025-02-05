@@ -8,7 +8,7 @@ from ui.tf_application import TFApplication
 from ui.views.tf_mainwindow import TFMainWindow
 from ui.components.tf_message_bar import TFMessageBar
 from ui.components.tf_message_box import TFMessageBox
-from utils.logging.tf_logger import TFLogger
+# from utils.logging.tf_logger import TFLogger
 from utils.registry.tf_tool_registry import TFToolRegistry
 from utils.helper import resource_path
 
@@ -17,7 +17,7 @@ def main():
     
     base_dir = os.path.dirname(os.path.abspath(__file__))
     
-    app.logger = TFLogger()
+    # app.logger = TFLogger()
     
     translator = QTranslator()
     if translator.load("resources/translations/zh_CN.qm"):
@@ -25,11 +25,11 @@ def main():
     app.translator = translator
 
     app.setStyleSheet(load_styles())
-    app.logger.debug("Styles loaded")
+    # app.logger.debug("Styles loaded")
     
     load_font()
     # check_loaded_fonts()
-    app.logger.debug("Fonts loaded")
+    # app.logger.debug("Fonts loaded")
 
     db_folder = os.path.join(base_dir, 'core', 'database')
     if not os.path.exists(db_folder):
@@ -44,7 +44,7 @@ def main():
 
     app.message_bar = TFMessageBar(window)
 
-    app.logger.info("Application initialized successfully.")
+    # app.logger.info("Application initialized successfully.")
     window.show()
     
     sys.exit(app.exec())

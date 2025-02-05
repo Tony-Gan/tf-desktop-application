@@ -8,17 +8,17 @@ from core.windows.tf_draggable_window import TFDraggableWindow
 from ui.components.tf_base_frame import TFBaseFrame
 from utils.helper import resource_path
 from utils.registry.tf_tool_matadata import TFToolMetadata
-from implements.components.base_phase import BasePhase
-from implements.components.phase0 import Phase0
-from implements.components.phase1 import Phase1
-from implements.components.phase2 import Phase2
-from implements.components.phase3 import Phase3
-from implements.components.phase4 import Phase4
+from implements.coc_components.base_phase import BasePhase
+from implements.coc_components.phase0 import Phase0
+from implements.coc_components.phase1 import Phase1
+from implements.coc_components.phase2 import Phase2
+from implements.coc_components.phase3 import Phase3
+from implements.coc_components.phase4 import Phase4
 
 
 class TFPcBuilderV2(TFDraggableWindow):
     metadata = TFToolMetadata(
-        name="角色构筑器v2",
+        name="CoC建卡器v2",
         window_title="角色构筑器v2",
         window_size=(1080, 640),
         description="PC builder",

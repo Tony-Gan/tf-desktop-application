@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt
 
 from ui.components.tf_base_frame import TFBaseFrame
 from ui.tf_application import TFApplication
-from implements.components.websocket_client import WebSocketClient
+from implements.coc_components.websocket_client import WebSocketClient
 from utils.helper import get_current_datetime
 
 
